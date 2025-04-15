@@ -31,7 +31,7 @@ app.use(function (err, req, res, next) {
 // Middleware
 
 // sanitize request data
-app.use(mongoSanitize());
+// app.use(mongoSanitize());
 
 // enable cors
 app.use(cors('*'));
