@@ -21,3 +21,8 @@ exports.deleteTicket = asyncHandler(async (req, res) => {
     const ticket = await ticketService.deleteTicket(req.params.id);
     return ticket;
 });
+
+exports.patchTicket = async (id, updates) => {
+    const ticket = await ticketService.patchTicket(id, updates);
+    return ticket;
+};

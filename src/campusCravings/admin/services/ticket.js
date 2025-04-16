@@ -1,5 +1,6 @@
 'use strict';
 const Ticket = require('../models/ticket');
+const ApiError = require('../../../../utils/ApiError');
 const getAllTickets = async () => {
     try {
         const tickets = await Ticket.find().populate('userId', 'name email');
@@ -44,11 +45,22 @@ const deleteTicket = async (id) => {
 
     return deletedTicket;
 };
-
+const patchTicket = async (id, updates) => {
+    const updated = await Ticket.findByIdAndUpdate(
+        id,
+        { $set: updates },
+        { new: true, runValidators: true }
+    );
+    if (!updated) {
+        throw new ApiError(404, "Ticket not found");
+    }
+    return updated;
+};
 
 module.exports = {
     getAllTickets,
     createTicket,
     updateTicket,
+    patchTicket,
     deleteTicket
 };
