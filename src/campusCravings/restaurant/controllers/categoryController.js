@@ -7,6 +7,11 @@ exports.createCategory = asyncHandler(async (req, res) => {
     return category;
 });
 
+exports.createItem = asyncHandler(async (req, res) => {
+    const categories = await restCat.createItem(req.body);
+    return categories;
+});
+
 exports.getItems = asyncHandler(async (req, res) => {
     const items = await restCat.getCategoryItemsById(req.params.id);
     return items;

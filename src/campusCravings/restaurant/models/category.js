@@ -50,6 +50,10 @@ const categorySchema = new Schema({
     type: Date,
     default: Date.now,
   },
+  restaurant: {
+    type: Schema.Types.ObjectId,
+    ref: 'Restaurant',
+  }
 });
 
 module.exports = mongoose.model('Category', categorySchema);
