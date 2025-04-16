@@ -9,6 +9,8 @@ const upload = multer({ storage: multer.memoryStorage() });
 const helmet = require("helmet");
 const compression = require("compression");
 
+const categoryRoutes = require("./src/campusCravings/restaurant/routes/categoryRoutes")
+
 const app = express();
 
 app.use(function (err, req, res, next) {
@@ -57,6 +59,7 @@ app.use(compression());
 // app.use("/api/users", require("./routes/userRoutes"));
 app.use("/api/auth", require("./src/auth/routes/authRoute"));
 app.use("/api/admin", require("./src/campusCravings/admin/routes/adminRoute"));
+app.use("/api", categoryRoutes);
 
 // convert error to CustomError, if needed
 app.use(errorConverter);
