@@ -2,27 +2,28 @@ const express = require('express');
 const router = express.Router();
 const httpStatus = require("http-status");
 const ApiError = require('../../../../utils/ApiError');
-const { getAllTickets, createTicket, updateTicket, deleteTicket } = require('../controllers/ticketController')
-// Get All Tickets
+const { getAllOrders, createOrder, updateOrder, deleteOrder } = require('../controllers/orderItemController');
+
+// Get All Orders
 router.get("/", async (req, res) => {
     try {
-        const allTickets = await getAllTickets(req, res);
-        res.status(httpStatus.status.OK).json({ message: "Data Fetch Successfully", tickets: allTickets });
-    }
-    catch {
+        const allOrders = await getAllOrders(req, res);
+        res.status(httpStatus.status.OK).json({ message: "Orders fetched successfully", orders: allOrders });
+    } catch (error) {
         if (error instanceof ApiError) {
             return res.status(error.statusCode).json({ message: error.message });
         }
         return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
     }
-})
-// Add a new ticket
+});
+
+// Add a new Order
 router.post("/", async (req, res) => {
     try {
-        const newTicket = await createTicket(req, res);
+        const newOrder = await createOrder(req, res);
         res.status(httpStatus.status.CREATED).json({
-            message: "Ticket created successfully",
-            ticket: newTicket,
+            message: "Order created successfully",
+            order: newOrder,
         });
     } catch (error) {
         if (error instanceof ApiError) {
@@ -31,13 +32,14 @@ router.post("/", async (req, res) => {
         return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
     }
 });
-// Update an existing ticket
+
+// Update an existing Order
 router.put("/:id", async (req, res) => {
     try {
-        const updatedTicket = await updateTicket(req, res);
+        const updatedOrder = await updateOrder(req, res);
         res.status(httpStatus.status.OK).json({
-            message: "Ticket updated successfully",
-            ticket: updatedTicket,
+            message: "Order updated successfully",
+            order: updatedOrder,
         });
     } catch (error) {
         if (error instanceof ApiError) {
@@ -46,13 +48,14 @@ router.put("/:id", async (req, res) => {
         return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
     }
 });
-// Delete a ticket
+
+// Delete an Order
 router.delete("/:id", async (req, res) => {
     try {
-        const deletedTicket = await deleteTicket(req, res);
+        const deletedOrder = await deleteOrder(req, res);
         res.status(httpStatus.status.OK).json({
-            message: "Ticket deleted successfully",
-            ticket: deletedTicket,
+            message: "Order deleted successfully",
+            order: deletedOrder,
         });
     } catch (error) {
         if (error instanceof ApiError) {
@@ -61,7 +64,5 @@ router.delete("/:id", async (req, res) => {
         return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
     }
 });
-
-
 
 module.exports = router;
