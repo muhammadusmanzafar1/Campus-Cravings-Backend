@@ -17,6 +17,11 @@ exports.updateOrder = asyncHandler(async (req, res) => {
     return order;
 });
 
+exports.patchOrder = asyncHandler(async (req, res) => {
+    const order = await orderService.patchOrder(req.params.id, req.body);
+    return order;
+});
+
 exports.deleteOrder = asyncHandler(async (req, res) => {
     const order = await orderService.deleteOrder(req.params.id);
     return order;
