@@ -1,55 +1,33 @@
 'use strict';
-const Order = require('../models/orderItem');
+const OrderItem = require('../models/orderItem');
 
-const getAllOrders = async () => {
-    try {
-        const orders = await Order.find()
-            // .populate('user_id', 'name email')
-            // .populate('restaurant_id', 'name');
-        return orders;
-    } catch (error) {
-        throw new Error('Error fetching orders: ' + error.message);
-    }
+const getAllOrderItems = async () => {
+    const items = await OrderItem.find()
+    // .populate('order_id menu_item_id');
+    return items;
 };
 
-const createOrder = async (body) => {
-    const { user_id, restaurant_id, status, total_price } = body;
-    const newOrder = new Order({
-        user_id,
-        restaurant_id,
-        status,
-        total_price
-    });
-    await newOrder.save();
-    return newOrder;
+const createOrderItem = async (body) => {
+    const newItem = new OrderItem(body);
+    await newItem.save();
+    return newItem;
 };
 
-const updateOrder = async (id, body) => {
-    const updatedOrder = await Order.findByIdAndUpdate(id, body, {
-        new: true,
-        runValidators: true,
-    });
-
-    if (!updatedOrder) {
-        throw new Error('Order not found');
-    }
-
-    return updatedOrder;
+const updateOrderItem = async (id, body) => {
+    const updated = await OrderItem.findByIdAndUpdate(id, body, { new: true, runValidators: true });
+    if (!updated) throw new Error("OrderItem not found");
+    return updated;
 };
 
-const deleteOrder = async (id) => {
-    const deletedOrder = await Order.findByIdAndDelete(id);
-
-    if (!deletedOrder) {
-        throw new Error('Order not found');
-    }
-
-    return deletedOrder;
+const deleteOrderItem = async (id) => {
+    const deleted = await OrderItem.findByIdAndDelete(id);
+    if (!deleted) throw new Error("OrderItem not found");
+    return deleted;
 };
 
 module.exports = {
-    getAllOrders,
-    createOrder,
-    updateOrder,
-    deleteOrder
+    getAllOrderItems,
+    createOrderItem,
+    updateOrderItem,
+    deleteOrderItem
 };

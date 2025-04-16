@@ -2,22 +2,22 @@
 const orderItemService = require('../services/orderItem');
 const asyncHandler = require('express-async-handler');
 
-exports.getAllOrders = asyncHandler(async (req, res) => {
-    const orders = await orderItemService.getAllOrders(req.body);
-    return orders;
+exports.getAllOrderItems = asyncHandler(async (req, res) => {
+    const items = await orderItemService.getAllOrderItems();
+    return items;
 });
 
-exports.createOrder = asyncHandler(async (req, res) => {
-    const order = await orderItemService.createOrder(req.body);
-    return order;
+exports.createOrderItem = asyncHandler(async (req, res) => {
+    const item = await orderItemService.createOrderItem(req.body);
+    return item;
 });
 
-exports.updateOrder = asyncHandler(async (req, res) => {
-    const order = await orderItemService.updateOrder(req.params.id, req.body);
-    return order;
+exports.updateOrderItem = asyncHandler(async (req, res) => {
+    const item = await orderItemService.updateOrderItem(req.params.id, req.body);
+    return item;
 });
 
-exports.deleteOrder = asyncHandler(async (req, res) => {
-    const order = await orderItemService.deleteOrder(req.params.id);
-    return order;
+exports.deleteOrderItem = asyncHandler(async (req, res) => {
+    const item = await orderItemService.deleteOrderItem(req.params.id);
+    return item;
 });
