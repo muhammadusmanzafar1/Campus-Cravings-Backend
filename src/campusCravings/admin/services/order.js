@@ -1,5 +1,6 @@
 'use strict';
 const Order = require('../models/order');
+const axios = require("axios");
 
 const getAllOrders = async () => {
     try {
@@ -13,10 +14,25 @@ const getAllOrders = async () => {
         throw new Error('Error fetching orders: ' + error.message);
     }
 };
-
-
 const createOrder = async (body) => {
-    const { user_id, restaurant_id, status, total_price, payment_method, items } = body;
+    const { user_id, restaurant_id, status, payment_method, items } = body;
+    let total_price = 0;
+    for (const item of items) {
+        const { item_id, quantity } = item;
+        try {
+            const URL = `${process.env.URL}:${process.env.PORT}`;
+
+            const response = await axios.get(`${URL}/api/getitem/${item_id}`);
+            const itemPrice = response.data.itens.price;
+            if (typeof itemPrice !== "number") {
+                throw new Error(`Invalid price for item ${item_id}`);
+            }
+            total_price += itemPrice * quantity;
+        } catch (err) {
+            throw new Error(`Failed to fetch item ${item_id}: ${err.message}`);
+        }
+    }
+
     const newOrder = new Order({
         user_id,
         restaurant_id,
@@ -25,6 +41,7 @@ const createOrder = async (body) => {
         payment_method,
         items
     });
+
     await newOrder.save();
     return newOrder;
 };
