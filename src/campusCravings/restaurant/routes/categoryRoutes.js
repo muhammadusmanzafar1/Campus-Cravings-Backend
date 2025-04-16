@@ -3,9 +3,9 @@ const router = express.Router();
 const httpStatus = require("http-status");
 const ApiError = require('../../../../utils/ApiError');
 const { validate } = require('../../../../middlewares/auth');
-const { createCategory, getItems, updateItems, deleteItems } = require('../controllers/categoryController')
+const { createCategory, getItems, updateItems, deleteItems, getCategories, createItem } = require('../controllers/categoryController')
 
-router.post("/additem", async (req, res) => {
+router.post("/addcategory", async (req, res) => {
 
     try {
         const category = await createCategory(req, res);
@@ -15,6 +15,18 @@ router.post("/additem", async (req, res) => {
             return res.status(error.statusCode).json({ message: error.message });
         }
 
+        return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
+    }
+});
+
+router.post("/additem", async (req, res) => {
+    try {
+        const item = await createItem(req, res);
+        res.status(httpStatus.status.CREATED).json({ message: "Item created successfully", item: item });
+    } catch (error) {
+        if (error instanceof ApiError) {
+            return res.status(error.statusCode).json({ message: error.message });
+        }
         return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
     }
 });
