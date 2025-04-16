@@ -16,13 +16,18 @@ const getAllOrders = async () => {
 };
 const createOrder = async (body) => {
     const { user_id, restaurant_id, status, payment_method, items } = body;
+    // Need to check restaurant_id when it is implemented
     let total_price = 0;
     for (const item of items) {
         const { item_id, quantity } = item;
         try {
             const URL = `${process.env.URL}:${process.env.PORT}`;
-
             const response = await axios.get(`${URL}/api/getitem/${item_id}`);
+            // if any item is not found, return error
+            if (!response.data) {
+                return { error: 'Item not found' };
+            }
+            // calculate total price
             const itemPrice = response.data.itens.price;
             if (typeof itemPrice !== "number") {
                 throw new Error(`Invalid price for item ${item_id}`);
@@ -48,6 +53,8 @@ const createOrder = async (body) => {
 
 const updateOrder = async (id, body) => {
     try {
+        // need to test restuarant id: 
+        console.log(body);
         const updatedOrder = await Order.findByIdAndUpdate(id, body, {
             new: true,
             runValidators: true,
