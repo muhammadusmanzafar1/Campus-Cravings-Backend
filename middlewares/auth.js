@@ -1,8 +1,8 @@
 'use strict';
 const httpStatus = require('http-status');
-const jwtHelper = require('../helpers/jwt');
-const sessionService = require('../src/auth/services/sessions');
-const ApiError = require('../helpers/ApiError');
+const jwtHelper = require('../utils/jwt');
+const sessionService = require('../src/auth/services/session');
+const ApiError = require('../utils/ApiError');
 /**
  * 
  * @param {*} token 
