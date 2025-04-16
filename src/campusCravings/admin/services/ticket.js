@@ -8,8 +8,6 @@ const getAllTickets = async () => {
         throw new Error('Error fetching tickets: ' + error.message);
     }
 };
-
-
 const createTicket = async (body) => {
     const { subject, description, userId, status, priority, imgUrl, messages } = body;
     const newTicket = new Ticket({
