@@ -56,11 +56,19 @@ const patchTicket = async (id, updates) => {
     }
     return updated;
 };
+const getTicket = async (id) => {
+    const ticket = await Ticket.findById(id);
+    if (!ticket) {
+        throw new ApiError(404, "Ticket not found");
+    }
+    return ticket;
+};
 
 module.exports = {
     getAllTickets,
     createTicket,
     updateTicket,
     patchTicket,
-    deleteTicket
+    deleteTicket,
+    getTicket
 };

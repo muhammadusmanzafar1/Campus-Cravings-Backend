@@ -26,3 +26,8 @@ exports.patchTicket = async (id, updates) => {
     const ticket = await ticketService.patchTicket(id, updates);
     return ticket;
 };
+
+exports.getTicket = async (req, res) => {
+    const ticket = await ticketService.getTicket(req.params.id);
+    return ticket;
+};

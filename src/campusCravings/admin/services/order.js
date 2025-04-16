@@ -98,11 +98,20 @@ const patchOrder = async (id, body) => {
         throw new Error('Error updating order: ' + error.message);
     }
 };
+const getOrder = async (id) => {
+    try {
+        const order = await Order.findById(id);
+        return order;
+    } catch (error) {
+        throw new Error('Error fetching order: ' + error.message);
+    }
+};
 
 module.exports = {
     getAllOrders,
     createOrder,
     updateOrder,
     deleteOrder,
-    patchOrder
+    patchOrder,
+    getOrder
 };

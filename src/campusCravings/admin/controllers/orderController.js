@@ -26,3 +26,8 @@ exports.deleteOrder = asyncHandler(async (req, res) => {
     const order = await orderService.deleteOrder(req.params.id);
     return order;
 });
+
+exports.getOrder = asyncHandler(async (req, res) => {
+    const order = await orderService.getOrder(req.params.id);
+    return order;
+});
