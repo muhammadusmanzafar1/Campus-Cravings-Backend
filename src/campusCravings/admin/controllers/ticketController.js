@@ -3,7 +3,7 @@ const ticketService = require('../services/ticket')
 const asyncHandler = require('express-async-handler');
 
 exports.getAllTickets = asyncHandler(async (req, res) => {
-    let tickets = await ticketService.getAllTickets(req.body);
+    let tickets = await ticketService.getAllTickets(req);
     return tickets;
 });
 
