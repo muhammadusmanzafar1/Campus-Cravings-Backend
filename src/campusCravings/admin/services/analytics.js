@@ -55,6 +55,122 @@ const getAnalytics = async (req) => {
         throw new Error('Error fetching analytics: ' + error.message);
     }
 };
+const getRevenueAnalytics = async (req) => {
+    try {
+        const duration = req.params.timeframe || 'week';
+        const now = new Date();
+        const matchStage = {
+            status: { $in: ['delivered', 'completed'] },
+            created_at: {}
+        };
+
+        let groupStage = {};
+        let startDate;
+        let labels = [];
+        let resultMap = {};
+
+        switch (duration) {
+            case 'week':
+                startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6);
+                matchStage.created_at = { $gte: startDate };
+                groupStage = {
+                    _id: { $dateToString: { format: '%Y-%m-%d', date: '$created_at' } },
+                    totalRevenue: { $sum: '$total_price' }
+                };
+
+                // Generate last 7 day labels
+                for (let i = 6; i >= 0; i--) {
+                    const date = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+                    labels.push(date.toISOString().split('T')[0]);
+                }
+                break;
+
+            case 'month':
+                startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 27);
+                matchStage.created_at = { $gte: startDate };
+                groupStage = {
+                    _id: { $isoWeek: '$created_at' },
+                    totalRevenue: { $sum: '$total_price' }
+                };
+                labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+                break;
+
+            case 'year':
+                startDate = new Date(now.getFullYear(), 0, 1);
+                matchStage.created_at = { $gte: startDate };
+                groupStage = {
+                    _id: { $month: '$created_at' },
+                    totalRevenue: { $sum: '$total_price' }
+                };
+                labels = [
+                    'January', 'February', 'March', 'April', 'May', 'June',
+                    'July', 'August', 'September', 'October', 'November', 'December'
+                ];
+                break;
+
+            case 'all':
+                delete matchStage.created_at;
+                groupStage = {
+                    _id: { $year: '$created_at' },
+                    totalRevenue: { $sum: '$total_price' }
+                };
+                break;
+
+            default:
+                throw new Error('Invalid duration. Use week, month, year, or all.');
+        }
+
+        const revenueData = await Order.aggregate([
+            { $match: matchStage },
+            { $group: groupStage },
+            { $sort: { _id: 1 } }
+        ]);
+
+        // Build result map for easy lookup
+        for (const record of revenueData) {
+            resultMap[record._id] = record.totalRevenue;
+        }
+
+        let result = [];
+
+        if (duration === 'week') {
+            result = labels.map(date => ({
+                label: date,
+                revenue: resultMap[date] || 0
+            }));
+        } else if (duration === 'month') {
+            let weekNums = revenueData.map(d => d._id);
+            for (let i = 1; i <= 4; i++) {
+                const label = `Week ${i}`;
+                const value = revenueData.find(r => r._id === weekNums[i - 1]);
+                result.push({
+                    label,
+                    revenue: value?.totalRevenue || 0
+                });
+            }
+        } else if (duration === 'year') {
+            for (let i = 1; i <= 12; i++) {
+                result.push({
+                    label: labels[i - 1],
+                    revenue: resultMap[i] || 0
+                });
+            }
+        } else if (duration === 'all') {
+            result = Object.keys(resultMap).map(year => ({
+                label: year,
+                revenue: resultMap[year] || 0
+            }));
+        }
+
+        return result;
+    } catch (error) {
+        throw new Error('Error fetching analytics: ' + error.message);
+    }
+};
+
+
+
 module.exports = {
-    getAnalytics
+    getAnalytics,
+    getRevenueAnalytics
 };
