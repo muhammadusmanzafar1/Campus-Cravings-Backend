@@ -19,7 +19,33 @@ const registerViaEmail = {
         deviceType: Joi.string().optional().valid('web', 'android', 'ios'),
         role: Joi.string().default("user"),
         countryCode: Joi.string().optional(),
-        phone: Joi.string().optional().custom(phone)
+        phoneNumber: Joi.string().optional().custom(phone),
+        isRestaurant: Joi.boolean().optional(),
+        isCustomer: Joi.boolean().optional(),
+        isDelivery: Joi.boolean().optional(),
+        isAdmin: Joi.boolean().optional(),
+        storeName: Joi.string().when('isRestaurant', { is: true, then: Joi.required() }),
+        brandName: Joi.string().when('isRestaurant', { is: true, then: Joi.required() }),
+        floor: Joi.string().when('isRestaurant', { is: true, then: Joi.required() }),
+        address: Joi.string().when('isRestaurant', { is: true, then: Joi.required() }),
+        openingHours: Joi.object({
+          monday: Joi.string().optional(),
+          tuesday: Joi.string().optional(),
+          wednesday: Joi.string().optional(),
+          thursday: Joi.string().optional(),
+          friday: Joi.string().optional(),
+          saturday: Joi.string().optional(),
+          sunday: Joi.string().optional(),
+        }).when('isRestaurant', { is: true, then: Joi.required() }),
+        cuisine: Joi.string().when('isRestaurant', { is: true, then: Joi.required() }),
+        deliveryMethods: Joi.array().items(Joi.string()).when('isRestaurant', { is: true, then: Joi.required() }),
+        ratings: Joi.object({
+          averageRating: Joi.number().default(0),
+          totalRatings: Joi.number().default(0),
+        }).when('isRestaurant', { is: true, then: Joi.required() }),
+        paymentMethods: Joi.array().items(Joi.string()).when('isRestaurant', { is: true, then: Joi.required() }),
+        categories: Joi.array().items(Joi.string()).when('isRestaurant', { is: true, then: Joi.required() }),
+        userId: Joi.string().when('isRestaurant', { is: true, then: Joi.required() }),
     }).xor("email","phone")
 };
 

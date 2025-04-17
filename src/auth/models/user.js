@@ -29,9 +29,21 @@ const entitySchema = new mongoose.Schema({
         enum: ['pending', 'active', 'deleted', 'blocked'],
         default: 'pending',
     },
-    role: {
-        type: String,
-        enum: ['superAdmin', 'user', 'admin'],
+    isRestaurant: {
+        type: Boolean,
+        default: false
+    },
+    isDelivery: {
+        type: Boolean,
+        default: false
+    },
+    isCustomer: {
+        type: Boolean,
+        default: false
+    },
+    isAdmin: {
+        type: Boolean,
+        default: false
     },
     isEmailVerified: {
         type: Boolean,
@@ -77,6 +89,10 @@ const entitySchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
+    restaurant: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "restaurant",
+    }
 });
 
 entitySchema.statics.newEntity = async function (body, createdByAdmin = true) {
@@ -90,7 +106,10 @@ entitySchema.statics.newEntity = async function (body, createdByAdmin = true) {
         phone: body.phone,
         ISOCode: body.ISOCode,
         countryCode: body.countryCode,
-        role: body.role,
+        isRestaurant: body.isRestaurant,
+        isDelivery: body.isDelivery,
+        isCustomer: body.isCustomer,
+        isAdmin: body.isAdmin,
         about: body.about,
         googleId: body.googleId,
         facebookId: body.facebookId,

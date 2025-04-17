@@ -3,59 +3,77 @@ const httpStatus = require('http-status');
 const userService = require('./users');
 const ApiError = require("../../../utils/ApiError");
 const userDB = require('../models/user')
+const restaurantDB = require('../../campusCravings/restaurant/models/restaurant')
 const utils = require('../../../utils/utils');
 const email = require('../../../utils/email');
 
 const registerWithEmail = async (body) => {
-
-    let existingUser;
-    
-    if (body.email) {
-         existingUser = await userService.get({
-              email: body.email 
-         });
-     } else if (body.phone) {
-         existingUser = await userService.get({
-              phone: body.phone 
-         });
-     }
-     
-
-     if (existingUser) await validateUser(existingUser);
-
-    if (existingUser) {
-         if (existingUser.status === 'pending') {
-              existingUser.activationCode = utils.randomPin();
-              existingUser?.authMethod === 'phone'
-                   ? await email.PhoneVerificationOTP(
-                          body.phone,
-                          existingUser.activationCode
-                     )
-                   : await email.sendOTPonEmail(
-                          body.email,
-                          existingUser.activationCode
-                     );
-              return await existingUser.save();
-         } else {
-              const errorMessage =
-                   body.authMethod === 'email'
-                        ? 'Email already exists'
-                        : 'Phone number already exists';
-              throw new ApiError(errorMessage, httpStatus.status.BAD_REQUEST);
+     try {
+         let existingUser;
+ 
+         if (body.email) {
+             existingUser = await userService.get({ email: body.email });
+         } else if (body.phone) {
+             existingUser = await userService.get({ phone: body.phone });
          }
-    }
-    
-    // No existing user with the provided email, create a new user
-    const model = await userDB.newEntity(body, false);
-    const newUser = new userDB(model);
-    if (body.authMethod === 'phone') {
-         await email.PhoneVerificationOTP(body.phone, model.activationCode);
-    } else {
-     
-         await email.sendOTPonEmail(body.email, model.activationCode);
-    }
-    return await newUser.save();
-};
+ 
+         if (existingUser) await validateUser(existingUser);
+ 
+         if (existingUser) {
+             if (existingUser.status === 'pending') {
+                 existingUser.activationCode = utils.randomPin();
+                 if (existingUser?.authMethod === 'phone') {
+                     await email.PhoneVerificationOTP(body.phone, existingUser.activationCode);
+                 } else {
+                     await email.sendOTPonEmail(body.email, existingUser.activationCode);
+                 }
+                 return await existingUser.save();
+             } else {
+                 const errorMessage = body.authMethod === 'email' ? 'Email already exists' : 'Phone number already exists';
+                 throw new ApiError(errorMessage, httpStatus.status.BAD_REQUEST);
+             }
+         }
+ 
+         if (body.isRestaurant === true) {
+             const userModel = await userDB.newEntity(body, false);
+             const restaurantModel = await restaurantDB.newEntity(body, false);
+ 
+             const newUser = new userDB(userModel);
+             const newRestaurant = new restaurantDB(restaurantModel);
+ 
+             await newRestaurant.save();
+ 
+             newUser.restaurant = newRestaurant._id;
+ 
+             if (body.authMethod === 'phone') {
+                 await email.PhoneVerificationOTP(body.phone, userModel.activationCode);
+             } else {
+                 await email.sendOTPonEmail(body.email, userModel.activationCode);
+             }
+ 
+             await newUser.save();
+ 
+             await createAdminNotification(newUser);
+ 
+             return newUser;
+         }
+ 
+         const model = await userDB.newEntity(body, false);
+         const newUser = new userDB(model);
+ 
+         if (body.authMethod === 'phone') {
+             await email.PhoneVerificationOTP(body.phone, model.activationCode);
+         } else {
+             await email.sendOTPonEmail(body.email, model.activationCode);
+         }
+ 
+         return await newUser.save();
+ 
+     } catch (error) {
+         console.error('Error during user registration:', error);
+         throw new ApiError(error.message || 'Internal Server Error', httpStatus.status.INTERNAL_SERVER_ERROR);
+     }
+ };
 
 const registerWithPhone = async (body) => {
      let existingUser;
@@ -102,8 +120,12 @@ const verifyOTP = async (body) => {
           throw new ApiError('Invalid OTP');
      }
 
-     user.activationCode = null;
-     user.status = 'active';
+     if (user.isRestaurant){
+          user.activationCode = null;  
+     }else {
+          user.activationCode = null;
+          user.status = 'active';
+     }
 
      if (user.authMethod == 'phone') {
           user.isPhoneVerified = true;
@@ -185,6 +207,23 @@ const validateUser = async (user) => {
          );
     }
 };
+
+
+const createAdminNotification = async (user) => {
+     try {
+       const notification = new Notification({
+         userId: user._id,
+         message: `New restaurant registration pending: ${user.firstName} ${user.lastName}, Restaurant: ${user.restaurant.storeName}`,
+         type: 'restaurant-registration',
+         restaurantId: user.restaurant,
+         status: 'unread',
+       });
+   
+       await notification.save();
+     } catch (error) {
+       console.error('Error creating notification:', error);
+     }
+   };
 
 module.exports = {
      registerWithEmail,
