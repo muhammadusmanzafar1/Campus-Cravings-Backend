@@ -9,10 +9,6 @@ const getAnalytics = async (req) => {
         const currentStart = new Date(now.getTime() - duration * 24 * 60 * 60 * 1000);
         const previousStart = new Date(currentStart.getTime() - duration * 24 * 60 * 60 * 1000);
         const orderStatusFilter = { status: { $in: ['delivered', 'completed'] } };
-        const { currentIsoDateStart, previousIsoDateStart } = {
-            currentIsoDateStart: currentStart.toISOString(),
-            previousIsoDateStart: previousStart.toISOString()
-        }
         const [
             currentUsers,
             previousUsers,
@@ -22,21 +18,21 @@ const getAnalytics = async (req) => {
             previousOrders,
             totalUsers
         ] = await Promise.all([
-            User.countDocuments({ role: 'user', createdAt: { $gte: currentIsoDateStart } }),
-            User.countDocuments({ role: 'user', createdAt: { $gte: previousIsoDateStart, $lt: currentIsoDateStart } }),
-            User.countDocuments({ role: 'user', status: 'active', createdAt: { $gte: currentIsoDateStart } }),
-            User.countDocuments({ role: 'user', status: 'active', createdAt: { $gte: previousIsoDateStart, $lt: currentIsoDateStart } }),
-            Order.countDocuments({ ...orderStatusFilter, createdAt: { $gte: currentIsoDateStart } }),
-            Order.countDocuments({ ...orderStatusFilter, createdAt: { $gte: previousIsoDateStart, $lt: currentIsoDateStart } }),
+            User.countDocuments({ role: 'user', createdAt: { $gte: currentStart } }),
+            User.countDocuments({ role: 'user', createdAt: { $gte: previousStart, $lt: currentStart } }),
+            User.countDocuments({ role: 'user', status: 'active', createdAt: { $gte: currentStart } }),
+            User.countDocuments({ role: 'user', status: 'active', createdAt: { $gte: previousStart, $lt: currentStart } }),
+            Order.countDocuments({ ...orderStatusFilter, createdAt: { $gte: currentStart } }),
+            Order.countDocuments({ ...orderStatusFilter, createdAt: { $gte: previousStart, $lt: currentStart } }),
             User.countDocuments({ role: 'user' })
         ]);
         const [currentRevenueAgg, previousRevenueAgg] = await Promise.all([
             Order.aggregate([
-                { $match: { ...orderStatusFilter, createdAt: { $gte: currentIsoDateStart } } },
+                { $match: { ...orderStatusFilter, createdAt: { $gte: currentStart } } },
                 { $group: { _id: null, total: { $sum: '$total_price' } } }
             ]),
             Order.aggregate([
-                { $match: { ...orderStatusFilter, createdAt: { $gte: previousIsoDateStart, $lt: currentIsoDateStart } } },
+                { $match: { ...orderStatusFilter, createdAt: { $gte: previousStart, $lt: currentStart } } },
                 { $group: { _id: null, total: { $sum: '$total_price' } } }
             ])
         ]);
