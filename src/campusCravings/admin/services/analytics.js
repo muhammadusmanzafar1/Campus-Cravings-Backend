@@ -9,6 +9,8 @@ const getAnalytics = async (req) => {
         const currentStart = new Date(now.getTime() - duration * 24 * 60 * 60 * 1000);
         const previousStart = new Date(currentStart.getTime() - duration * 24 * 60 * 60 * 1000);
         const orderStatusFilter = { status: { $in: ['delivered', 'completed'] } };
+        console.log(currentStart.toISOString());
+        console.log(previousStart.toISOString());
         const [
             currentUsers,
             previousUsers,
@@ -18,21 +20,21 @@ const getAnalytics = async (req) => {
             previousOrders,
             totalUsers
         ] = await Promise.all([
-            User.countDocuments({ role: 'user', createdAt: { $gte: currentStart } }),
-            User.countDocuments({ role: 'user', createdAt: { $gte: previousStart, $lt: currentStart } }),
-            User.countDocuments({ role: 'user', status: 'active', createdAt: { $gte: currentStart } }),
-            User.countDocuments({ role: 'user', status: 'active', createdAt: { $gte: previousStart, $lt: currentStart } }),
-            Order.countDocuments({ ...orderStatusFilter, createdAt: { $gte: currentStart } }),
-            Order.countDocuments({ ...orderStatusFilter, createdAt: { $gte: previousStart, $lt: currentStart } }),
-            User.countDocuments({ role: 'user' })
+            User.countDocuments({ isCustomer: true, created_at: { $gte: currentStart } }),
+            User.countDocuments({ isCustomer: true, created_at: { $gte: previousStart, $lt: currentStart } }),
+            User.countDocuments({ isCustomer: true, status: 'active', created_at: { $gte: currentStart } }),
+            User.countDocuments({ isCustomer: true, status: 'active', created_at: { $gte: previousStart, $lt: currentStart } }),
+            Order.countDocuments({ ...orderStatusFilter, created_at: { $gte: currentStart } }),
+            Order.countDocuments({ ...orderStatusFilter, created_at: { $gte: previousStart, $lt: currentStart } }),
+            User.countDocuments({ isCustomer: true })
         ]);
         const [currentRevenueAgg, previousRevenueAgg] = await Promise.all([
             Order.aggregate([
-                { $match: { ...orderStatusFilter, createdAt: { $gte: currentStart } } },
+                { $match: { ...orderStatusFilter, created_at: { $gte: currentStart } } },
                 { $group: { _id: null, total: { $sum: '$total_price' } } }
             ]),
             Order.aggregate([
-                { $match: { ...orderStatusFilter, createdAt: { $gte: previousStart, $lt: currentStart } } },
+                { $match: { ...orderStatusFilter, created_at: { $gte: previousStart, $lt: currentStart } } },
                 { $group: { _id: null, total: { $sum: '$total_price' } } }
             ])
         ]);
