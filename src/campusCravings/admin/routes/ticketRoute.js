@@ -4,7 +4,7 @@ const httpStatus = require("http-status");
 const ApiError = require('../../../../utils/ApiError');
 const { getAllTickets, createTicket, updateTicket, deleteTicket, patchTicket, getTicket } = require('../controllers/ticketController');
 const { validateBody } = require("../middlewares/validate");
-const { updateTicketSchema } = require("../validators/ticket");
+const { updateTicketSchema,createTicketSchema } = require("../validators/ticket");
 // Get All Tickets
 router.get("/", async (req, res) => {
     try {
@@ -19,7 +19,7 @@ router.get("/", async (req, res) => {
     }
 })
 // Add a new ticket
-router.post("/", validateBody(updateTicketSchema), async (req, res) => {
+router.post("/", validateBody(createTicketSchema), async (req, res) => {
     try {
         const newTicket = await createTicket(req, res);
         res.status(httpStatus.status.CREATED).json({

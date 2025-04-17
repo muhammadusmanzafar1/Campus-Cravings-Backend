@@ -10,6 +10,7 @@ const getAllTickets = async () => {
     }
 };
 const createTicket = async (body) => {
+    // Need to authenticate UserId or get from token to verify
     const { subject, description, userId, status, priority, imgUrl, messages } = body;
     const newTicket = new Ticket({
         subject,
@@ -25,6 +26,7 @@ const createTicket = async (body) => {
 };
 
 const updateTicket = async (id, body) => {
+    // Need to check if the user is the owner of ticket or admin
     const updatedTicket = await Ticket.findByIdAndUpdate(id, body, {
         new: true,
         runValidators: true,
@@ -37,6 +39,7 @@ const updateTicket = async (id, body) => {
     return updatedTicket;
 };
 const deleteTicket = async (id) => {
+    // Need to check if the user is the owner of ticket or admin
     const deletedTicket = await Ticket.findByIdAndDelete(id);
 
     if (!deletedTicket) {
@@ -46,6 +49,7 @@ const deleteTicket = async (id) => {
     return deletedTicket;
 };
 const patchTicket = async (id, updates) => {
+    // Need to check if the user is the owner of ticket or admin
     const updated = await Ticket.findByIdAndUpdate(
         id,
         { $set: updates },
@@ -57,6 +61,7 @@ const patchTicket = async (id, updates) => {
     return updated;
 };
 const getTicket = async (id) => {
+    // Need to check if the user is the owner of ticket or admin
     const ticket = await Ticket.findById(id);
     if (!ticket) {
         throw new ApiError(404, "Ticket not found");

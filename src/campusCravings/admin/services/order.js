@@ -4,6 +4,7 @@ const axios = require("axios");
 
 const getAllOrders = async () => {
     try {
+        // Need to check admin  role or restaurant role when it is implemented
         const orders = await Order.find()
         // .populate('user_id', 'name email')  // Populate user details
         // .populate('restaurant_id', 'name')  // Populate restaurant details
@@ -83,6 +84,7 @@ const deleteOrder = async (id) => {
     }
 };
 const patchOrder = async (id, body) => {
+    // Need to add a check to see if the user is the owner of the order
     try {
         const updatedOrder = await Order.findByIdAndUpdate(id, body, {
             new: true,
