@@ -39,7 +39,7 @@ const restaurantSchema = new Schema({
     required: true
   },
   openingHours: {
-    monday: { type: String,  },
+    monday: { type: String, },
     tuesday: { type: String, },
     wednesday: { type: String, },
     thursday: { type: String, },
@@ -48,11 +48,11 @@ const restaurantSchema = new Schema({
     sunday: { type: String, }
   },
   cuisine: {
-    type: String, 
+    type: String,
     required: true
   },
   deliveryMethods: [{
-    type: String, 
+    type: String,
     required: true
   }],
   ratings: {
@@ -70,7 +70,7 @@ const restaurantSchema = new Schema({
   createdAt: { type: Date, default: Date.now },
   categories: [{
     type: Schema.Types.ObjectId,
-    ref: 'Category', // Reference to the Category model
+    ref: 'Category',
   }],
 });
 

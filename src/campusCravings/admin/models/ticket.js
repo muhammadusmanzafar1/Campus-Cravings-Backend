@@ -9,8 +9,8 @@ const messageSchema = new mongoose.Schema({
         default: ''
     },
     imageUrl: {
-        type: String,
-        default: ''
+        type: [String],
+        default: []
     },
     time: {
         type: Date,

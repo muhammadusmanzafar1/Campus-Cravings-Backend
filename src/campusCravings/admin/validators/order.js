@@ -12,6 +12,8 @@ const createOrderSchema = Joi.object({
     status: Joi.string().valid('pending', 'completed', 'cancelled'),
     payment_method: Joi.string().valid('cash', 'card', 'wallet', 'upi').required(),
     items: Joi.array().items(orderItemSchema).default([]),
+    tip: Joi.number().min(0).default(0),
+    delivery_fee: Joi.number().min(0).default(0)
 });
 
 const updateOrderSchema = Joi.object({
@@ -21,8 +23,9 @@ const updateOrderSchema = Joi.object({
     total_price: Joi.number(),
     payment_method: Joi.string().valid('cash', 'card', 'wallet', 'upi'),
     items: Joi.array().items(orderItemSchema),
+    tip: Joi.number().min(0),
+    delivery_fee: Joi.number().min(0)
 }).min(1);
-
 module.exports = {
     createOrderSchema,
     updateOrderSchema,

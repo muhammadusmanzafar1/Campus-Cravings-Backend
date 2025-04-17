@@ -16,7 +16,7 @@ const getAllOrders = async () => {
     }
 };
 const createOrder = async (body) => {
-    const { user_id, restaurant_id, status, payment_method, items } = body;
+    const { user_id, restaurant_id, status, payment_method, items, tip, delivery_fee } = body;
     // Need to check restaurant_id when it is implemented
     let total_price = 0;
     for (const item of items) {
@@ -39,6 +39,8 @@ const createOrder = async (body) => {
         }
     }
 
+    total_price += tip; 
+    total_price += delivery_fee;
     const newOrder = new Order({
         user_id,
         restaurant_id,
