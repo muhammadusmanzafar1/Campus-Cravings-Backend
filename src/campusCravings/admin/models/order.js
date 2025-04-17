@@ -24,7 +24,8 @@ const orderSchema = new mongoose.Schema({
             'order_prepared',
             'order_dispatched',
             'delivered',
-            'cancelled'
+            'cancelled',
+            'completed'
         ],
         default: 'pending'
     },
