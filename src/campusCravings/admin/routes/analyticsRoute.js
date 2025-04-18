@@ -31,11 +31,15 @@ router.get("/revenue/:timeframe", async (req, res) => {
     }
 });
 module.exports = router;
-// get all order with respect to restaurant id 
+
+// Extract revenue for restaurant id
+
+
+// get all order with respect to restaurant id
 // order with respect to user id
 
-// Extract Revenue for admin total
-// Extract revenue for restaurant id 
 
-// Need to add order type in order schema
+// Done--
 // ticker filter by days
+// Need to add order type in order schema
+// Extract Revenue for admin total

@@ -6,7 +6,7 @@ const { getAllTickets, createTicket, updateTicket, deleteTicket, patchTicket, ge
 const { validateBody } = require("../middlewares/validate");
 const { updateTicketSchema,createTicketSchema } = require("../validators/ticket");
 // Get All Tickets
-router.get("/", async (req, res) => {
+router.get("/:period", async (req, res) => {
     try {
         const allTickets = await getAllTickets(req, res);
         res.status(httpStatus.status.OK).json({ message: "Data Fetch Successfully", tickets: allTickets });

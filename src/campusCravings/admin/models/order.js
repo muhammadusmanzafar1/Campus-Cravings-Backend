@@ -60,6 +60,10 @@ const orderSchema = new mongoose.Schema({
         type: String,
         default: ''
     },
+    order_type: {
+        type: String,
+        default: ''
+    },
     items: {
         type: [
             {

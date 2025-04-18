@@ -28,6 +28,7 @@ const createOrderSchema = Joi.object({
     tip: Joi.number().min(0).default(0),
     delivery_fee: Joi.number().min(0).default(0),
     estimated_time: Joi.string().allow('').default(''),
+    order_type: Joi.string().allow('').default(''),
     address: Joi.string().required(),
     image_url: Joi.string().uri().allow('').default(''),
     items: Joi.array().items(orderItemSchema).default([])
@@ -50,6 +51,7 @@ const updateOrderSchema = Joi.object({
     tip: Joi.number().min(0),
     delivery_fee: Joi.number().min(0),
     estimated_time: Joi.string().allow(''),
+    order_type: Joi.string().allow(''),
     address: Joi.string(),
     image_url: Joi.string().uri().allow(''),
     items: Joi.array().items(orderItemSchema)
