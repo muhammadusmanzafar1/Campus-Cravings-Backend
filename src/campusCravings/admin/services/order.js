@@ -141,7 +141,7 @@ const getResturantAllOrders = async (req) => {
         throw new Error('Error fetching orders: ' + error.message);
     }
 };
-// Resturant orders 
+// User orders 
 const getUserAllOrders = async (req) => {
     try {
         const userId = new mongoose.Types.ObjectId(req.params.userId);
