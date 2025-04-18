@@ -88,17 +88,32 @@ const deleteOrder = async (id) => {
     }
 };
 const patchOrder = async (id, body) => {
-    // Need to add a check to see if the user is the owner of the order
     try {
-        const updatedOrder = await Order.findByIdAndUpdate(id, body, {
-            new: true,
-            runValidators: true,
-        });
-
-        if (!updatedOrder) {
-            throw new Error('Order not found');
+        const order = await Order.findById(id);
+        if (!order) {
+            return ('Order not found');
         }
-
+        const update = { $set: { ...body } };
+        if (body.status) {
+            const statusIndex = order.progress.findIndex(
+                (entry) => entry.status === body.status
+            );
+            if (statusIndex !== -1) {
+                order.progress[statusIndex].updated_at = new Date();
+                update.$set.progress = order.progress;
+            } else {
+                update.$push = {
+                    progress: {
+                        status: body.status,
+                        updated_at: new Date()
+                    }
+                };
+            }
+        }
+        const updatedOrder = await Order.findByIdAndUpdate(id, update, {
+            new: true,
+            runValidators: true
+        });
         return updatedOrder;
     } catch (error) {
         throw new Error('Error updating order: ' + error.message);

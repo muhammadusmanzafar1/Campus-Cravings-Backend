@@ -29,6 +29,30 @@ const orderSchema = new mongoose.Schema({
         ],
         default: 'pending'
     },
+    progress: {
+        type: [
+            {
+                status: {
+                    type: String,
+                    enum: [
+                        'pending',
+                        'order_accepted',
+                        'order_prepared',
+                        'order_dispatched',
+                        'delivered',
+                        'cancelled',
+                        'completed'
+                    ],
+                    required: true
+                },
+                updated_at: {
+                    type: Date,
+                    default: Date.now
+                }
+            }
+        ],
+        default: []
+    },
     total_price: {
         type: Number,
         required: true
@@ -49,7 +73,7 @@ const orderSchema = new mongoose.Schema({
         min: 0
     },
     estimated_time: {
-        type: String, 
+        type: String,
         default: ''
     },
     address: {
