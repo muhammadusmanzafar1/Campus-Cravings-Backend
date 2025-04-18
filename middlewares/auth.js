@@ -2,6 +2,7 @@
 const httpStatus = require('http-status');
 const jwtHelper = require('../utils/jwt');
 const sessionService = require('../src/auth/services/session');
+const userDB = require('../src/auth/models/user');
 const ApiError = require('../utils/ApiError');
 /**
  * 
@@ -39,10 +40,7 @@ const sessionValidator = async (sessionId) => {
  * @returns 
  */
 const userValidator = async (userId) => {
-    let user = await db.user.findById(userId).populate({
-        path: "profile",
-        select: "socialMedia features"
-    });
+    let user = await userDB.findById(userId)
     if (!user) {
         throw new ApiError('User not found', httpStatus.UNAUTHORIZED);
     }
@@ -146,8 +144,6 @@ const userValidator = async (userId) => {
 exports.validate = async (req, res, next) => {
     try {
         let token =
-            req.body.token ||
-            req.query.token ||
             req.headers['x-access-token'];
         if (!token) return res.accessDenied();
 
