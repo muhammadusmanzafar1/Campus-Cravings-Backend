@@ -20,6 +20,7 @@ const registerViaEmail = {
         role: Joi.string().default("user"),
         countryCode: Joi.string().optional(),
         phoneNumber: Joi.string().optional().custom(phone),
+        phone: Joi.string().optional().custom(phone),
         isRestaurant: Joi.boolean().optional(),
         isCustomer: Joi.boolean().optional(),
         isDelivery: Joi.boolean().optional(),
@@ -45,7 +46,6 @@ const registerViaEmail = {
         }).when('isRestaurant', { is: true, then: Joi.required() }),
         paymentMethods: Joi.array().items(Joi.string()).when('isRestaurant', { is: true, then: Joi.required() }),
         categories: Joi.array().items(Joi.string()).when('isRestaurant', { is: true, then: Joi.required() }),
-        userId: Joi.string().when('isRestaurant', { is: true, then: Joi.required() }),
     }).xor("email","phone")
 };
 

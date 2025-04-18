@@ -19,22 +19,30 @@ exports.verifyOTP = asyncHandler(async (req, res) => {
     let user = await authService.verifyOTP(req.body);
     user.deviceId = req.body.deviceId;
     user.deviceType = req.body.deviceType;
-    const session = await sessionService.createSession(user, req.body);
+
+    let responseData = { ...user.toObject() };
+
+    if (!user.isRestaurant) {
+        const session = await sessionService.createSession(user, req.body);
+
+        responseData.accessToken = session.accessToken;
+        responseData.refreshToken = session.refreshToken;
+
+        res.cookie('refreshToken', session.refreshToken, {
+            secure: false,
+            httpOnly: true,
+        });
+    }
 
     user.lastAccess = moment.utc();
     user = await user.save();
 
-    const responseData = {
-        ...user.toObject(), 
-        accessToken: session.accessToken,
-        refreshToken: session.refreshToken
-    };
-    res.cookie('refreshToken', user.refreshToken, {
-         secure: false,
-         httpOnly: true,
+    return res.json({
+        message: 'User verified successfully',
+        data: responseData,
     });
-    return responseData;
 });
+
 
 exports.login = asyncHandler(async (req, res) => {
     let user = await authService.login(req.body);

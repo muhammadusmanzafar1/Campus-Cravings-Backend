@@ -53,7 +53,7 @@ const registerWithEmail = async (body) => {
  
              await newUser.save();
  
-             await createAdminNotification(newUser);
+          //    await createAdminNotification(newUser);
  
              return newUser;
          }
@@ -209,21 +209,21 @@ const validateUser = async (user) => {
 };
 
 
-const createAdminNotification = async (user) => {
-     try {
-       const notification = new Notification({
-         userId: user._id,
-         message: `New restaurant registration pending: ${user.firstName} ${user.lastName}, Restaurant: ${user.restaurant.storeName}`,
-         type: 'restaurant-registration',
-         restaurantId: user.restaurant,
-         status: 'unread',
-       });
+// const createAdminNotification = async (user) => {
+//      try {
+//        const notification = new Notification({
+//          userId: user._id,
+//          message: `New restaurant registration pending: ${user.firstName} ${user.lastName}, Restaurant: ${user.restaurant.storeName}`,
+//          type: 'restaurant-registration',
+//          restaurantId: user.restaurant,
+//          status: 'unread',
+//        });
    
-       await notification.save();
-     } catch (error) {
-       console.error('Error creating notification:', error);
-     }
-   };
+//        await notification.save();
+//      } catch (error) {
+//        console.error('Error creating notification:', error);
+//      }
+//    };
 
 module.exports = {
      registerWithEmail,

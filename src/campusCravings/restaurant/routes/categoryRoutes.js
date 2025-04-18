@@ -31,7 +31,7 @@ router.post("/additem", async (req, res) => {
     }
 });
 
-router.get("/getitem/:id", async (req, res) => {
+router.get("/getitem/:id", validate, async (req, res) => {
     try {
         const getItem = await getItems(req, res);
         res.status(httpStatus.status.OK).json({ message: "Items retrieved successfully", itens: getItem });
