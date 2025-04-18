@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const httpStatus = require("http-status");
 const ApiError = require('../../../../utils/ApiError');
-const { getAllOrders, createOrder, updateOrder, deleteOrder, patchOrder, getOrder } = require('../controllers/orderController');
+const { getAllOrders, createOrder, updateOrder, deleteOrder, patchOrder, getOrder, getResturantAllOrders, getUserAllOrders } = require('../controllers/orderController');
 const { validateBody } = require("../middlewares/validate");
 const { updateOrderSchema, createOrderSchema } = require("../validators/order");
 // Get All Orders
@@ -85,6 +85,31 @@ router.get("/:id", async (req, res) => {
     try {
         const order = await getOrder(req, res);
         res.status(httpStatus.status.OK).json({ message: "Data Fetch Successfully", order: order });
+    } catch (error) {
+        if (error instanceof ApiError) {
+            return res.status(error.statusCode).json({ message: error.message });
+        }
+        return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
+    }
+});
+// Get all orders with respect to restaurant id
+router.get("/resturant/:restaurantId", async (req, res) => {
+    try {
+        const allOrders = await getResturantAllOrders(req, res);
+        res.status(httpStatus.status.OK).json({ message: "Orders fetched successfully", orders: allOrders });
+    } catch (error) {
+        if (error instanceof ApiError) {
+            return res.status(error.statusCode).json({ message: error.message });
+        }
+        return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
+    }
+});
+
+// Get all orders with respect to User id
+router.get("/user/:userId", async (req, res) => {
+    try {
+        const allOrders = await getUserAllOrders(req, res);
+        res.status(httpStatus.status.OK).json({ message: "Orders fetched successfully", orders: allOrders });
     } catch (error) {
         if (error instanceof ApiError) {
             return res.status(error.statusCode).json({ message: error.message });

@@ -31,3 +31,13 @@ exports.getOrder = asyncHandler(async (req, res) => {
     const order = await orderService.getOrder(req.params.id);
     return order;
 });
+// Resturant All Orders
+exports.getResturantAllOrders = asyncHandler(async (req, res) => {
+    const orders = await orderService.getResturantAllOrders(req);
+    return orders;
+});
+// User All Orders
+exports.getUserAllOrders = asyncHandler(async (req, res) => {
+    const orders = await orderService.getUserAllOrders(req);
+    return orders;
+});

@@ -1,5 +1,6 @@
 'use strict';
 const Order = require('../models/order');
+const mongoose = require('mongoose');
 const axios = require("axios");
 
 const getAllOrders = async () => {
@@ -111,6 +112,34 @@ const getOrder = async (id) => {
         throw new Error('Error fetching order: ' + error.message);
     }
 };
+// Resturant orders 
+const getResturantAllOrders = async (req) => {
+    try {
+        const restaurantId = new mongoose.Types.ObjectId(req.params.restaurantId);
+        const orders = await Order.find({ restaurant_id: restaurantId })
+        // .populate('user_id', 'name email')  // Populate user details
+        // .populate('restaurant_id', 'name')  // Populate restaurant details
+        // .populate('items.item_id', 'name price'); // Populate item details (name and price)
+
+        return orders;
+    } catch (error) {
+        throw new Error('Error fetching orders: ' + error.message);
+    }
+};
+// Resturant orders 
+const getUserAllOrders = async (req) => {
+    try {
+        const userId = new mongoose.Types.ObjectId(req.params.userId);
+        const orders = await Order.find({ user_id: userId })
+        // .populate('user_id', 'name email')  // Populate user details
+        // .populate('restaurant_id', 'name')  // Populate restaurant details
+        // .populate('items.item_id', 'name price'); // Populate item details (name and price)
+
+        return orders;
+    } catch (error) {
+        throw new Error('Error fetching orders: ' + error.message);
+    }
+};
 
 module.exports = {
     getAllOrders,
@@ -118,5 +147,7 @@ module.exports = {
     updateOrder,
     deleteOrder,
     patchOrder,
-    getOrder
+    getOrder,
+    getResturantAllOrders,
+    getUserAllOrders
 };

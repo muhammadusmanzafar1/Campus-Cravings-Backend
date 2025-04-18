@@ -11,3 +11,8 @@ exports.getRevenueAnalytics = asyncHandler(async (req, res) => {
     const orders = await analyticsService.getRevenueAnalytics(req);
     return orders;
 });
+// Resturant Analytics
+exports.getResturantAnalytics = asyncHandler(async (req, res) => {
+    const orders = await analyticsService.getResturantAnalytics(req);
+    return orders;
+});
