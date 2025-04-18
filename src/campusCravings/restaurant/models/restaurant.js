@@ -38,6 +38,10 @@ const restaurantSchema = new Schema({
     type: String,
     required: true
   }],
+  view_count: {
+    type: Number,
+    default: 0
+  },
   ratings: {
     averageRating: { type: Number, default: 0 },
     totalRatings: { type: Number, default: 0 }

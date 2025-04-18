@@ -1,15 +1,12 @@
 const userDb = require('../models/user');
 const mongoose = require('mongoose');
 
-const populate = [{ path: "profile" },{path:"userPlan"}];
 
 const getById = async (id) => {
-    // return await userDb.findById(id).populate(populate);
     return await userDb.findById(id);
 };
 
 const getByCondition = async (condition) => {
-    // return await userDb.findOne(condition).populate(populate);
     return await userDb.findOne(condition)
 };
 
