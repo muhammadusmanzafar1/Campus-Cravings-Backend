@@ -145,7 +145,8 @@ exports.validate = async (req, res, next) => {
     try {
         let token =
             req.headers['x-access-token'];
-        if (!token) return res.status(httpStatus.status.UNAUTHORIZED).json({ message: 'No token provided' });
+        if (!token) throw new ApiError("Token not found", 401);
+
         let claims = await tokenValidator(token);
         req.sessionId = claims.session;
         req.userId = claims.user;

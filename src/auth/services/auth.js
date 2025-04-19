@@ -120,12 +120,8 @@ const verifyOTP = async (body) => {
           throw new ApiError('Invalid OTP', httpStatus.status.UNAUTHORIZED);
      }
 
-     if (user.isRestaurant){
-          user.activationCode = null;  
-     }else {
           user.activationCode = null;
           user.status = 'active';
-     }
 
      if (user.authMethod == 'phone') {
           user.isPhoneVerified = true;

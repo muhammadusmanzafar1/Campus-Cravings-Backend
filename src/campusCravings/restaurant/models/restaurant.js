@@ -2,7 +2,6 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const restaurantSchema = new Schema({
-
   storeName: {
     type: String,
     required: true
@@ -17,18 +16,20 @@ const restaurantSchema = new Schema({
     required: true,
     unique: true
   },
-  address: {
-    type: String,
-    required: true
-  },
-  openingHours: {
-    monday: { type: String, },
-    tuesday: { type: String, },
-    wednesday: { type: String, },
-    thursday: { type: String, },
-    friday: { type: String, },
-    saturday: { type: String, },
-    sunday: { type: String, }
+  addresses: {
+    address: { type: String, required: true },
+    coordinates: {
+      type: {
+        type: String,
+        enum: ['Point'],
+        default: 'Point',
+        required: true,
+      },
+      coordinates: {
+        type: [Number], // [lng, lat]
+        required: true,
+      }
+    }
   },
   cuisine: {
     type: String,
@@ -61,12 +62,23 @@ const restaurantSchema = new Schema({
   }],
 });
 
+restaurantSchema.index({ "addresses.coordinates": "2dsphere" });
+
 restaurantSchema.statics.newEntity = async function (body, createdByAdmin = true) {
   const model = {
     storeName: body.storeName,
     brandName: body.brandName,
     phoneNumber: body.phoneNumber,
-    address: body.address,
+    addresses: {
+      address: body.addresses.address,
+      coordinates: {
+        type: 'Point',
+        coordinates: [
+          body.addresses.coordinates.lng,
+          body.addresses.coordinates.lat,
+        ],
+      },
+    },
     cuisine: body.cuisine,
     deliveryMethods: body.deliveryMethods,
     paymentMethods: body.paymentMethods,
@@ -76,11 +88,7 @@ restaurantSchema.statics.newEntity = async function (body, createdByAdmin = true
     userId: body.userId,
   };
 
-  if (createdByAdmin) {
-    model.status = 'active';
-  } else {
-    model.status = 'pending';
-  }
+  model.status = createdByAdmin ? 'active' : 'pending';
 
   return model;
 };
