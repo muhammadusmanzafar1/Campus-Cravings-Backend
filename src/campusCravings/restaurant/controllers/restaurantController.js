@@ -19,6 +19,12 @@ exports.getnearbyRestaurant = asyncHandler(async (req, res) => {
     return restaurant;
 })
 
+// Search Restaurants or Food Items
+exports.searchRestaurantsandFoodItems = asyncHandler(async (req, res) => {
+    const restaurant = await restaurantService.searchRestaurantsandFoodItems(req);
+    return restaurant;
+})
+
 exports.getAllCategoryByRestaurantId = asyncHandler(async (req, res, next) => {
     try {
         const categories = await restaurantService.getAllCategoryByRestaurantId(req, res, next);
