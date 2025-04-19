@@ -117,7 +117,7 @@ const verifyOTP = async (body) => {
           body.activationCode !== user.activationCode &&
           body.activationCode !== '4444'
      ) {
-          throw new ApiError('Invalid OTP');
+          throw new ApiError('Invalid OTP', httpStatus.status.UNAUTHORIZED);
      }
 
      if (user.isRestaurant){
