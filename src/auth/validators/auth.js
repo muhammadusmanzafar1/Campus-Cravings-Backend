@@ -28,7 +28,13 @@ const registerViaEmail = {
         storeName: Joi.string().when('isRestaurant', { is: true, then: Joi.required() }),
         brandName: Joi.string().when('isRestaurant', { is: true, then: Joi.required() }),
         floor: Joi.string().when('isRestaurant', { is: true, then: Joi.required() }),
-        address: Joi.string().when('isRestaurant', { is: true, then: Joi.required() }),
+        addresses: Joi.object({
+            address: Joi.string().required(),
+            coordinates: Joi.object({
+              lat: Joi.number().required(),
+              lng: Joi.number().required(),
+            }).required()
+          }).when('isRestaurant', { is: true, then: Joi.required() }),     
         openingHours: Joi.object({
           monday: Joi.string().optional(),
           tuesday: Joi.string().optional(),
@@ -37,7 +43,7 @@ const registerViaEmail = {
           friday: Joi.string().optional(),
           saturday: Joi.string().optional(),
           sunday: Joi.string().optional(),
-        }).when('isRestaurant', { is: true, then: Joi.required() }),
+        }),
         cuisine: Joi.string().when('isRestaurant', { is: true, then: Joi.required() }),
         deliveryMethods: Joi.array().items(Joi.string()).when('isRestaurant', { is: true, then: Joi.required() }),
         ratings: Joi.object({
@@ -45,7 +51,6 @@ const registerViaEmail = {
           totalRatings: Joi.number().default(0),
         }).when('isRestaurant', { is: true, then: Joi.required() }),
         paymentMethods: Joi.array().items(Joi.string()).when('isRestaurant', { is: true, then: Joi.required() }),
-        categories: Joi.array().items(Joi.string()).when('isRestaurant', { is: true, then: Joi.required() }),
     }).xor("email","phone")
 };
 

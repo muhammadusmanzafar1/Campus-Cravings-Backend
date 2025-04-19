@@ -2,16 +2,38 @@
 const httpStatus = require('http-status');
 const ApiError = require("../../../../utils/ApiError");
 const Category = require('../models/category');
+const Restaurant = require('../models/restaurant');
 const mongoose = require('mongoose');
 
 // Create a new category with items
-const createCategory = async (data) => {
+const createCategory = async (req) => {
+    
+    const restaurantId = req.user.restaurant;
+
     try {
-        const category = new Category(data);
+        const restaurant = await Restaurant.findById(restaurantId);
+        if (!restaurant) {
+            return null;
+            }
+        const category = new Category(req.body);
+        category.restaurant = restaurantId;
+
         await category.save();
+        restaurant.categories = category._id;
+        await restaurant.save();
         return category;
     } catch (error) {
-        throw new ApiError(error.message, httpStatus.status.BAD_REQUEST);
+        console.error(error);
+
+        if (error.name === "ValidationError") {
+            throw new ApiError("Validation error: " + error.message, httpStatus.status.BAD_REQUEST);
+        }
+
+        if (error.name === "MongoError" && error.code === 11000) {
+            throw new ApiError("Duplicate category entry", httpStatus.status.BAD_REQUEST);
+        }
+
+        throw new ApiError("An error occurred while creating the category", httpStatus.status.INTERNAL_SERVER_ERROR);
     }
 };
 

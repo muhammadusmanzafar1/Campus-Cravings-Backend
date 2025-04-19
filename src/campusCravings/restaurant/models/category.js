@@ -21,7 +21,16 @@ const itemSchema = new Schema({
     min: [1, 'Preparation time must be at least 1 minute'],
   },
   customization: {
-    type: [String],
+    type: [{
+      name: {
+        type: String,
+        required: true, 
+      },
+      price: {
+        type: Number,
+        required: true,
+      },
+    }],
     default: [],
   },
   image: [
@@ -36,7 +45,6 @@ const categorySchema = new Schema({
   name: {
     type: String,
     required: true,
-    unique: true, 
   },
   description: {
     type: String,

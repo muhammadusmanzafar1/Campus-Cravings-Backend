@@ -10,6 +10,8 @@ const helmet = require("helmet");
 const compression = require("compression");
 
 const categoryRoutes = require("./src/campusCravings/restaurant/routes/categoryRoutes")
+const restaurantRoute = require("./src/campusCravings/restaurant/routes/restaurantRoutes")
+const apiRoutes = require('./src/campusCravings/routes/index')
 
 const app = express();
 
@@ -59,7 +61,8 @@ app.use(compression());
 // app.use("/api/users", require("./routes/userRoutes"));
 app.use("/api/auth", require("./src/auth/routes/authRoute"));
 app.use("/api/admin", require("./src/campusCravings/admin/routes/adminRoute"));
-app.use("/api", categoryRoutes);
+// app.use("/api", categoryRoutes);
+app.use("/api", apiRoutes);
 
 // convert error to CustomError, if needed
 app.use(errorConverter);
