@@ -206,6 +206,7 @@ exports.getpoplarFoodItems = async (req, res) => {
 exports.nearbyRestaurant = async (req) => {
     try {
         const { latitude, longitude } = req.body;
+        console.log(latitude, longitude);
 
     } catch (error) {
         console.error(error);
