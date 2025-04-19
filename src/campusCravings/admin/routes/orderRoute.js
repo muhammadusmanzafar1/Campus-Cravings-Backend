@@ -4,10 +4,10 @@ const httpStatus = require("http-status");
 const ApiError = require('../../../../utils/ApiError');
 const { validate } = require('../../../../middlewares/auth');
 const { getAllOrders, createOrder, updateOrder, deleteOrder, patchOrder, getOrder, getResturantAllOrders, getUserAllOrders } = require('../controllers/orderController');
-const { validateBody } = require("../middlewares/validate");
+const { validateBody } = require("../../../../middlewares/validate");
 const { updateOrderSchema, createOrderSchema } = require("../validators/order");
 // Get All Orders
-router.get("/", validate,async (req, res) => {
+router.get("/", validate, async (req, res) => {
     try {
         const allOrders = await getAllOrders(req, res);
         res.status(httpStatus.status.OK).json({ message: "Orders fetched successfully", orders: allOrders });

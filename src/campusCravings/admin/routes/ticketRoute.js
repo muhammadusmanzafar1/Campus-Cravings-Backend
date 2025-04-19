@@ -4,7 +4,7 @@ const httpStatus = require("http-status");
 const ApiError = require('../../../../utils/ApiError');
 const { validate } = require('../../../../middlewares/auth');
 const { getAllTickets, createTicket, updateTicket, deleteTicket, patchTicket, getTicket } = require('../controllers/ticketController');
-const { validateBody } = require("../middlewares/validate");
+const { validateBody } = require("../../../../middlewares/validate");
 const { updateTicketSchema, createTicketSchema } = require("../validators/ticket");
 // Get All Tickets
 router.get("/:period", validate, async (req, res) => {

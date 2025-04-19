@@ -60,6 +60,7 @@ app.use(compression());
 // app.use("/api/users", require("./routes/userRoutes"));
 app.use("/api/auth", require("./src/auth/routes/authRoute"));
 app.use("/api/admin", require("./src/campusCravings/admin/routes/adminRoute"));
+app.use("/api/user", require("./src/campusCravings/users/routes/userRoute"));
 app.use("/api", categoryRoutes);
 
 // convert error to CustomError, if needed
