@@ -64,7 +64,9 @@ app.use("/api/admin", require("./src/campusCravings/admin/routes/adminRoute"));
 app.use("/api/user", require("./src/campusCravings/users/routes/userRoute"));
 app.use("/api/restaurant", require("./src/campusCravings/restaurant/routes/restaurantRoute"));
 app.use("/api", categoryRoutes);
+// app.use("/api", categoryRoutes);
 app.use("/api", apiRoutes);
+app.use("/api/user", require("./src/campusCravings/users/routes/userRoute"));
 
 // convert error to CustomError, if needed
 app.use(errorConverter);

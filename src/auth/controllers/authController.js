@@ -30,6 +30,7 @@ exports.verifyOTP = asyncHandler(async (req, res) => {
         httpOnly: true,
     });
     return responseData;
+
 });
 
 
