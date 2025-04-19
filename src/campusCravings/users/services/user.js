@@ -6,68 +6,11 @@ const httpStatus = require('http-status');
 const getUser = async (query) => {
     try {
         const userId = query.user._id;
-        const user = await User.findById(userId).lean();
-        console.log(user);
+        const user = await User.findById(userId).select('-password');        
         if (!user) {
             throw new ApiError('User not found', httpStatus.status.NOT_FOUND);
         }
-        const {
-            _id,
-            firstName,
-            lastName,
-            fullName,
-            userName,
-            imgUrl,
-            authMethod,
-            countryCode,
-            ISOCode,
-            phone,
-            email,
-            addresses,
-            status,
-            isRestaurant,
-            isDelivery,
-            isCustomer,
-            isAdmin,
-            isEmailVerified,
-            isPhoneVerified,
-            isProfileCompleted,
-            lastAccess,
-            about,
-            notificationCount,
-            planPro,
-            userPlan,
-            restaurant
-        } = user;
-
-        return {
-            _id,
-            firstName,
-            lastName,
-            fullName,
-            userName,
-            imgUrl,
-            authMethod,
-            countryCode,
-            ISOCode,
-            phone,
-            email,
-            addresses,
-            status,
-            isRestaurant,
-            isDelivery,
-            isCustomer,
-            isAdmin,
-            isEmailVerified,
-            isPhoneVerified,
-            isProfileCompleted,
-            lastAccess,
-            about,
-            notificationCount,
-            planPro,
-            userPlan,
-            restaurant
-        };
+        return user;
     } catch (error) {
         throw new ApiError(error.message, httpStatus.status.INTERNAL_SERVER_ERROR);
     }
