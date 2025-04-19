@@ -5,9 +5,12 @@ const Category = require('../models/category');
 const mongoose = require('mongoose');
 
 // Create a new category with items
-const createCategory = async (data) => {
+const createCategory = async (req) => {
+    const restaurantId = req.user;
+
     try {
-        const category = new Category(data);
+        const category = new Category(req.body);
+        category.restaurant = restaurantId;
         await category.save();
         return category;
     } catch (error) {

@@ -16,3 +16,8 @@ exports.getResturantAnalytics = asyncHandler(async (req, res) => {
     const orders = await analyticsService.getResturantAnalytics(req);
     return orders;
 });
+// Top Restaurants
+exports.getTopRestaurants = asyncHandler(async (req, res) => {
+    const orders = await analyticsService.getTopRestaurants(req);
+    return orders;
+});

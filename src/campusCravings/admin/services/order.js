@@ -1,7 +1,9 @@
 'use strict';
 const Order = require('../models/order');
+const category = require('../../restaurant/models/category');
 const mongoose = require('mongoose');
-const axios = require("axios");
+const APIError = require('../../../../utils/ApiError');
+const httpStatus = require('http-status');
 
 const getAllOrders = async () => {
     try {
@@ -17,45 +19,37 @@ const getAllOrders = async () => {
     }
 };
 const createOrder = async (body) => {
-    const { user_id, restaurant_id, status, payment_method, items, tip, delivery_fee, address } = body;
-    // Need to check restaurant_id when it is implemented
-    let total_price = 0;
-    for (const item of items) {
-        const { item_id, quantity } = item;
-        try {
-            const URL = `${process.env.URL}:${process.env.PORT}`;
-            const response = await axios.get(`${URL}/api/getitem/${item_id}`);
-            // if any item is not found, return error
-            if (!response.data) {
-                return { error: 'Item not found' };
+    try {
+        const { user_id, restaurant_id, status, payment_method, items, tip, delivery_fee, address } = body;
+        let total_price = 0;
+
+        for (const item of items) {
+            const { item_id, quantity } = item;
+            const response = await category.findOne({ 'items._id': item_id });
+            if (!response) {
+                throw new APIError('Item not found', httpStatus.status.NOT_FOUND);
             }
-            // calculate total price
-            const itemPrice = response.data.itens.price;
-            if (typeof itemPrice !== "number") {
-                throw new Error(`Invalid price for item ${item_id}`);
-            }
+            const itemPrice = response.items.find(item => item._id.toString() === item_id.toString()).price;
             total_price += itemPrice * quantity;
-        } catch (err) {
-            throw new Error(`Failed to fetch item ${item_id}: ${err.message}`);
         }
+        total_price += tip;
+        total_price += delivery_fee;
+        const newOrder = new Order({
+            user_id,
+            restaurant_id,
+            status,
+            total_price,
+            payment_method,
+            items,
+            address
+        });
+        await newOrder.save();
+        return newOrder;
+
+    } catch (err) {
+        throw new APIError(`Error creating order: ${err.message}`, err.statusCode || httpStatus.status.INTERNAL_SERVER_ERROR);
     }
-
-    total_price += tip;
-    total_price += delivery_fee;
-    const newOrder = new Order({
-        user_id,
-        restaurant_id,
-        status,
-        total_price,
-        payment_method,
-        items,
-        address
-    });
-
-    await newOrder.save();
-    return newOrder;
 };
-
 const updateOrder = async (id, body) => {
     try {
         // need to test restuarant id: 

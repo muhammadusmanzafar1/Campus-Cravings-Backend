@@ -10,6 +10,7 @@ const helmet = require("helmet");
 const compression = require("compression");
 
 const categoryRoutes = require("./src/campusCravings/restaurant/routes/categoryRoutes")
+const restaurantRoutes = require("./src/campusCravings/restaurant/routes/restaurantRegisteration")
 
 const app = express();
 

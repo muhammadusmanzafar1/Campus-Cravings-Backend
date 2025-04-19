@@ -114,6 +114,7 @@ entitySchema.statics.newEntity = async function (body, createdByAdmin = true) {
         googleId: body.googleId,
         facebookId: body.facebookId,
         appleId: body.appleId,
+        restaurantId: body.restaurant,
         stripeCustomerId: body.stripeCustomerId || "",
     };
 

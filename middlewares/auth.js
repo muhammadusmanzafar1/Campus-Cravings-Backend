@@ -145,8 +145,7 @@ exports.validate = async (req, res, next) => {
     try {
         let token =
             req.headers['x-access-token'];
-        if (!token) return res.accessDenied();
-
+        if (!token) return res.status(httpStatus.status.UNAUTHORIZED).json({ message: 'No token provided' });
         let claims = await tokenValidator(token);
         req.sessionId = claims.session;
         req.userId = claims.user;
@@ -216,24 +215,24 @@ exports.validateRefreshToken = (req, res, next) => {
  * @param {import('express').NextFunction} next 
  * @returns 
  */
-exports.userPlanValidation =async(req,res,next) =>{
-     /**
-      * @type {import('../typedef').IUserPlan}
-      */
-    const userPlan =await db.userPlan.findOne({user:req.user.id,status:"active"});
-    if(!userPlan) res.status(httpStatus.PAYMENT_REQUIRED).send({
+exports.userPlanValidation = async (req, res, next) => {
+    /**
+     * @type {import('../typedef').IUserPlan}
+     */
+    const userPlan = await db.userPlan.findOne({ user: req.user.id, status: "active" });
+    if (!userPlan) res.status(httpStatus.PAYMENT_REQUIRED).send({
         success: false,
         message: 'UserPlan not found',
     });
-   if( userPlan.leftPostScriptCount===0 ||userPlan.leftIdeasCount===0){
-    return res.status(httpStatus.BAD_REQUEST).send({
-        success: false,
-        message: 'Insufficient idea and post script count.',
-    });
-   }
+    if (userPlan.leftPostScriptCount === 0 || userPlan.leftIdeasCount === 0) {
+        return res.status(httpStatus.BAD_REQUEST).send({
+            success: false,
+            message: 'Insufficient idea and post script count.',
+        });
+    }
 
-   next()
+    next()
 
-    
-    
+
+
 }

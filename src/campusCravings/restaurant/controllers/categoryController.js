@@ -3,7 +3,7 @@ const restCat = require('../services/categoryService');
 const asyncHandler = require('express-async-handler');
 
 exports.createCategory = asyncHandler(async (req, res) => {
-    const category = await restCat.createCategory(req.body);
+    const category = await restCat.createCategory(req);
     return category;
 });
 

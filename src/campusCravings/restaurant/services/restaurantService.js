@@ -5,12 +5,12 @@ const Restaurant = require("../models/restaurant");
 const mongoose = require("mongoose");
 
 exports.getRestaurantAnalytics = async (req, res, next) => {
-    
+
     const { restaurantId } = req.userId;
 
     try {
         if (!restaurantId) {
-            throw new ApiError("Restaurant ID is required", httpStatus.BAD_REQUEST);
+            throw new ApiError("Restaurant ID is required", httpStatus.status.BAD_REQUEST);
         }
 
         const analytics = await Order.aggregate([
@@ -19,9 +19,9 @@ exports.getRestaurantAnalytics = async (req, res, next) => {
             },
             {
                 $group: {
-                    _id: "$restaurant_id", 
+                    _id: "$restaurant_id",
                     orderCount: { $sum: 1 },
-                    totalRevenue: { $sum: "$total_price" }, 
+                    totalRevenue: { $sum: "$total_price" },
                 }
             }
         ]);
@@ -32,7 +32,7 @@ exports.getRestaurantAnalytics = async (req, res, next) => {
             throw new ApiError(httpStatus.NOT_FOUND, "Restaurant not found");
         }
 
-        const viewCount = restaurant.view_count;  
+        const viewCount = restaurant.view_count;
 
         if (analytics.length === 0) {
             throw new ApiError(httpStatus.NOT_FOUND, "No orders found for this restaurant");

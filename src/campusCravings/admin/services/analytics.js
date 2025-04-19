@@ -208,6 +208,7 @@ const getResturantAnalytics = async (req) => {
         throw new Error('Error fetching analytics: ' + error.message);
     }
 };
+// Get top Restaurants
 
 module.exports = {
     getAnalytics,
