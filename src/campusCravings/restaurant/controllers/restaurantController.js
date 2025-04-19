@@ -11,3 +11,9 @@ exports.getRestaurantAnalytics = asyncHandler(async (req, res, next) => {
         throw new ApiError(error.message, httpStatus.status.NOT_FOUND);
     }
 });
+
+// fetch nearby restaurants
+exports.getnearbyRestaurant = asyncHandler(async (req, res) => {
+    const restaurant = await restaurantService.nearbyRestaurant(req);
+    return restaurant;
+})

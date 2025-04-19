@@ -4,6 +4,7 @@ const Order = require("../../admin/models/order");
 const Restaurant = require("../models/restaurant");
 const mongoose = require("mongoose");
 
+
 exports.getRestaurantAnalytics = async (req, res, next) => {
 
     const { restaurantId } = req.userId;
@@ -51,3 +52,13 @@ exports.getRestaurantAnalytics = async (req, res, next) => {
         next(error);
     }
 };
+
+exports.nearbyRestaurant = async (req) => {
+    try {
+        const { latitude, longitude } = req.body;
+
+    } catch (error) {
+        console.error(error);
+        throw new ApiError(error.message, httpStatus.status.BAD_REQUEST);
+    }
+}
