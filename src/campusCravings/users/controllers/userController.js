@@ -7,6 +7,11 @@ exports.getUser = asyncHandler(async (req, res) => {
     return user;
 })
 
+exports.updateUser = asyncHandler(async (req, res) => {
+    const user = await userService.updateUser(req);
+    return user;
+})
+
 exports.addUserAddress = asyncHandler(async (req, res) => {
     const user = await userService.addUserAddress(req);
     return user;

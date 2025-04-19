@@ -6,7 +6,7 @@ const httpStatus = require('http-status');
 const getUser = async (query) => {
     try {
         const userId = query.user._id;
-        const user = await User.findById(userId).select('-password');        
+        const user = await User.findById(userId).select('-password');
         if (!user) {
             throw new ApiError('User not found', httpStatus.status.NOT_FOUND);
         }
@@ -15,6 +15,23 @@ const getUser = async (query) => {
         throw new ApiError(error.message, httpStatus.status.INTERNAL_SERVER_ERROR);
     }
 };
+// Update User Info
+const updateUser = async ({ user: { _id }, body }) => {
+    try {
+        const user = await User.findById(_id);
+        if (!user) throw new ApiError('User not found', httpStatus.status.NOT_FOUND);
+
+        Object.assign(user, body); 
+        const updatedUser = await user.save();
+        if (!updatedUser) {
+            throw new ApiError('Failed to update user', httpStatus.status.INTERNAL_SERVER_ERROR);
+        }
+        return await User.findById(_id).select('-password');
+    } catch (error) {
+        throw new ApiError(error.message, httpStatus.status.INTERNAL_SERVER_ERROR);
+    }
+};
+
 // Add New Address
 const addUserAddress = async (query) => {
     try {
@@ -72,5 +89,6 @@ const updateUserAddress = async ({ user, body }) => {
 module.exports = {
     getUser,
     addUserAddress,
-    updateUserAddress
+    updateUserAddress,
+    updateUser
 };
