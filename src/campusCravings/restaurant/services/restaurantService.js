@@ -206,10 +206,27 @@ exports.getpoplarFoodItems = async (req, res) => {
 exports.nearbyRestaurant = async (req) => {
     try {
         const { latitude, longitude } = req.body;
-        console.log(latitude, longitude);
 
+        if (!latitude || !longitude) {
+            throw new ApiError("Missing required parameters: latitude and longitude are required.", httpStatus.status.BAD_REQUEST);
+        }
+
+        const radiusInMeters = 15 * 1609.34;
+
+        const nearbyRestaurants = await Restaurant.find({
+            'addresses.coordinates': {
+                $nearSphere: {
+                    $geometry: {
+                        type: "Point",
+                        coordinates: [longitude, latitude],
+                    },
+                    $maxDistance: radiusInMeters,
+                },
+            },
+        });
+        return nearbyRestaurants;
     } catch (error) {
         console.error(error);
         throw new ApiError(error.message, httpStatus.status.BAD_REQUEST);
     }
-}
+};
