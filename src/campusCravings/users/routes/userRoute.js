@@ -1,11 +1,24 @@
 const express = require('express');
 const router = express.Router();
 const { validate } = require('../../../../middlewares/auth');
-const { addUserAddress, updateUserAddress } = require('../controllers/userController');
+const { addUserAddress, updateUserAddress, getUser } = require('../controllers/userController');
 const { validateBody } = require("../../../../middlewares/validate");
 const { addAddressSchema, updateAddressSchema } = require("../validators/user");
 const httpStatus = require("http-status");
 const ApiError = require('../../../../utils/ApiError');
+
+// Get User Info
+router.get("/", validate, async (req, res) => {
+    try {
+        const user = await getUser(req, res);
+        res.status(httpStatus.status.OK).json({ message: "User data fetched successfully", userInfo: user });
+    } catch (error) {
+        if (error instanceof ApiError) {
+            return res.status(error.statusCode).json({ message: error.message });
+        }
+        return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
+    }
+});
 
 // Add New Address
 router.patch("/addAddress", validate, validateBody(addAddressSchema), async (req, res) => {

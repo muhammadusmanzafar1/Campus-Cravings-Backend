@@ -2,6 +2,11 @@
 const userService = require('../services/user');
 const asyncHandler = require('express-async-handler');
 
+exports.getUser = asyncHandler(async (req, res) => {
+    const user = await userService.getUser(req);
+    return user;
+})
+
 exports.addUserAddress = asyncHandler(async (req, res) => {
     const user = await userService.addUserAddress(req);
     return user;
