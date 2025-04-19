@@ -14,7 +14,7 @@ const tokenValidator = async (token) => {
         return jwtHelper.verifyToken(token);
     } catch (err) {
         if (err.name === 'TokenExpiredError') {
-            throw new ApiError("Token Expired", httpStatus.UNAUTHORIZED);
+            throw new ApiError("Token Expired", httpStatus.status.UNAUTHORIZED);
         }
         throw new ApiError(err);
     }
@@ -27,10 +27,10 @@ const tokenValidator = async (token) => {
 const sessionValidator = async (sessionId) => {
     let session = await sessionService.get(sessionId);
     if (!session) {
-        throw new ApiError('Session not found', httpStatus.UNAUTHORIZED);
+        throw new ApiError('Session not found', httpStatus.status.UNAUTHORIZED);
     }
     if (session.status === 'expired') {
-        throw new ApiError('Session expired', httpStatus.UNAUTHORIZED);
+        throw new ApiError('Session expired', httpStatus.status.UNAUTHORIZED);
     }
     return session;
 };
@@ -42,16 +42,16 @@ const sessionValidator = async (sessionId) => {
 const userValidator = async (userId) => {
     let user = await userDB.findById(userId)
     if (!user) {
-        throw new ApiError('User not found', httpStatus.UNAUTHORIZED);
+        throw new ApiError('User not found', httpStatus.status.UNAUTHORIZED);
     }
     if (user.status == 'inactive') {
-        throw new ApiError('User status is inactive.', httpStatus.UNAUTHORIZED);
+        throw new ApiError('User status is inactive.', httpStatus.status.UNAUTHORIZED);
     }
     if (user.status == 'deleted') {
-        throw new ApiError('User status is deleted.', httpStatus.UNAUTHORIZED);
+        throw new ApiError('User status is deleted.', httpStatus.status.UNAUTHORIZED);
     }
     if (user.status == 'blocked') {
-        throw new ApiError('User status is blocked.', httpStatus.UNAUTHORIZED);
+        throw new ApiError('User status is blocked.', httpStatus.status.UNAUTHORIZED);
     }
     return user;
 };
@@ -216,24 +216,24 @@ exports.validateRefreshToken = (req, res, next) => {
  * @param {import('express').NextFunction} next 
  * @returns 
  */
-exports.userPlanValidation =async(req,res,next) =>{
-     /**
-      * @type {import('../typedef').IUserPlan}
-      */
-    const userPlan =await db.userPlan.findOne({user:req.user.id,status:"active"});
-    if(!userPlan) res.status(httpStatus.PAYMENT_REQUIRED).send({
+exports.userPlanValidation = async (req, res, next) => {
+    /**
+     * @type {import('../typedef').IUserPlan}
+     */
+    const userPlan = await db.userPlan.findOne({ user: req.user.id, status: "active" });
+    if (!userPlan) res.status(httpStatus.status.PAYMENT_REQUIRED).send({
         success: false,
         message: 'UserPlan not found',
     });
-   if( userPlan.leftPostScriptCount===0 ||userPlan.leftIdeasCount===0){
-    return res.status(httpStatus.BAD_REQUEST).send({
-        success: false,
-        message: 'Insufficient idea and post script count.',
-    });
-   }
+    if (userPlan.leftPostScriptCount === 0 || userPlan.leftIdeasCount === 0) {
+        return res.status(httpStatus.status.BAD_REQUEST).send({
+            success: false,
+            message: 'Insufficient idea and post script count.',
+        });
+    }
 
-   next()
+    next()
 
-    
-    
+
+
 }

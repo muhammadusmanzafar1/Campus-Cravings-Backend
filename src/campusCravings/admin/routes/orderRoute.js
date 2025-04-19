@@ -2,11 +2,12 @@ const express = require('express');
 const router = express.Router();
 const httpStatus = require("http-status");
 const ApiError = require('../../../../utils/ApiError');
-const { getAllOrders, createOrder, updateOrder, deleteOrder, patchOrder } = require('../controllers/orderController');
-const { validateBody } = require("../middlewares/validate");
+const { validate } = require('../../../../middlewares/auth');
+const { getAllOrders, createOrder, updateOrder, deleteOrder, patchOrder, getOrder, getResturantAllOrders, getUserAllOrders } = require('../controllers/orderController');
+const { validateBody } = require("../../../../middlewares/validate");
 const { updateOrderSchema, createOrderSchema } = require("../validators/order");
 // Get All Orders
-router.get("/", async (req, res) => {
+router.get("/", validate, async (req, res) => {
     try {
         const allOrders = await getAllOrders(req, res);
         res.status(httpStatus.status.OK).json({ message: "Orders fetched successfully", orders: allOrders });
@@ -19,7 +20,7 @@ router.get("/", async (req, res) => {
 });
 
 // Add a new Order
-router.post("/", validateBody(createOrderSchema), async (req, res) => {
+router.post("/", validate, validateBody(createOrderSchema), async (req, res) => {
     try {
         const newOrder = await createOrder(req, res);
         res.status(httpStatus.status.CREATED).json({
@@ -35,7 +36,7 @@ router.post("/", validateBody(createOrderSchema), async (req, res) => {
 });
 
 // Update an existing Order
-router.put("/:id", validateBody(updateOrderSchema), async (req, res) => {
+router.put("/:id", validate, validateBody(updateOrderSchema), async (req, res) => {
     try {
         const updatedOrder = await updateOrder(req, res);
         res.status(httpStatus.status.OK).json({
@@ -51,7 +52,7 @@ router.put("/:id", validateBody(updateOrderSchema), async (req, res) => {
 });
 
 // Delete an Order
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", validate, async (req, res) => {
     try {
         const deletedOrder = await deleteOrder(req, res);
         res.status(httpStatus.status.OK).json({
@@ -66,7 +67,7 @@ router.delete("/:id", async (req, res) => {
     }
 });
 // Patch an Order
-router.patch("/:id", validateBody(updateOrderSchema), async (req, res) => {
+router.patch("/:id", validate, validateBody(updateOrderSchema), async (req, res) => {
     try {
         const updatedOrder = await patchOrder(req, res);
         res.status(httpStatus.status.OK).json({
@@ -80,5 +81,41 @@ router.patch("/:id", validateBody(updateOrderSchema), async (req, res) => {
         return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
     }
 });
+// Get a specific Order
+router.get("/:id", validate, async (req, res) => {
+    try {
+        const order = await getOrder(req, res);
+        res.status(httpStatus.status.OK).json({ message: "Data Fetch Successfully", order: order });
+    } catch (error) {
+        if (error instanceof ApiError) {
+            return res.status(error.statusCode).json({ message: error.message });
+        }
+        return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
+    }
+});
+// Get all orders with respect to restaurant id
+router.get("/resturant/:restaurantId", validate, async (req, res) => {
+    try {
+        const allOrders = await getResturantAllOrders(req, res);
+        res.status(httpStatus.status.OK).json({ message: "Orders fetched successfully", orders: allOrders });
+    } catch (error) {
+        if (error instanceof ApiError) {
+            return res.status(error.statusCode).json({ message: error.message });
+        }
+        return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
+    }
+});
 
+// Get all orders with respect to User id
+router.get("/user/:userId", validate, async (req, res) => {
+    try {
+        const allOrders = await getUserAllOrders(req, res);
+        res.status(httpStatus.status.OK).json({ message: "Orders fetched successfully", orders: allOrders });
+    } catch (error) {
+        if (error instanceof ApiError) {
+            return res.status(error.statusCode).json({ message: error.message });
+        }
+        return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
+    }
+});
 module.exports = router;

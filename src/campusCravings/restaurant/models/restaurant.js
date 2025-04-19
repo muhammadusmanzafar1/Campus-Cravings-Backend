@@ -32,11 +32,11 @@ const restaurantSchema = new Schema({
     }
   },
   cuisine: {
-    type: String, 
+    type: String,
     required: true
   },
   deliveryMethods: [{
-    type: String, 
+    type: String,
     required: true
   }],
   view_count: {

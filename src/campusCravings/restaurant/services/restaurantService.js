@@ -11,7 +11,7 @@ exports.getRestaurantAnalytics = async (req, res, next) => {
 
     try {
         if (!restaurantId) {
-            throw new ApiError("Restaurant ID is required", httpStatus.BAD_REQUEST);
+            throw new ApiError("Restaurant ID is required", httpStatus.status.BAD_REQUEST);
         }
 
         const analytics = await Order.aggregate([

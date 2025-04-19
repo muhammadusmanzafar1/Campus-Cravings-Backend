@@ -5,7 +5,7 @@ const ApiError = require('../../../../utils/ApiError');
 const { validate } = require('../../../../middlewares/auth');
 const { createCategory, getItems, updateItems, deleteItems, getCategories, createItem } = require('../controllers/categoryController')
 
-router.post("/addcategory", async (req, res) => {
+router.post("/addcategory", validate, async (req, res) => {
 
     try {
         const category = await createCategory(req, res);
@@ -20,7 +20,7 @@ router.post("/addcategory", async (req, res) => {
     }
 });
 
-router.post("/additem", async (req, res) => {
+router.post("/additem", validate, async (req, res) => {
     try {
         const item = await createItem(req, res);
         res.status(httpStatus.status.CREATED).json({ message: "Item created successfully", item: item });
@@ -44,7 +44,7 @@ router.get("/getitem/:id", validate, async (req, res) => {
     }
 });
 
-router.put("/updateItem", async (req, res) => {
+router.put("/updateItem", validate, async (req, res) => {
     try {
         const updateItem = await updateItems(req, res);
         res.status(httpStatus.status.OK).json({ message: "Item updated successfully", item: updateItem });
@@ -56,7 +56,7 @@ router.put("/updateItem", async (req, res) => {
     }
 });
 
-router.delete("/deleteitem/:id", async (req, res) => {
+router.delete("/deleteitem/:id", validate, async (req, res) => {
     try {
         const deleteItem = await deleteItems(req, res);
         res.status(httpStatus.status.OK).json({ message: "Item deleted successfully", item: deleteItem });

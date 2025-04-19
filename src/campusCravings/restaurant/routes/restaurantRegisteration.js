@@ -6,7 +6,7 @@ const { validate } = require('../../../../middlewares/auth');
 const restaurant = require('../controllers/restaurantController')
 
 
-router.get("/getrestaurantAnalytics", async (req, res, next) => {
+router.get("/getrestaurantAnalytics", validate, async (req, res, next) => {
     try {
         const getItem = await restaurant.getRestaurantAnalytics(req, res, next);
         res.status(httpStatus.status.OK).json({ message: "Items retrieved successfully", itens: getItem });

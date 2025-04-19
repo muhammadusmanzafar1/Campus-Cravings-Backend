@@ -7,10 +7,10 @@ const sessionService = require('../services/session');
 
 exports.registerUser = asyncHandler(async (req, res) => {
     let user = await authService.registerWithEmail(req.body);
-     return user;
+    return user;
 });
 
-exports.registerViaPhone = asyncHandler( async (req, res)=> {
+exports.registerViaPhone = asyncHandler(async (req, res) => {
     let user = await authService.registerWithPhone(req.body);
     return user;
 })
@@ -30,6 +30,7 @@ exports.verifyOTP = asyncHandler(async (req, res) => {
          httpOnly: true,
         });
         return responseData;
+
 });
 
 
@@ -44,19 +45,19 @@ exports.login = asyncHandler(async (req, res) => {
     user = await user.save();
 
     const responseData = {
-        ...user.toObject(), 
+        ...user.toObject(),
         accessToken: session.accessToken,
         refreshToken: session.refreshToken
-        
+
     };
     const option = {
-         secure: process.env.NODE_ENV == 'prod',
-         httpOnly: true,
+        secure: process.env.NODE_ENV == 'prod',
+        httpOnly: true,
     };
     res.cookie('refreshToken', session.refreshToken, option).cookie(
-         'accessToken',
-         session.accessToken,
-         option
+        'accessToken',
+        session.accessToken,
+        option
     );
     return responseData;
 });

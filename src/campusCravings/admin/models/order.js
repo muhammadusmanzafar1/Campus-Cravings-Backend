@@ -11,10 +11,47 @@ const orderSchema = new mongoose.Schema({
         ref: 'Restaurant',
         required: true
     },
+    rider_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        default: null
+    },
     status: {
         type: String,
-        enum: ['pending', 'completed', 'cancelled'],
+        enum: [
+            'pending',
+            'order_accepted',
+            'order_prepared',
+            'order_dispatched',
+            'delivered',
+            'cancelled',
+            'completed'
+        ],
         default: 'pending'
+    },
+    progress: {
+        type: [
+            {
+                status: {
+                    type: String,
+                    enum: [
+                        'pending',
+                        'order_accepted',
+                        'order_prepared',
+                        'order_dispatched',
+                        'delivered',
+                        'cancelled',
+                        'completed'
+                    ],
+                    required: true
+                },
+                updated_at: {
+                    type: Date,
+                    default: Date.now
+                }
+            }
+        ],
+        default: []
     },
     total_price: {
         type: Number,
@@ -24,6 +61,32 @@ const orderSchema = new mongoose.Schema({
         type: String,
         enum: ['cash', 'card', 'wallet', 'upi'],
         required: true
+    },
+    tip: {
+        type: Number,
+        default: 0,
+        min: 0
+    },
+    delivery_fee: {
+        type: Number,
+        default: 0,
+        min: 0
+    },
+    estimated_time: {
+        type: String,
+        default: ''
+    },
+    address: {
+        type: String,
+        required: true
+    },
+    image_url: {
+        type: String,
+        default: ''
+    },
+    order_type: {
+        type: String,
+        default: ''
     },
     items: {
         type: [
@@ -39,7 +102,7 @@ const orderSchema = new mongoose.Schema({
                     min: 1
                 },
                 customizations: {
-                    type: [String], 
+                    type: [String],
                     default: []
                 }
             }
@@ -52,5 +115,4 @@ const orderSchema = new mongoose.Schema({
         updatedAt: 'updated_at'
     }
 });
-
 module.exports = mongoose.model('Order', orderSchema);

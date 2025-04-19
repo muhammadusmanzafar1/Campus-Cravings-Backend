@@ -3,6 +3,13 @@ const utils = require('../../../utils/utils');
 const mongoose = require("mongoose");
 
 const authMethods = ['email', 'google', 'facebook', 'apple', 'github', 'phone'];
+const addressSchema = new mongoose.Schema({
+    address: { type: String, required: true },
+    coordinates: {
+        lat: { type: Number, required: true },
+        lng: { type: Number, required: true }
+    }
+}, { _id: true });
 
 const entitySchema = new mongoose.Schema({
     firstName: String,
@@ -24,6 +31,10 @@ const entitySchema = new mongoose.Schema({
     },
     activationCode: String,
     password: String,
+    addresses: {
+        type: [addressSchema],
+        validate: [val => val.length <= 5, 'Cannot add more than 5 addresses']
+    },
     status: {
         type: String,
         enum: ['pending', 'active', 'deleted', 'blocked'],
@@ -114,7 +125,9 @@ entitySchema.statics.newEntity = async function (body, createdByAdmin = true) {
         googleId: body.googleId,
         facebookId: body.facebookId,
         appleId: body.appleId,
+        restaurantId: body.restaurant,
         stripeCustomerId: body.stripeCustomerId || "",
+        addresses: body.addresses || []
     };
 
     if (body.password) {
