@@ -2,6 +2,7 @@ const User = require('../../../auth/models/user');
 const ApiError = require('../../../../utils/ApiError');
 const httpStatus = require('http-status');
 
+// Add New Address
 const addUserAddress = async (query) => {
     try {
         const userId = query.user._id;
@@ -26,6 +27,36 @@ const addUserAddress = async (query) => {
         throw new ApiError(error.message, httpStatus.status.INTERNAL_SERVER_ERROR);
     }
 };
+
+// Update Address
+const updateUserAddress = async ({ user, body }) => {
+    try {
+        const foundUser = await User.findById(user._id);
+        if (!foundUser) {
+            throw new ApiError('User not found', httpStatus.status.NOT_FOUND);
+        }
+        const { addressId, address, coordinates } = body;
+        const targetAddress = foundUser.addresses.id(addressId);
+        if (!targetAddress) {
+            throw new ApiError('Address not found', httpStatus.status.NOT_FOUND);
+        }
+        Object.assign(targetAddress, {
+            address,
+            coordinates: {
+                lat: coordinates.lat,
+                lng: coordinates.lng
+            }
+        });
+        const updatedUser = await foundUser.save();
+        if (!updatedUser) {
+            throw new ApiError('Failed to update address', httpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return updatedUser;
+    } catch (error) {
+        throw new ApiError(error.message, httpStatus.status.INTERNAL_SERVER_ERROR);
+    }
+};
 module.exports = {
-    addUserAddress
+    addUserAddress,
+    updateUserAddress
 };
