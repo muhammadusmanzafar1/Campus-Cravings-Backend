@@ -8,7 +8,7 @@ exports.getAllOrders = asyncHandler(async (req, res) => {
 });
 
 exports.createOrder = asyncHandler(async (req, res) => {
-    const order = await orderService.createOrder(req.body);
+    const order = await orderService.createOrder(req);
     return order;
 });
 

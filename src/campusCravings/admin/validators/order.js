@@ -21,8 +21,6 @@ const progressSchema = Joi.array().items(
     })
 ).default([]);
 const createOrderSchema = Joi.object({
-    user_id: objectId.required(),
-    restaurant_id: objectId.required(),
     rider_id: Joi.alternatives().try(objectId, Joi.valid(null)).default(null),
     status: Joi.string().valid(...statusEnum).default('pending'),
     progress: progressSchema,
@@ -36,8 +34,6 @@ const createOrderSchema = Joi.object({
     items: Joi.array().items(orderItemSchema).default([])
 });
 const updateOrderSchema = Joi.object({
-    user_id: objectId,
-    restaurant_id: objectId,
     rider_id: Joi.alternatives().try(objectId, Joi.valid(null)),
     status: Joi.string().valid(...statusEnum),
     progress: progressSchema,

@@ -4,7 +4,6 @@ const ApiError = require('../../../../utils/ApiError');
 const httpStatus = require('http-status');
 const getAllTickets = async (req) => {
     try {
-        console.log(req.user);
         const isAdmin = req.user?.isAdmin;
         if (!isAdmin) {
             throw new ApiError('You are not authorized to perform this action', httpStatus.status.UNAUTHORIZED);
