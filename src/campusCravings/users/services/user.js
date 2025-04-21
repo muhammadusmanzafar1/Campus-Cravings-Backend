@@ -49,6 +49,7 @@ const addUserAddress = async (query) => {
             coordinates: query.body.coordinates
         };
         user.addresses.push(address);
+        console.log(address);
         const updatedUser = await user.save();
         if (!updatedUser) {
             throw new ApiError('Failed to update user', httpStatus.status.INTERNAL_SERVER_ERROR);
@@ -73,10 +74,7 @@ const updateUserAddress = async ({ user, body }) => {
         }
         Object.assign(targetAddress, {
             address,
-            coordinates: {
-                lat: coordinates.lat,
-                lng: coordinates.lng
-            }
+            coordinates
         });
         const updatedUser = await foundUser.save();
         if (!updatedUser) {
@@ -87,7 +85,6 @@ const updateUserAddress = async ({ user, body }) => {
         throw new ApiError(error.message, httpStatus.status.INTERNAL_SERVER_ERROR);
     }
 };
-
 const getUserTickets = async (req) => {
     const tickets = await Ticket.find({ userId: req.user._id });
     return tickets;

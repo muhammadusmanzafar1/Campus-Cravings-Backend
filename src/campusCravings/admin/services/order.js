@@ -71,7 +71,7 @@ const patchOrder = async (id, body) => {
     try {
         const order = await Order.findById(id);
         if (!order) {
-            return ('Order not found');
+            throw new APIError('Order not found', httpStatus.status.NOT_FOUND);
         }
         const update = { $set: { ...body } };
         if (body.status) {
@@ -123,12 +123,13 @@ const getResturantAllOrders = async (req) => {
 // User orders 
 const getUserAllOrders = async (req) => {
     try {
+        const userType = req.query.for || 'customer';
         const userId = new mongoose.Types.ObjectId(req.params.userId);
-        const orders = await Order.find({ user_id: userId })
-        // .populate('user_id', 'name email')  // Populate user details
-        // .populate('restaurant_id', 'name')  // Populate restaurant details
-        // .populate('items.item_id', 'name price'); // Populate item details (name and price)
-
+        const comparingId = userType === 'rider' ? 'rider_id' : 'user_id';
+        const orders = await Order.find({ [comparingId]: userId })
+            .populate('user_id', 'firstName lastName email')
+            .populate('restaurant_id', 'storeName brandName phoneNumber')
+            .populate('items.item_id', 'name price');
         return orders;
     } catch (error) {
         throw new APIError(`Error fetching orders: ${error.message}`, error.statusCode || httpStatus.status.INTERNAL_SERVER_ERROR);
