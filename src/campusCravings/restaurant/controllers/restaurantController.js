@@ -13,6 +13,18 @@ exports.getRestaurantAnalytics = asyncHandler(async (req, res, next) => {
     }
 });
 
+// fetch nearby restaurants
+exports.getnearbyRestaurant = asyncHandler(async (req, res) => {
+    const restaurant = await restaurantService.nearbyRestaurant(req);
+    return restaurant;
+})
+
+// Search Restaurants or Food Items
+exports.searchRestaurantsandFoodItems = asyncHandler(async (req, res) => {
+    const restaurant = await restaurantService.searchRestaurantsandFoodItems(req);
+    return restaurant;
+})
+
 exports.getAllCategoryByRestaurantId = asyncHandler(async (req, res, next) => {
     try {
         const categories = await restaurantService.getAllCategoryByRestaurantId(req, res, next);

@@ -8,14 +8,14 @@ const mongoose = require('mongoose');
 
 // Create a new category with items
 const createCategory = async (req) => {
-    
+
     const restaurantId = req.user.restaurant;
 
     try {
         const restaurant = await Restaurant.findById(restaurantId);
         if (!restaurant) {
             return null;
-            }
+        }
         const category = new Category(req.body);
         category.restaurant = restaurantId;
 

@@ -21,15 +21,15 @@ exports.verifyOTP = asyncHandler(async (req, res) => {
     user.deviceType = req.body.deviceType;
     const session = await sessionService.createSession(user, req.body);
     const responseData = {
-        ...user.toObject(), 
+        ...user.toObject(),
         accessToken: session.accessToken,
         refreshToken: session.refreshToken
     };
     res.cookie('refreshToken', user.refreshToken, {
-         secure: false,
-         httpOnly: true,
-        });
-        return responseData;
+        secure: false,
+        httpOnly: true,
+    });
+    return responseData;
 
 });
 
