@@ -2,14 +2,14 @@ const express = require('express');
 const router = express.Router();
 const httpStatus = require("http-status");
 const ApiError = require('../../../../utils/ApiError');
-const { getAllTickets, createTicket, updateTicket, deleteTicket, patchTicket, getTicket } = require('../controllers/ticketController');
+const { getAllTickets, createTicket, updateTicket, deleteTicket, patchTicket, getTicket, getUserTickets } = require('../controllers/ticketController');
 const { validateBody } = require("../../../../middlewares/validate");
 const { updateTicketSchema, createTicketSchema } = require("../validators/ticket");
 // Get All Tickets
 router.get("/:period", async (req, res) => {
     try {
         const allTickets = await getAllTickets(req, res);
-        res.status(httpStatus.status.OK).json({ message: "Data Fetch Successfully", tickets: allTickets });
+        res.status(httpStatus.status.OK).json({ message: "Tickets Fetch Successfully", tickets: allTickets });
     }
     catch (error) {
         if (error instanceof ApiError) {
@@ -79,7 +79,7 @@ router.patch("/:id", validateBody(updateTicketSchema), async (req, res) => {
 router.get("/ticketbyid/:id", async (req, res) => {
     try {
         const ticket = await getTicket(req, res);
-        res.status(httpStatus.status.OK).json({ message: "Data Fetch Successfully", ticket: ticket });
+        res.status(httpStatus.status.OK).json({ message: "Ticket Fetch Successfully", ticket: ticket });
     } catch (error) {
         if (error instanceof ApiError) {
             return res.status(error.statusCode).json({ message: error.message });

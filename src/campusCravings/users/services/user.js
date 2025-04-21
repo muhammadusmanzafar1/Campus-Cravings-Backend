@@ -1,4 +1,5 @@
 const User = require('../../../auth/models/user');
+const Ticket = require('../../admin/models/ticket')
 const ApiError = require('../../../../utils/ApiError');
 const httpStatus = require('http-status');
 
@@ -21,7 +22,7 @@ const updateUser = async ({ user: { _id }, body }) => {
         const user = await User.findById(_id);
         if (!user) throw new ApiError('User not found', httpStatus.status.NOT_FOUND);
 
-        Object.assign(user, body); 
+        Object.assign(user, body);
         const updatedUser = await user.save();
         if (!updatedUser) {
             throw new ApiError('Failed to update user', httpStatus.status.INTERNAL_SERVER_ERROR);
@@ -86,9 +87,15 @@ const updateUserAddress = async ({ user, body }) => {
         throw new ApiError(error.message, httpStatus.status.INTERNAL_SERVER_ERROR);
     }
 };
+
+const getUserTickets = async (req) => {
+    const tickets = await Ticket.find({ userId: req.user._id });
+    return tickets;
+};
 module.exports = {
     getUser,
     addUserAddress,
     updateUserAddress,
-    updateUser
+    updateUser,
+    getUserTickets
 };

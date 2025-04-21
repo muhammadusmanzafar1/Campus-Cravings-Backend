@@ -8,12 +8,12 @@ exports.getAllTickets = asyncHandler(async (req, res) => {
 });
 
 exports.createTicket = asyncHandler(async (req, res) => {
-    const ticket = await ticketService.createTicket(req.body);
+    const ticket = await ticketService.createTicket(req);
     return ticket;
 });
 
 exports.updateTicket = asyncHandler(async (req, res) => {
-    const ticket = await ticketService.updateTicket(req.params.id, req.body);
+    const ticket = await ticketService.updateTicket(req);
     return ticket;
 });
 

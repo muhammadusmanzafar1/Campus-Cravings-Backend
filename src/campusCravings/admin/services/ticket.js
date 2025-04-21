@@ -1,8 +1,14 @@
 'use strict';
 const Ticket = require('../models/ticket');
 const ApiError = require('../../../../utils/ApiError');
+const httpStatus = require('http-status');
 const getAllTickets = async (req) => {
     try {
+        console.log(req.user);
+        const isAdmin = req.user?.isAdmin;
+        if (!isAdmin) {
+            throw new ApiError('You are not authorized to perform this action', httpStatus.status.UNAUTHORIZED);
+        }
         const period = req.params.period || 'all';
         const now = new Date();
         let match = {};
@@ -13,7 +19,7 @@ const getAllTickets = async (req) => {
                 break;
             case 'week':
                 const day = now.getDay();
-                const diffToMonday = day === 0 ? 6 : day - 1; 
+                const diffToMonday = day === 0 ? 6 : day - 1;
                 const startOfWeek = new Date(now);
                 startOfWeek.setDate(now.getDate() - diffToMonday);
                 startOfWeek.setHours(0, 0, 0, 0);
@@ -30,71 +36,67 @@ const getAllTickets = async (req) => {
             case 'all':
                 break;
             default:
-                throw new Error('Invalid period. Use today, week, month, year, or all.');
+                throw new ApiError('Invalid period', httpStatus.status.BAD_REQUEST);
         }
         const tickets = await Ticket.find(match).populate('userId', 'name email');
         return tickets;
     } catch (error) {
-        throw new Error('Error fetching tickets: ' + error.message);
+        throw new ApiError(error.message || 'Internal Server Error', httpStatus.status.INTERNAL_SERVER_ERROR);
     }
 };
 
-const createTicket = async (body) => {
-    // Need to authenticate UserId or get from token to verify
-    const { subject, description, userId, status, priority, imgUrl, messages } = body;
-    const newTicket = new Ticket({
+const createTicket = async (req) => {
+    const { subject, description, status, priority, imgUrl, messages } = req.body;
+    const userId = req.user?._id;
+    const newTicket = await Ticket.create({
         subject,
         description,
-        userId,
         status,
         priority,
         imgUrl,
         messages,
+        userId,
     });
-    await newTicket.save();
     return newTicket;
 };
 
-const updateTicket = async (id, body) => {
-    // Need to check if the user is the owner of ticket or admin
-    const updatedTicket = await Ticket.findByIdAndUpdate(id, body, {
+const updateTicket = async (req) => {
+    const userAdmin = req.user?.isAdmin;
+    if (!userAdmin) {
+        throw new ApiError('You are not authorized to perform this action', httpStatus.status.UNAUTHORIZED);
+    }
+    const updatedTicket = await Ticket.findByIdAndUpdate(req.id, req.body, {
         new: true,
         runValidators: true,
     });
 
     if (!updatedTicket) {
-        throw new Error("Ticket not found");
+        throw new ApiError("Ticket not found", httpStatus.status.NOT_FOUND);
     }
-
     return updatedTicket;
 };
 const deleteTicket = async (id) => {
-    // Need to check if the user is the owner of ticket or admin
     const deletedTicket = await Ticket.findByIdAndDelete(id);
-
     if (!deletedTicket) {
-        throw new Error("Ticket not found");
+        throw new ApiError("Ticket not found", httpStatus.status.NOT_FOUND);
     }
-
     return deletedTicket;
 };
 const patchTicket = async (id, updates) => {
-    // Need to check if the user is the owner of ticket or admin
     const updated = await Ticket.findByIdAndUpdate(
         id,
         { $set: updates },
         { new: true, runValidators: true }
     );
     if (!updated) {
-        throw new ApiError(404, "Ticket not found");
+        throw new ApiError("Ticket not found", httpStatus.status.NOT_FOUND);
     }
     return updated;
 };
 const getTicket = async (id) => {
-    // Need to check if the user is the owner of ticket or admin
     const ticket = await Ticket.findById(id);
     if (!ticket) {
-        throw new ApiError(404, "Ticket not found");
+        throw new ApiError("Ticket not found", httpStatus.status.NOT_FOUND);
     }
     return ticket;
 };

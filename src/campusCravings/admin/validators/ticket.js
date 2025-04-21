@@ -6,21 +6,19 @@ const messageSchema = Joi.object({
     time: Joi.date(),
 });
 const createTicketSchema = Joi.object({
-    subject: Joi.string(),
-    description: Joi.string(),
-    userId: Joi.string().regex(/^[0-9a-fA-F]{24}$/),
+    subject: Joi.string().required(),
+    description: Joi.string().required(),
     status: Joi.string().valid("pending", "archive", "resolved"),
     priority: Joi.string().valid("low", "medium", "high"),
     imgUrl: Joi.array().items(Joi.string().uri()),
     messages: Joi.array().items(messageSchema),
-}).min(1);
+}).min(2);
 const updateTicketSchema = Joi.object({
     subject: Joi.string(),
     description: Joi.string(),
     status: Joi.string().valid("pending", "archive", "resolved"),
     priority: Joi.string().valid("low", "medium", "high"),
-    imgUrl: Joi.array().items(Joi.string().uri()),
-    messages: Joi.array().items(messageSchema)
+    imgUrl: Joi.array().items(Joi.string().uri())
 }).min(1);
 
 module.exports = {

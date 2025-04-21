@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { addUserAddress, updateUserAddress, getUser, updateUser } = require('../controllers/userController');
+const { addUserAddress, updateUserAddress, getUser, updateUser, getUserTickets } = require('../controllers/userController');
 const { validateBody } = require("../../../../middlewares/validate");
 const { addAddressSchema, updateAddressSchema, updateUserSchema } = require("../validators/user");
 const httpStatus = require("http-status");
@@ -50,6 +50,19 @@ router.patch("/updateAddress", validateBody(updateAddressSchema), async (req, re
     try {
         const updateAddress = await updateUserAddress(req, res);
         res.status(httpStatus.status.OK).json({ message: "User Address updated successfully", updatedAddress: updateAddress });
+    } catch (error) {
+        if (error instanceof ApiError) {
+            return res.status(error.statusCode).json({ message: error.message });
+        }
+        return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
+    }
+});
+
+// Get User tickets
+router.get("/tickets", async (req, res) => {
+    try {
+        const tickets = await getUserTickets(req, res);
+        res.status(httpStatus.status.OK).json({ message: "Tickets Fetch Successfully", tickets: tickets });
     } catch (error) {
         if (error instanceof ApiError) {
             return res.status(error.statusCode).json({ message: error.message });
