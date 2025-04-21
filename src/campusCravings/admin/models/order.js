@@ -11,11 +11,11 @@ const orderSchema = new mongoose.Schema({
         ref: 'Restaurant',
         required: true
     },
-    rider_id: {
+    assigned_to: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
+        ref: 'Rider',
         default: null
-    },
+      },
     status: {
         type: String,
         enum: [

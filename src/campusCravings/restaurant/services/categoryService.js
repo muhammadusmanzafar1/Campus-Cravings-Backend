@@ -4,7 +4,6 @@ const ApiError = require("../../../../utils/ApiError");
 const Category = require('../models/category');
 const Restaurant = require('../models/restaurant');
 const items = require('../models/items')
-const mongoose = require('mongoose');
 
 // Create a new category with items
 const createCategory = async (req) => {
