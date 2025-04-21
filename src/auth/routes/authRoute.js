@@ -7,14 +7,14 @@ const { registerViaEmail, validateVerifyOTP, loginVerify, registerViaPhone: regi
 
 // RegisterWithEmail
 router.post("/register/email", async (req, res) => {
-    // const { error, value } = registerViaEmail.body.validate(req.body, { abortEarly: false });
+    const { error, value } = registerViaEmail.body.validate(req.body, { abortEarly: false });
 
-    // if (error) {
-    //     return res.status(httpStatus.status.BAD_REQUEST).json({
-    //         message: "Validation Error",
-    //         errors: error.details.map(err => err.message),
-    //     });
-    // }
+    if (error) {
+        return res.status(httpStatus.status.BAD_REQUEST).json({
+            message: "Validation Error",
+            errors: error.details.map(err => err.message),
+        });
+    }
 
     try {
         const registeredUser = await registerUser(req, res);
