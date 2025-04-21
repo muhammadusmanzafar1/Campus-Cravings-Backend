@@ -2,18 +2,18 @@ const Joi = require("joi");
 const addAddressSchema = Joi.object({
     address: Joi.string().required(),
     coordinates: Joi.object({
-        lat: Joi.number().required(),
-        lng: Joi.number().required()
+        type: Joi.string().valid('Point').required(),
+        coordinates: Joi.array().items(Joi.number()).length(2).required() 
     }).required()
 });
 const updateAddressSchema = Joi.object({
     addressId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).required(),
-    address: Joi.string().optional(),
+    address: Joi.string().required(),
     coordinates: Joi.object({
-        lat: Joi.number().optional(),
-        lng: Joi.number().optional()
-    }).optional()
-}).min(2);
+        type: Joi.string().valid('Point').required(),
+        coordinates: Joi.array().items(Joi.number()).length(2).required() 
+    }).required()
+}).min(3);
 
 const updateUserSchema = Joi.object({
     firstName: Joi.string().optional(),

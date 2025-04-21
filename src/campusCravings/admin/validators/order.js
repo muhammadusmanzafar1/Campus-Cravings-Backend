@@ -21,9 +21,6 @@ const progressSchema = Joi.array().items(
     })
 ).default([]);
 const createOrderSchema = Joi.object({
-    user_id: objectId.required(),
-    restaurant_id: objectId.required(),
-    rider_id: Joi.alternatives().try(objectId, Joi.valid(null)).default(null),
     status: Joi.string().valid(...statusEnum).default('pending'),
     progress: progressSchema,
     payment_method: Joi.string().valid('cash', 'card', 'wallet', 'upi').required(),
@@ -36,8 +33,6 @@ const createOrderSchema = Joi.object({
     items: Joi.array().items(orderItemSchema).default([])
 });
 const updateOrderSchema = Joi.object({
-    user_id: objectId,
-    restaurant_id: objectId,
     rider_id: Joi.alternatives().try(objectId, Joi.valid(null)),
     status: Joi.string().valid(...statusEnum),
     progress: progressSchema,
@@ -48,8 +43,7 @@ const updateOrderSchema = Joi.object({
     estimated_time: Joi.string().allow(''),
     order_type: Joi.string().allow(''),
     address: Joi.string(),
-    image_url: Joi.string().uri().allow(''),
-    items: Joi.array().items(orderItemSchema)
+    image_url: Joi.string().uri().allow('')
 }).min(1);
 module.exports = {
     createOrderSchema,

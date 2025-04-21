@@ -2,8 +2,9 @@ const express = require("express");
 const router = express.Router();
 const httpStatus = require("http-status");
 const ApiError = require('../../../../utils/ApiError');
-const { validate } = require('../../../../middlewares/auth');
 const restaurant = require('../controllers/restaurantController')
+const { validateBody } = require("../../../../middlewares/validate");
+const { nearbyRestaurantSchema, searchSchema } = require("../validators/restaurant");
 
 
 router.get("/getrestaurantAnalytics", async (req, res, next) => {
@@ -132,9 +133,31 @@ router.get('/getNearbyPopularFood', async (req, res, next) => {
     }
 });
 
+// Find nearby Restaurants
+router.get("/nearby", validateBody(nearbyRestaurantSchema), async (req, res) => {
+    try {
+        const nearbyRestaurant = await restaurant.getnearbyRestaurant(req, res);
+        res.status(httpStatus.status.OK).json({ message: "Nearby Restaurants fetched successfully", nearbyRestaurant: nearbyRestaurant });
+    } catch (error) {
+        if (error instanceof ApiError) {
+            return res.status(error.statusCode).json({ message: error.message });
+        }
+        return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
+    }
+});
 
-
-
+// Search Restaurants or Food Items
+router.get("/search", validateBody(searchSchema), async (req, res) => {
+    try {
+        const search = await restaurant.searchRestaurantsandFoodItems(req, res);
+        res.status(httpStatus.status.OK).json({ message: "Nearby Restaurants fetched successfully", searchResult: search });
+    } catch (error) {
+        if (error instanceof ApiError) {
+            return res.status(error.statusCode).json({ message: error.message });
+        }
+        return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
+    }
+});
 
 
 module.exports = router;

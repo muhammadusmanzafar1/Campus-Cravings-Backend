@@ -21,3 +21,8 @@ exports.updateUserAddress = asyncHandler(async (req, res) => {
     const user = await userService.updateUserAddress(req);
     return user;
 });
+
+exports.getUserTickets = async (req, res) => {
+    const tickets = await userService.getUserTickets(req);
+    return tickets;
+};

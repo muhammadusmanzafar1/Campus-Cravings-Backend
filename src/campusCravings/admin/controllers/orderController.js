@@ -8,12 +8,7 @@ exports.getAllOrders = asyncHandler(async (req, res) => {
 });
 
 exports.createOrder = asyncHandler(async (req, res) => {
-    const order = await orderService.createOrder(req.body);
-    return order;
-});
-
-exports.updateOrder = asyncHandler(async (req, res) => {
-    const order = await orderService.updateOrder(req.params.id, req.body);
+    const order = await orderService.createOrder(req);
     return order;
 });
 

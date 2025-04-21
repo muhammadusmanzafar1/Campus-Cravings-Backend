@@ -8,29 +8,32 @@ const httpStatus = require('http-status');
 
 const getAllOrders = async () => {
     try {
-        // Need to check admin  role or restaurant role when it is implemented
         const orders = await Order.find()
-        // .populate('user_id', 'name email')  // Populate user details
-        // .populate('restaurant_id', 'name')  // Populate restaurant details
-        // .populate('items.item_id', 'name price'); // Populate item details (name and price)
-
+            .populate('user_id', 'firstName lastName email')
+            .populate('restaurant_id', 'storeName brandName phoneNumber')
+            .populate('items.item_id', 'name price');
         return orders;
     } catch (error) {
-        throw new Error('Error fetching orders: ' + error.message);
+        throw new APIError(`Error fetching orders: ${error.message}`, httpStatus.status.INTERNAL_SERVER_ERROR);
     }
 };
-const createOrder = async (body) => {
+const createOrder = async (req) => {
     try {
-        const { user_id, restaurant_id, status, payment_method, items, tip, delivery_fee, address } = body;
+        const { status, payment_method, items, tip, delivery_fee, address } = req.body;
+        const user_id = req.user._id;
         let total_price = 0;
-
+        let restaurant_id = null;
         for (const item of items) {
             const { item_id, quantity } = item;
             const response = await itemsDB.findById(item_id);
             if (!response) {
                 throw new APIError('Item not found', httpStatus.status.NOT_FOUND);
             }
-            
+            if (!restaurant_id) {
+                restaurant_id = response.restaurant.toString();
+            } else if (response.restaurant.toString() !== restaurant_id) {
+                throw new APIError('All items must be from the same restaurant', httpStatus.status.BAD_REQUEST);
+            }
             total_price += response.price * quantity;
         }
         total_price += tip;
@@ -51,42 +54,24 @@ const createOrder = async (body) => {
         throw new APIError(`Error creating order: ${err.message}`, err.statusCode || httpStatus.status.INTERNAL_SERVER_ERROR);
     }
 };
-const updateOrder = async (id, body) => {
-    try {
-        // need to test restuarant id: 
-        console.log(body);
-        const updatedOrder = await Order.findByIdAndUpdate(id, body, {
-            new: true,
-            runValidators: true,
-        });
-
-        if (!updatedOrder) {
-            throw new Error('Order not found');
-        }
-
-        return updatedOrder;
-    } catch (error) {
-        throw new Error('Error updating order: ' + error.message);
-    }
-};
 const deleteOrder = async (id) => {
     try {
         const deletedOrder = await Order.findByIdAndDelete(id);
 
         if (!deletedOrder) {
-            throw new Error('Order not found');
+            throw new APIError('Order not found', httpStatus.status.NOT_FOUND);
         }
 
         return deletedOrder;
     } catch (error) {
-        throw new Error('Error deleting order: ' + error.message);
+        throw new APIError(`Error deleting order: ${error.message}`, error.statusCode || httpStatus.status.INTERNAL_SERVER_ERROR);
     }
 };
 const patchOrder = async (id, body) => {
     try {
         const order = await Order.findById(id);
         if (!order) {
-            return ('Order not found');
+            throw new APIError('Order not found', httpStatus.status.NOT_FOUND);
         }
         const update = { $set: { ...body } };
         if (body.status) {
@@ -111,7 +96,7 @@ const patchOrder = async (id, body) => {
         });
         return updatedOrder;
     } catch (error) {
-        throw new Error('Error updating order: ' + error.message);
+        throw new APIError(`Error updating order: ${error.message}`, error.statusCode || httpStatus.status.INTERNAL_SERVER_ERROR);
     }
 };
 const getOrder = async (id) => {
@@ -119,7 +104,7 @@ const getOrder = async (id) => {
         const order = await Order.findById(id);
         return order;
     } catch (error) {
-        throw new Error('Error fetching order: ' + error.message);
+        throw new APIError(`Error fetching order: ${error.message}`, error.statusCode || httpStatus.status.INTERNAL_SERVER_ERROR);
     }
 };
 // Resturant orders 
@@ -127,34 +112,33 @@ const getResturantAllOrders = async (req) => {
     try {
         const restaurantId = new mongoose.Types.ObjectId(req.params.restaurantId);
         const orders = await Order.find({ restaurant_id: restaurantId })
-        // .populate('user_id', 'name email')  // Populate user details
-        // .populate('restaurant_id', 'name')  // Populate restaurant details
-        // .populate('items.item_id', 'name price'); // Populate item details (name and price)
-
+            .populate('user_id', 'firstName lastName email')
+            .populate('restaurant_id', 'storeName brandName phoneNumber')
+            .populate('items.item_id', 'name price');
         return orders;
     } catch (error) {
-        throw new Error('Error fetching orders: ' + error.message);
+        throw new APIError(`Error fetching orders: ${error.message}`, error.statusCode || httpStatus.status.INTERNAL_SERVER_ERROR);
     }
 };
 // User orders 
 const getUserAllOrders = async (req) => {
     try {
+        const userType = req.query.for || 'customer';
         const userId = new mongoose.Types.ObjectId(req.params.userId);
-        const orders = await Order.find({ user_id: userId })
-        // .populate('user_id', 'name email')  // Populate user details
-        // .populate('restaurant_id', 'name')  // Populate restaurant details
-        // .populate('items.item_id', 'name price'); // Populate item details (name and price)
-
+        const comparingId = userType === 'rider' ? 'rider_id' : 'user_id';
+        const orders = await Order.find({ [comparingId]: userId })
+            .populate('user_id', 'firstName lastName email')
+            .populate('restaurant_id', 'storeName brandName phoneNumber')
+            .populate('items.item_id', 'name price');
         return orders;
     } catch (error) {
-        throw new Error('Error fetching orders: ' + error.message);
+        throw new APIError(`Error fetching orders: ${error.message}`, error.statusCode || httpStatus.status.INTERNAL_SERVER_ERROR);
     }
 };
 
 module.exports = {
     getAllOrders,
     createOrder,
-    updateOrder,
     deleteOrder,
     patchOrder,
     getOrder,
