@@ -33,12 +33,15 @@ const registerViaEmail = {
                 Joi.object({
                     address: Joi.string().required(),
                     coordinates: Joi.object({
-                        lat: Joi.number().required(),
-                        lng: Joi.number().required(),
-                    }).required(),
+                        type: Joi.string().valid('Point').required(),
+                        coordinates: Joi.array()
+                            .items(Joi.number().required())
+                            .length(2)
+                            .required()
+                    }).required()
                 })
             )
-            .when('isRestaurant', { is: true, then: Joi.required() }),  
+         .when('isRestaurant', { is: true, then: Joi.required() }),
         openingHours: Joi.object({
           monday: Joi.string().optional(),
           tuesday: Joi.string().optional(),
