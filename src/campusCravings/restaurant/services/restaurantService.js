@@ -97,7 +97,7 @@ exports.getAllRestaurant = async (req, res, next) => {
 
 
 
-exports.getNearbyRestaurantsWithCategories = async (req, res) => {
+exports.getNearbyRestaurantsWithCategories = async (req, res, next) => {
     try {
         const { latitude, longitude } = req.query;
 
@@ -124,158 +124,176 @@ exports.getNearbyRestaurantsWithCategories = async (req, res) => {
 
 exports.getpoplarFoodItems = async (req, res) => {
     const { lat, lng } = req.query;
-
-    if (!lat || !lng) {
-        return res.status(400).json({ error: 'Latitude and longitude are required' });
-    }
-
-    try {
-        const nearbyRestaurants = await Restaurant.aggregate([
-            {
-                $geoNear: {
-                    near: {
-                        type: "Point",
-                        coordinates: [parseFloat(lng), parseFloat(lat)]
-                    },
-                    distanceField: "distance",
-                    maxDistance: 32186.9,
-                    spherical: true
-                }
-            },
-            {
-                $project: {
-                    _id: 1
-                }
-            }
-        ]);
-
-        if (!nearbyRestaurants.length) {
-            return res.status(404).json({ message: 'No nearby restaurants found' });
-        }
-
-        const restaurantIds = nearbyRestaurants.map(r => r._id);
-
-        const orders = await Order.aggregate([
-            { $match: { restaurant_id: { $in: restaurantIds } } },
-            { $unwind: "$items" },
-            {
-                $group: {
-                    _id: "$items.item_id",
-                    totalOrdered: { $sum: "$items.quantity" }
-                }
-            },
-            { $sort: { totalOrdered: -1 } },
-            { $limit: 10 },
-            {
-                $lookup: {
-                    from: "items",
-                    localField: "_id",
-                    foreignField: "_id",
-                    as: "itemDetails"
-                }
-            },
-            {
-                $project: {
-                    item_id: "$_id",
-                    totalOrdered: 1,
-                    itemDetails: { $arrayElemAt: ["$itemDetails", 0] }
-                }
-            }
-        ]);
-
-        if (!orders.length) {
-            return res.status(404).json({ message: 'No popular items found' });
-        }
-
-        const popularItems = orders.map(order => ({
-            item_id: order.item_id,
-            name: order.itemDetails.name,
-            price: order.itemDetails.price,
-            description: order.itemDetails.description,
-            totalOrdered: order.totalOrdered,
-            image: order.itemDetails.image,
-        }));
-
-        return res.status(200).json({ popularItems });
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ error: 'An error occurred while fetching popular items' });
-    }
-};
-
-exports.nearbyRestaurant = async (req) => {
-    try {
-        const { latitude, longitude } = req.body;
+    exports.getpoplarFoodItems = async (req, res, next) => {
+        const { latitude, longitude } = req.query;
 
         if (!latitude || !longitude) {
-            throw new ApiError("Missing required parameters: latitude and longitude are required.", httpStatus.status.BAD_REQUEST);
+            throw new ApiError('Latitude and longitude are required', httpStatus.status.BAD_REQUEST)
         }
 
-        const radiusInMeters = 15 * 1609.34;
-
-        const nearbyRestaurants = await Restaurant.find({
-            'addresses.coordinates': {
-                $nearSphere: {
-                    $geometry: {
-                        type: "Point",
-                        coordinates: [longitude, latitude],
-                    },
-                    $maxDistance: radiusInMeters,
+        try {
+            const nearbyRestaurants = await Restaurant.aggregate([
+                {
+                    $geoNear: {
+                        near: {
+                            type: "Point",
+                            coordinates: [parseFloat(lng), parseFloat(lat)]
+                        },
+                        distanceField: "distance",
+                        maxDistance: 32186.9,
+                        spherical: true
+                    }
                 },
-            },
-        });
-        return nearbyRestaurants;
-    } catch (error) {
-        console.error(error);
-        throw new ApiError(error.message, httpStatus.status.BAD_REQUEST);
-    }
-};
-
-// Search Restaurants or Food Items
-exports.searchRestaurantsandFoodItems = async (req) => {
-    try {
-        const { latitude, longitude, search } = req.body;
-        if (!latitude || !longitude || !search) {
-            throw new ApiError("Missing required parameters: latitude, longitude and search are required.", httpStatus.status.BAD_REQUEST);
-        }
-        const radiusInMeters = 15 * 1609.34;
-        // Find nearby restaurants
-        const nearbyRestaurants = await Restaurant.find({
-            'addresses.coordinates': {
-                $nearSphere: {
-                    $geometry: {
-                        type: "Point",
-                        coordinates: [longitude, latitude],
-                    },
-                    $maxDistance: radiusInMeters,
-                },
-            },
-        });
-
-        const nearbyRestaurantIds = nearbyRestaurants.map(r => r._id);
-
-        // Filter restaurants by search term (storeName or brandName)
-        const filteredRestaurants = nearbyRestaurants.filter(r =>
-            r.storeName.toLowerCase().includes(search.toLowerCase()) ||
-            r.brandName.toLowerCase().includes(search.toLowerCase())
-        );
-
-        // Find categories linked to nearby restaurants where any item's name matches the search
-        const matchedCategories = await Category.find({
-            restaurant: { $in: nearbyRestaurantIds },
-            items: {
-                $elemMatch: {
-                    name: { $regex: search, $options: "i" }
+                {
+                    $project: {
+                        _id: 1
+                    }
                 }
-            }
-        });
+            ]);
+            try {
+                const nearbyRestaurants = await Restaurant.aggregate([
+                    {
+                        $geoNear: {
+                            near: {
+                                type: "Point",
+                                coordinates: [parseFloat(longitude), parseFloat(latitude)]
+                            },
+                            distanceField: "distance",
+                            maxDistance: 32186.9,
+                            spherical: true
+                        }
+                    },
+                    { $project: { _id: 1 } }
+                ]);
 
-        return {
-            restaurants: filteredRestaurants,
-            categories: matchedCategories
+
+                if (!nearbyRestaurants.length) {
+                    throw new ApiError('No nearby restaurants found', httpStatus.status.NOT_FOUND)
+                }
+
+                const restaurantIds = nearbyRestaurants.map(r => r._id);
+
+                const orders = await Order.aggregate([
+                    { $match: { restaurant_id: { $in: restaurantIds } } },
+                    { $unwind: "$items" },
+                    {
+                        $group: {
+                            _id: "$items.item_id",
+                            totalOrdered: { $sum: "$items.quantity" }
+                        }
+                    },
+                    { $sort: { totalOrdered: -1 } },
+                    { $limit: 10 },
+                    {
+                        $lookup: {
+                            from: "items",
+                            localField: "_id",
+                            foreignField: "_id",
+                            as: "itemDetails"
+                        }
+                    },
+                    {
+                        $project: {
+                            item_id: "$_id",
+                            totalOrdered: 1,
+                            itemDetails: { $arrayElemAt: ["$itemDetails", 0] }
+                        }
+                    }
+                ]);
+
+                if (!orders.length) {
+                    return res.status(404).json({ message: 'No popular items found' });
+                }
+
+                const popularItems = orders.map(order => ({
+                    item_id: order.item_id,
+                    name: order.itemDetails.name,
+                    price: order.itemDetails.price,
+                    description: order.itemDetails.description,
+                    totalOrdered: order.totalOrdered,
+                    image: order.itemDetails.image,
+                }));
+
+                return res.status(200).json({ popularItems });
+            } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'An error occurred while fetching popular items' });
+            }
         };
-    } catch (error) {
-        console.error(error);
-        throw new ApiError(error.message, httpStatus.BAD_REQUEST);
-    }
-};
+
+        exports.nearbyRestaurant = async (req) => {
+            try {
+                const { latitude, longitude } = req.body;
+
+                if (!latitude || !longitude) {
+                    throw new ApiError("Missing required parameters: latitude and longitude are required.", httpStatus.status.BAD_REQUEST);
+                }
+
+                const radiusInMeters = 15 * 1609.34;
+
+                const nearbyRestaurants = await Restaurant.find({
+                    'addresses.coordinates': {
+                        $nearSphere: {
+                            $geometry: {
+                                type: "Point",
+                                coordinates: [longitude, latitude],
+                            },
+                            $maxDistance: radiusInMeters,
+                        },
+                    },
+                });
+                return nearbyRestaurants;
+            } catch (error) {
+                console.error(error);
+                throw new ApiError(error.message, httpStatus.status.BAD_REQUEST);
+            }
+        };
+
+        // Search Restaurants or Food Items
+        exports.searchRestaurantsandFoodItems = async (req) => {
+            try {
+                const { latitude, longitude, search } = req.body;
+                if (!latitude || !longitude || !search) {
+                    throw new ApiError("Missing required parameters: latitude, longitude and search are required.", httpStatus.status.BAD_REQUEST);
+                }
+                const radiusInMeters = 15 * 1609.34;
+                // Find nearby restaurants
+                const nearbyRestaurants = await Restaurant.find({
+                    'addresses.coordinates': {
+                        $nearSphere: {
+                            $geometry: {
+                                type: "Point",
+                                coordinates: [longitude, latitude],
+                            },
+                            $maxDistance: radiusInMeters,
+                        },
+                    },
+                });
+
+                const nearbyRestaurantIds = nearbyRestaurants.map(r => r._id);
+
+                // Filter restaurants by search term (storeName or brandName)
+                const filteredRestaurants = nearbyRestaurants.filter(r =>
+                    r.storeName.toLowerCase().includes(search.toLowerCase()) ||
+                    r.brandName.toLowerCase().includes(search.toLowerCase())
+                );
+
+                // Find categories linked to nearby restaurants where any item's name matches the search
+                const matchedCategories = await Category.find({
+                    restaurant: { $in: nearbyRestaurantIds },
+                    items: {
+                        $elemMatch: {
+                            name: { $regex: search, $options: "i" }
+                        }
+                    }
+                });
+
+                return {
+                    restaurants: filteredRestaurants,
+                    categories: matchedCategories
+                };
+            } catch (error) {
+                console.error(error);
+                throw new ApiError(error.message, httpStatus.BAD_REQUEST);
+            }
+        };

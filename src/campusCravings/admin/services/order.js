@@ -1,6 +1,7 @@
 'use strict';
 const Order = require('../models/order');
 const category = require('../../restaurant/models/category');
+const itemsDB = require('../../restaurant/models/items')
 const mongoose = require('mongoose');
 const APIError = require('../../../../utils/ApiError');
 const httpStatus = require('http-status');
@@ -25,12 +26,12 @@ const createOrder = async (body) => {
 
         for (const item of items) {
             const { item_id, quantity } = item;
-            const response = await category.findOne({ 'items._id': item_id });
+            const response = await itemsDB.findById(item_id);
             if (!response) {
                 throw new APIError('Item not found', httpStatus.status.NOT_FOUND);
             }
-            const itemPrice = response.items.find(item => item._id.toString() === item_id.toString()).price;
-            total_price += itemPrice * quantity;
+            
+            total_price += response.price * quantity;
         }
         total_price += tip;
         total_price += delivery_fee;
