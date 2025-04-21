@@ -2,12 +2,11 @@ const express = require('express');
 const router = express.Router();
 const httpStatus = require("http-status");
 const ApiError = require('../../../../utils/ApiError');
-const { validate } = require('../../../../middlewares/auth');
 const { getAllTickets, createTicket, updateTicket, deleteTicket, patchTicket, getTicket } = require('../controllers/ticketController');
 const { validateBody } = require("../../../../middlewares/validate");
 const { updateTicketSchema, createTicketSchema } = require("../validators/ticket");
 // Get All Tickets
-router.get("/:period", validate, async (req, res) => {
+router.get("/:period", async (req, res) => {
     try {
         const allTickets = await getAllTickets(req, res);
         res.status(httpStatus.status.OK).json({ message: "Data Fetch Successfully", tickets: allTickets });
@@ -20,7 +19,7 @@ router.get("/:period", validate, async (req, res) => {
     }
 })
 // Add a new ticket
-router.post("/", validate, validateBody(createTicketSchema), async (req, res) => {
+router.post("/", validateBody(createTicketSchema), async (req, res) => {
     try {
         const newTicket = await createTicket(req, res);
         res.status(httpStatus.status.CREATED).json({
@@ -35,7 +34,7 @@ router.post("/", validate, validateBody(createTicketSchema), async (req, res) =>
     }
 });
 // Update an existing ticket
-router.put("/:id", validate, validateBody(updateTicketSchema), async (req, res) => {
+router.put("/:id", validateBody(updateTicketSchema), async (req, res) => {
     try {
         const updatedTicket = await updateTicket(req, res);
         res.status(httpStatus.status.OK).json({
@@ -50,7 +49,7 @@ router.put("/:id", validate, validateBody(updateTicketSchema), async (req, res) 
     }
 });
 // Delete a ticket
-router.delete("/:id", validate, async (req, res) => {
+router.delete("/:id", async (req, res) => {
     try {
         const deletedTicket = await deleteTicket(req, res);
         res.status(httpStatus.status.OK).json({
@@ -65,7 +64,7 @@ router.delete("/:id", validate, async (req, res) => {
     }
 });
 // Patch an existing ticket
-router.patch("/:id", validate, validateBody(updateTicketSchema), async (req, res) => {
+router.patch("/:id", validateBody(updateTicketSchema), async (req, res) => {
     try {
         const updatedTicket = await patchTicket(req.params.id, req.body);
         return res
@@ -77,7 +76,7 @@ router.patch("/:id", validate, validateBody(updateTicketSchema), async (req, res
     }
 });
 // Get a specific ticket
-router.get("/ticketbyid/:id", validate, async (req, res) => {
+router.get("/ticketbyid/:id", async (req, res) => {
     try {
         const ticket = await getTicket(req, res);
         res.status(httpStatus.status.OK).json({ message: "Data Fetch Successfully", ticket: ticket });

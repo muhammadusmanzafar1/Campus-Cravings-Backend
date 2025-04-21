@@ -57,16 +57,8 @@ app.use(cookieParser());
 
 app.use(compression());
 
-// Routes
-// app.use("/api/users", require("./routes/userRoutes"));
-app.use("/api/auth", require("./src/auth/routes/authRoute"));
-app.use("/api/admin", require("./src/campusCravings/admin/routes/adminRoute"));
-app.use("/api/user", require("./src/campusCravings/users/routes/userRoute"));
-app.use("/api/restaurant", require("./src/campusCravings/restaurant/routes/restaurantRoute"));
-app.use("/api", categoryRoutes);
-// app.use("/api", categoryRoutes);
+// Routes 
 app.use("/api", apiRoutes);
-app.use("/api/user", require("./src/campusCravings/users/routes/userRoute"));
 
 // convert error to CustomError, if needed
 app.use(errorConverter);

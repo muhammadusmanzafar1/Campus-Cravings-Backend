@@ -145,7 +145,7 @@ const login = async (body) => {
      }
 
      if (!user) {
-          throw new ApiError('User Not Found', httpStatus.NOT_FOUND);
+          throw new ApiError('User Not Found', httpStatus.status.NOT_FOUND);
      }
      let isPasswordMatch;
      switch (verificationType) {
