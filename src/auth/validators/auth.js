@@ -28,13 +28,17 @@ const registerViaEmail = {
         storeName: Joi.string().when('isRestaurant', { is: true, then: Joi.required() }),
         brandName: Joi.string().when('isRestaurant', { is: true, then: Joi.required() }),
         floor: Joi.string().when('isRestaurant', { is: true, then: Joi.required() }),
-        addresses: Joi.object({
-            address: Joi.string().required(),
-            coordinates: Joi.object({
-              lat: Joi.number().required(),
-              lng: Joi.number().required(),
-            }).required()
-          }).when('isRestaurant', { is: true, then: Joi.required() }),     
+        addresses: Joi.array()
+            .items(
+                Joi.object({
+                    address: Joi.string().required(),
+                    coordinates: Joi.object({
+                        lat: Joi.number().required(),
+                        lng: Joi.number().required(),
+                    }).required(),
+                })
+            )
+            .when('isRestaurant', { is: true, then: Joi.required() }),  
         openingHours: Joi.object({
           monday: Joi.string().optional(),
           tuesday: Joi.string().optional(),

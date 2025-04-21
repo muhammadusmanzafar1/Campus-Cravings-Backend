@@ -26,7 +26,7 @@ const restaurantSchema = new Schema({
         required: true,
       },
       coordinates: {
-        type: [Number], 
+        type: [Number],
         required: true,
       }
     }
@@ -69,16 +69,7 @@ restaurantSchema.statics.newEntity = async function (body, createdByAdmin = true
     storeName: body.storeName,
     brandName: body.brandName,
     phoneNumber: body.phoneNumber,
-    addresses: {
-      address: body.addresses.address,
-      coordinates: {
-        type: 'Point',
-        coordinates: [
-          body.addresses.coordinates.lng,
-          body.addresses.coordinates.lat,
-        ],
-      },
-    },
+    addresses: body.addresses[0],
     cuisine: body.cuisine,
     deliveryMethods: body.deliveryMethods,
     paymentMethods: body.paymentMethods,
