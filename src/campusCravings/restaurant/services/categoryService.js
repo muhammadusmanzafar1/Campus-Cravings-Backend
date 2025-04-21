@@ -3,6 +3,7 @@ const httpStatus = require('http-status');
 const ApiError = require("../../../../utils/ApiError");
 const Category = require('../models/category');
 const Restaurant = require('../models/restaurant');
+const items = require('../models/items')
 const mongoose = require('mongoose');
 
 // Create a new category with items
@@ -45,11 +46,14 @@ const createItem = async (data) => {
         if (!category) {
             throw new ApiError("Category not found", httpStatus.status.NOT_FOUND);
         }
-
-        category.items.push(itemData);
+        const itemsData = new items(itemData)
+        itemsData.category = category._id;
+        itemsData.restaurant = category.restaurant;
+        await itemsData.save();
+        category.items.push(itemsData._id);
         await category.save();
 
-        return category;
+        return itemData;
     } catch (error) {
 
         throw new ApiError(error.message, httpStatus.status.INTERNAL_SERVER_ERROR);
@@ -58,14 +62,10 @@ const createItem = async (data) => {
 
 const getCategoryItemsById = async (itemId) => {
     try {
-        const item = await Category.aggregate([
-            { $unwind: "$items" },
-            { $match: { "items._id": mongoose.Types.ObjectId.createFromHexString(itemId) } },
-            { $project: { "items": 1 } }
-        ]);
+        const item = await items.findById(itemId)
 
-        if (item.length === 0) throw new Error('Item not found');
-        return item[0].items;
+        if (!item) throw new Error('Item not found');
+        return item;
     } catch (error) {
         console.error(error);
         throw new ApiError(error.message, httpStatus.status.BAD_REQUEST);
@@ -77,8 +77,8 @@ const updateCategory = async (data) => {
         const { _id, ...newItem } = data;
         console.log("Data to update:", data);
 
-        const updatedCategory = await Category.findOneAndUpdate(
-            { "items._id": _id },
+        const updatedCategory = await items.findOneAndUpdate(
+            { "_id": _id },
             {
                 $set: {
                     "items.$.name": newItem.name,
@@ -92,10 +92,8 @@ const updateCategory = async (data) => {
             { new: true }
         );
 
-        console.log("Updated Category:", updatedCategory);
-
         if (!updatedCategory) {
-            throw new Error('Category or item not found');
+            throw new ApiError('Category or item not found', httpStatus.status.NOT_FOUND);
         }
 
         const updatedItem = updatedCategory.items.find(item => item._id.toString() === _id.toString());

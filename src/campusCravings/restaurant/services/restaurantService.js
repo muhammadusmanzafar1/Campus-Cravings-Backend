@@ -96,7 +96,7 @@ exports.getAllRestaurant = async (req, res, next) => {
 
 
 
-exports.getNearbyRestaurantsWithCategories = async (req, res) => {
+exports.getNearbyRestaurantsWithCategories = async (req, res, next) => {
     try {
         const { latitude, longitude } = req.query;
 
@@ -121,81 +121,73 @@ exports.getNearbyRestaurantsWithCategories = async (req, res) => {
     }
 };
 
-exports.getpoplarFoodItems = async (req, res) => {
-    const { lat, lng } = req.query; 
+exports.getpoplarFoodItems = async (req, res, next) => {
+    const { latitude, longitude } = req.query;
 
-    if (!lat || !lng) {
-        return res.status(400).json({ error: 'Latitude and longitude are required' });
+  if (!latitude || !longitude) {
+    throw new ApiError('Latitude and longitude are required', httpStatus.status.BAD_REQUEST)
+  }
+
+  try {
+    const nearbyRestaurants = await Restaurant.aggregate([
+      {
+        $geoNear: {
+          near: {
+            type: "Point",
+            coordinates: [parseFloat(longitude), parseFloat(latitude)]
+          },
+          distanceField: "distance",
+          maxDistance: 32186.9,
+          spherical: true
+        }
+      },
+      { $project: { _id: 1 } }
+    ]);
+    
+
+    if (!nearbyRestaurants.length) {
+        throw new ApiError('No nearby restaurants found', httpStatus.status.NOT_FOUND)
     }
 
-    try {
-        const nearbyRestaurants = await Restaurant.aggregate([
-            {
-                $geoNear: {
-                    near: {
-                        type: "Point",
-                        coordinates: [parseFloat(lng), parseFloat(lat)] 
-                    },
-                    distanceField: "distance",
-                    maxDistance: 32186.9,
-                    spherical: true
-                }
-            },
-            {
-                $project: {
-                    _id: 1
-                }
-            }
-        ]);
+    const restaurantIds = nearbyRestaurants.map(r => r._id);
 
-        if (!nearbyRestaurants.length) {
-            return res.status(404).json({ message: 'No nearby restaurants found' });
+    const orders = await Order.aggregate([
+      { $match: { restaurant_id: { $in: restaurantIds } } },
+      { $unwind: "$items" },
+      {
+        $group: {
+          _id: "$items.item_id",
+          totalOrdered: { $sum: "$items.quantity" }
         }
-
-        const restaurantIds = nearbyRestaurants.map(r => r._id);
-
-        const orders = await Order.aggregate([
-            { $match: { restaurant_id: { $in: restaurantIds } } },
-            { $unwind: "$items" },
-            { $group: {
-                _id: "$items.item_id",
-                totalOrdered: { $sum: "$items.quantity" }
-            }},
-            { $sort: { totalOrdered: -1 } },
-            { $limit: 10 },
-            {
-                $lookup: {
-                    from: "items",
-                    localField: "_id",
-                    foreignField: "_id",
-                    as: "itemDetails"
-                }
-            },
-            {
-                $project: {
-                    item_id: "$_id",
-                    totalOrdered: 1,
-                    itemDetails: { $arrayElemAt: ["$itemDetails", 0] }
-                }
-            }
-        ]);
-
-        if (!orders.length) {
-            return res.status(404).json({ message: 'No popular items found' });
+      },
+      { $sort: { totalOrdered: -1 } },
+      { $limit: 10 },
+      {
+        $lookup: {
+          from: "items", // <-- works only if Item is a separate collection
+          localField: "_id",
+          foreignField: "_id",
+          as: "itemDetails"
         }
+      },
+      {
+        $unwind: "$itemDetails"
+      },
+      {
+        $project: {
+          item_id: "$_id",
+          name: "$itemDetails.name",
+          description: "$itemDetails.description",
+          price: "$itemDetails.price",
+          image: "$itemDetails.image",
+          totalOrdered: 1
+        }
+      }
+    ]);
 
-        const popularItems = orders.map(order => ({
-            item_id: order.item_id,
-            name: order.itemDetails.name,
-            price: order.itemDetails.price,
-            description: order.itemDetails.description,
-            totalOrdered: order.totalOrdered,
-            image: order.itemDetails.image,
-        }));
-
-        return res.status(200).json({ popularItems });
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ error: 'An error occurred while fetching popular items' });
-    }
+    return orders
+  } catch (error) {
+    console.error(error);
+    throw new ApiError('Failed to fetch orders', httpStatus.status.INTERNAL_SERVER_ERROR);
+  }
 };
