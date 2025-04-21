@@ -54,21 +54,6 @@ const createOrder = async (req) => {
         throw new APIError(`Error creating order: ${err.message}`, err.statusCode || httpStatus.status.INTERNAL_SERVER_ERROR);
     }
 };
-const updateOrder = async (id, body) => {
-    try {
-        const updatedOrder = await Order.findByIdAndUpdate(id, body, {
-            new: true,
-            runValidators: true,
-        });
-        if (!updatedOrder) {
-            throw new APIError('Order not found', httpStatus.status.NOT_FOUND);
-        }
-
-        return updatedOrder;
-    } catch (error) {
-        throw new APIError(`Error updating order: ${error.message}`, error.statusCode || httpStatus.status.INTERNAL_SERVER_ERROR);
-    }
-};
 const deleteOrder = async (id) => {
     try {
         const deletedOrder = await Order.findByIdAndDelete(id);
@@ -153,7 +138,6 @@ const getUserAllOrders = async (req) => {
 module.exports = {
     getAllOrders,
     createOrder,
-    updateOrder,
     deleteOrder,
     patchOrder,
     getOrder,

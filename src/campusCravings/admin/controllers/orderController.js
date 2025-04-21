@@ -12,11 +12,6 @@ exports.createOrder = asyncHandler(async (req, res) => {
     return order;
 });
 
-exports.updateOrder = asyncHandler(async (req, res) => {
-    const order = await orderService.updateOrder(req.params.id, req.body);
-    return order;
-});
-
 exports.patchOrder = asyncHandler(async (req, res) => {
     const order = await orderService.patchOrder(req.params.id, req.body);
     return order;
