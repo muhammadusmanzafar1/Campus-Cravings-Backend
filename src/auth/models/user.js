@@ -9,6 +9,7 @@ const entitySchema = new mongoose.Schema({
     lastName: String,
     fullName: String,
     userName: String,
+    universityName: String,
     imgUrl: String,
     authMethod: {
         type: String,
@@ -17,6 +18,7 @@ const entitySchema = new mongoose.Schema({
     },
     countryCode: String,
     ISOCode: String,
+    phoneNumber: Number,
     phone: String,
     email: {
         type: String,
@@ -118,6 +120,8 @@ entitySchema.statics.newEntity = async function (body, createdByAdmin = true) {
         authMethod: body.authMethod,
         userName: body.firstName ? `${body.firstName}_${utils.generateRandomAlphaNumeric()}` : utils.generateRandomAlphaNumeric(),
         email: body.email,
+        phoneNumber: body.phoneNumber,
+        universityName: body.universityName,
         phone: body.phone,
         ISOCode: body.ISOCode,
         countryCode: body.countryCode,
