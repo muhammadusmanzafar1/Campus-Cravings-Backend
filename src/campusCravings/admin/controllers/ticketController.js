@@ -31,3 +31,8 @@ exports.getTicket = async (req, res) => {
     const ticket = await ticketService.getTicket(req.params.id);
     return ticket;
 };
+
+exports.replyticket = async (req, res) => {
+    const ticket = await ticketService.replyticket(req);
+    return ticket;
+};

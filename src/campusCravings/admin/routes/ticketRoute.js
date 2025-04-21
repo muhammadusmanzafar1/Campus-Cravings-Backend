@@ -2,9 +2,9 @@ const express = require('express');
 const router = express.Router();
 const httpStatus = require("http-status");
 const ApiError = require('../../../../utils/ApiError');
-const { getAllTickets, createTicket, updateTicket, deleteTicket, patchTicket, getTicket, getUserTickets } = require('../controllers/ticketController');
+const { getAllTickets, createTicket, updateTicket, deleteTicket, patchTicket, getTicket, replyticket } = require('../controllers/ticketController');
 const { validateBody } = require("../../../../middlewares/validate");
-const { updateTicketSchema, createTicketSchema } = require("../validators/ticket");
+const { updateTicketSchema, createTicketSchema, replyTicketSchema } = require("../validators/ticket");
 // Get All Tickets
 router.get("/:period", async (req, res) => {
     try {
@@ -87,7 +87,21 @@ router.get("/ticketbyid/:id", async (req, res) => {
         return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
     }
 });
-
+// Reply to a ticket
+router.patch("/reply/:id", validateBody(replyTicketSchema), async (req, res) => {
+    try {
+        const updatedTicket = await replyticket(req, res);
+        res.status(httpStatus.status.OK).json({
+            message: "Ticket updated successfully",
+            ticket: updatedTicket,
+        });
+    } catch (error) {
+        if (error instanceof ApiError) {
+            return res.status(error.statusCode).json({ message: error.message });
+        }
+        return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
+    }
+});
 
 
 module.exports = router;

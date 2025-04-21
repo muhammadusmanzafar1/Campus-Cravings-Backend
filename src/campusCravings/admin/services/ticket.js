@@ -99,6 +99,22 @@ const getTicket = async (id) => {
     }
     return ticket;
 };
+const replyticket = async (req) => {
+    const ticket = await Ticket.findById(req.params.id);
+    if (!ticket) {
+        throw new ApiError("Ticket not found", httpStatus.status.NOT_FOUND);
+    }
+    const sender = req.user?.isAdmin ? "admin" : "user";
+    const { text = '', imageUrl = [] } = req.body;
+    const message = {
+        sender,
+        text,
+        imageUrl
+    };
+    ticket.messages.push(message);
+    await ticket.save();
+    return ticket;
+};
 
 module.exports = {
     getAllTickets,
@@ -106,5 +122,6 @@ module.exports = {
     updateTicket,
     patchTicket,
     deleteTicket,
-    getTicket
+    getTicket,
+    replyticket
 };

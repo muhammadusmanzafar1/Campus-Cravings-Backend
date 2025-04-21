@@ -11,17 +11,27 @@ const createTicketSchema = Joi.object({
     status: Joi.string().valid("pending", "archive", "resolved"),
     priority: Joi.string().valid("low", "medium", "high"),
     imgUrl: Joi.array().items(Joi.string().uri()),
-    messages: Joi.array().items(messageSchema),
 }).min(2);
 const updateTicketSchema = Joi.object({
     subject: Joi.string(),
     description: Joi.string(),
     status: Joi.string().valid("pending", "archive", "resolved"),
     priority: Joi.string().valid("low", "medium", "high"),
-    imgUrl: Joi.array().items(Joi.string().uri())
+    imgUrl: Joi.array().items(Joi.string().uri()),
 }).min(1);
-
+const replyTicketSchema = Joi.object({
+    text: Joi.string().allow('').optional(),
+    imageUrl: Joi.array().items(Joi.string().uri()).optional()
+}).custom((value, helpers) => {
+    if (!value.text && (!value.imageUrl || value.imageUrl.length === 0)) {
+        return helpers.error("any.invalid");
+    }
+    return value;
+}).messages({
+    "any.invalid": "Message must contain either text or image."
+});
 module.exports = {
     createTicketSchema,
-    updateTicketSchema
+    updateTicketSchema,
+    replyTicketSchema
 };
