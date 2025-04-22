@@ -74,18 +74,14 @@ const getCategoryItemsById = async (itemId) => {
 const updateCategory = async (data) => {
     try {
         const { _id, ...newItem } = data;
-        console.log("Data to update:", data);
 
         const updatedCategory = await items.findOneAndUpdate(
-            { "_id": _id },
+            {
+                "_id": _id
+            },
             {
                 $set: {
-                    "items.$.name": newItem.name,
-                    "items.$.price": newItem.price,
-                    "items.$.description": newItem.description,
-                    "items.$.estimated_preparation_time": newItem.estimated_preparation_time,
-                    "items.$.customization": newItem.customization,
-                    "items.$.image": newItem.image
+                    ...newItem
                 }
             },
             { new: true }
@@ -95,24 +91,20 @@ const updateCategory = async (data) => {
             throw new ApiError('Category or item not found', httpStatus.status.NOT_FOUND);
         }
 
-        const updatedItem = updatedCategory.items.find(item => item._id.toString() === _id.toString());
-        return updatedItem;
+        return updatedCategory;
 
     } catch (error) {
         throw new ApiError(error.message, httpStatus.status.BAD_REQUEST);
     }
 };
 
+
 const deleteCategoryItem = async (id) => {
     try {
-        const updatedCategory = await Category.findOneAndUpdate(
-            { "items._id": id },
-            { $pull: { items: { _id: id } } },
-            { new: true }
-        );
+        const updatedCategory = await items.findByIdAndDelete(id);
 
         if (!updatedCategory) {
-            throw new Error('Category or item not found');
+            throw new ApiError('item not found', http.status.NOT_FOUND);
         }
 
         return "item deleted";

@@ -1,4 +1,5 @@
 // models/Rider.js
+const { required } = require('joi');
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
@@ -7,6 +8,31 @@ const riderSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'User',
     required: true,
+  },
+  batch_year: {
+    type: String,
+    required: true
+  },
+  majors: {
+    type: [String],
+    required: true
+  },
+  monirs: {
+    type: [String],
+  },
+  club_organizations: {
+    type: [String],
+  },
+  bio: {
+    type: String,
+  },
+  SSN: {
+    type: String,
+    required: true
+  },
+  national_id_image_url: {
+    type: String,
+    required: true
   },
   totalHours: {
     type: Number,
@@ -42,7 +68,7 @@ const riderSchema = new Schema({
   status: {
     type: String,
     enum: ['pending', 'active', 'inactive', 'banned'],
-    default: 'pending'
+    default: 'active'
   },
   createdAt: {
     type: Date,
