@@ -10,7 +10,7 @@ const createSession = async (user, body) => {
         deviceType: body.deviceType
     };
     if (sessionType == 'single') {
-        await expireSessions(user.id);
+        await expireSessions(user._id);
     }
     let entity = new SessionDB(model);
     

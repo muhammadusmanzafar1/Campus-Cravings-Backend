@@ -15,31 +15,30 @@ const apiRoutes = require('./src/campusCravings/routes/index')
 
 const app = express();
 
-app.use(function (err, req, res, next) {
-    if (err) {
-        (res.log).error(err.stack);
-        if (req.xhr) {
-            res.send(500, { error: 'Something went wrong!' });
-        } else {
-            next(err);
-        }
-
-        return;
-    }
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
-    next();
-});
-
 // Middleware
 
 // sanitize request data
 // app.use(mongoSanitize());
 
 // enable cors
-app.use(cors('*'));
-// app.options('*', cors());
+const corsOptions = {
+  origin: '*', // allow all origins
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+
+app.use(cors(corsOptions));
+
+// ✅ Handle preflight requests safely
+app.use((req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    return res.sendStatus(200);
+  }
+  next();
+});
 
 //media Uploads
 app.use(upload.any());
@@ -67,7 +66,7 @@ app.use(errorConverter);
 app.use(errorHandler);
 
 app.get("/", (req, res) => {
-    res.send("Welcome to SocialHype!");
+    res.send("Welcome to Campus Cravings!");
 });
 
 module.exports = app;
