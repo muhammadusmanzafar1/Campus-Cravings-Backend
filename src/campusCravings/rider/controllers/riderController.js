@@ -13,3 +13,8 @@ exports.getUnassignedOrders = asyncHandler(async (req, res, next) => {
     const data = await riderService.getRandomUnassignedOrder(req, res, next);
     return data;
 });
+
+exports.deliverOrder = asyncHandler(async (req, res, next) => {
+    const data = await riderService.deliverOrder(req, res, next);
+    return data;
+});

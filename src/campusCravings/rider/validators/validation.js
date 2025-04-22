@@ -12,6 +12,14 @@ const registerRiderSchema = {
     })
 }
 
+const deliverOrderSchema = {
+    body: Joi.object({
+        orderId: Joi.string().required()
+    })
+
+}
+
 module.exports = {
-    registerRiderSchema
+    registerRiderSchema,
+    deliverOrderSchema
 };

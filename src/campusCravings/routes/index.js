@@ -13,5 +13,8 @@ const admin = require("../admin/routes/adminRoute");
 router.use("/auth", auth);
 router.use("/categories", validate, category);
 router.use("/restaurants", validate, restaurant);
+router.use("/rider", validate, rider);
+router.use("/user", validate, user);
+router.use("/admin", validate, admin);
 
 module.exports = router;
