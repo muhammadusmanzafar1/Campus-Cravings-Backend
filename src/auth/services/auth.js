@@ -159,7 +159,7 @@ const login = async (body) => {
                if (!isPasswordMatch) {
                     throw new ApiError(
                          'Incorrect email or password',
-                         httpStatus.OK
+                         httpStatus.status.OK
                     );
                }
                break;
@@ -173,7 +173,7 @@ const login = async (body) => {
           default:
                throw new ApiError(
                     'Invalid verification type',
-                    httpStatus.BAD_REQUEST
+                    httpStatus.status.BAD_REQUEST
                );
      }
      await validateUser(user);
