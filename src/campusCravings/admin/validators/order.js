@@ -33,7 +33,6 @@ const progressSchema = Joi.array().items(
     })
 ).default([]);
 const createOrderSchema = Joi.object({
-    status: Joi.string().valid(...statusEnum).default('pending'),
     progress: progressSchema,
     payment_method: Joi.string().valid('cash', 'card', 'wallet', 'upi').required(),
     tip: Joi.number().min(0).default(0),
