@@ -1,6 +1,5 @@
 'use strict';
 const Order = require('../models/order');
-const category = require('../../restaurant/models/category');
 const itemsDB = require('../../restaurant/models/items')
 const mongoose = require('mongoose');
 const APIError = require('../../../../utils/ApiError');
@@ -19,7 +18,7 @@ const getAllOrders = async () => {
 };
 const createOrder = async (req) => {
     try {
-        const { payment_method, items, tip, delivery_fee, addresses } = req.body;
+        const { payment_method, items, tip, delivery_fee, addresses, customizations = [] } = req.body;
         const user_id = req.user._id;
         let total_price = 0;
         let restaurant_id = null;
@@ -34,7 +33,17 @@ const createOrder = async (req) => {
             } else if (response.restaurant.toString() !== restaurant_id) {
                 throw new APIError('All items must be from the same restaurant', httpStatus.status.BAD_REQUEST);
             }
-            total_price += response.price * quantity;
+            let customizedItemPrice = 0;
+            const itemCustomizations = item.customizations || [];
+            for (const customizationId of itemCustomizations) {
+                const matchedCustomization = response.customization.find(
+                    (c) => c._id.toString() === customizationId.toString()
+                );
+                if (matchedCustomization) {
+                    customizedItemPrice += matchedCustomization.price;
+                }
+            }
+            total_price += (response.price + customizedItemPrice) * quantity;
         }
         total_price += tip;
         total_price += delivery_fee;
