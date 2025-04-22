@@ -117,6 +117,7 @@ entitySchema.statics.newEntity = async function (body, createdByAdmin = true) {
         firstName: body.firstName,
         lastName: body.lastName,
         fullName: body.firstName && body.lastName ? `${body.firstName} ${body.lastName}` : null,
+        imgUrl: body.imgUrl,
         authMethod: body.authMethod,
         userName: body.firstName ? `${body.firstName}_${utils.generateRandomAlphaNumeric()}` : utils.generateRandomAlphaNumeric(),
         email: body.email,
