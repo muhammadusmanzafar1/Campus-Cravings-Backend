@@ -63,19 +63,25 @@ exports.getAllCategoryByRestaurantId = async (req, res, next) => {
             throw new ApiError("Invalid restaurant ID", httpStatus.status.BAD_REQUEST);
         }
 
-        const categories = await Category.find({ restaurant: restaurantId });
+        const categories = await Category.find({ restaurant: restaurantId })
+            .populate('items'); // Populate item details
 
-        // If no categories found, throw an error
         if (!categories || categories.length === 0) {
             throw new ApiError("No categories found for this restaurant", httpStatus.status.NOT_FOUND);
         }
 
-        return categories; // Return categories if found
+        return categories;
     } catch (error) {
-        // Directly throw the error to be handled in the controller
-        throw new ApiError(error.message || "Something went wrong", error.statusCode || httpStatus.status.INTERNAL_SERVER_ERROR);
+        console.error('Error occurred while fetching categories:', error);
+        next(
+            new ApiError(
+                error.message || "Something went wrong",
+                error.statusCode || httpStatus.status.INTERNAL_SERVER_ERROR
+            )
+        );
     }
 };
+
 
 
 
@@ -85,7 +91,7 @@ exports.getAllRestaurant = async (req, res, next) => {
         const categories = await Category.find({ restaurant: restaurantId });
 
         if (!categories || categories.length === 0) {
-            return res.status(404).json({ message: 'No categories found for this restaurant' });
+            throw new ApiError("No category Found", httpStatus.status.NOT_FOUND);
         }
 
         return res.status(200).json(categories);
