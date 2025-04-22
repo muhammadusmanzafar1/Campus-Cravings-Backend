@@ -17,7 +17,7 @@ exports.registerViaPhone = asyncHandler(async (req, res) => {
 
 exports.verifyOTP = asyncHandler(async (req, res) => {
     let user = await authService.verifyOTP(req.body);
-    user.deviceId = req.body.deviceId;
+    // user.deviceId = req.body.deviceId;
     user.deviceType = req.body.deviceType;
     const session = await sessionService.createSession(user, req.body);
     const responseData = {
@@ -36,7 +36,7 @@ exports.verifyOTP = asyncHandler(async (req, res) => {
 
 exports.login = asyncHandler(async (req, res) => {
     let user = await authService.login(req.body);
-    user.deviceId = req.body.deviceId;
+    // user.deviceId = req.body.deviceId;
     user.deviceType = req.body.deviceType;
 
     const session = await sessionService.createSession(user, req.body);
