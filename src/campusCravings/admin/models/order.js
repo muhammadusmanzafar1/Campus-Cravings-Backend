@@ -15,7 +15,7 @@ const orderSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Rider',
         default: null
-      },
+    },
     status: {
         type: String,
         enum: [
@@ -32,6 +32,7 @@ const orderSchema = new mongoose.Schema({
     progress: {
         type: [
             {
+                _id: false,
                 status: {
                     type: String,
                     enum: [
@@ -76,9 +77,20 @@ const orderSchema = new mongoose.Schema({
         type: String,
         default: ''
     },
-    address: {
-        type: String,
-        required: true
+    addresses: {
+        address: { type: String, required: true },
+        coordinates: {
+            type: {
+                type: String,
+                enum: ['Point'],
+                default: 'Point',
+                required: true,
+            },
+            coordinates: {
+                type: [Number],
+                required: true,
+            }
+        }
     },
     image_url: {
         type: String,
