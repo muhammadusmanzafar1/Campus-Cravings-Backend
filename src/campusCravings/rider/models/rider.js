@@ -8,6 +8,14 @@ const riderSchema = new Schema({
     ref: 'User',
     required: true,
   },
+  totalHours: {
+    type: Number,
+    default: 0
+  },
+  totalDistance: {
+    type: Number,
+    default: 0
+  },
   isAvailable: {
     type: Boolean,
     default: true
@@ -33,7 +41,7 @@ const riderSchema = new Schema({
   },
   status: {
     type: String,
-    enum: ['pending','active', 'inactive', 'banned'],
+    enum: ['pending', 'active', 'inactive', 'banned'],
     default: 'pending'
   },
   createdAt: {

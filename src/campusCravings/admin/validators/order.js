@@ -1,5 +1,17 @@
 const Joi = require("joi");
 const objectId = Joi.string().regex(/^[0-9a-fA-F]{24}$/);
+const coordinatesSchema = Joi.object({
+    type: Joi.string().valid('Point').default('Point').required(),
+    coordinates: Joi.array()
+        .items(Joi.number().required())
+        .length(2)
+        .required()
+});
+
+const addressesSchema = Joi.object({
+    address: Joi.string().required(),
+    coordinates: coordinatesSchema.required()
+});
 const statusEnum = [
     'pending',
     'order_accepted',
@@ -21,19 +33,18 @@ const progressSchema = Joi.array().items(
     })
 ).default([]);
 const createOrderSchema = Joi.object({
-    status: Joi.string().valid(...statusEnum).default('pending'),
     progress: progressSchema,
     payment_method: Joi.string().valid('cash', 'card', 'wallet', 'upi').required(),
     tip: Joi.number().min(0).default(0),
     delivery_fee: Joi.number().min(0).default(0),
     estimated_time: Joi.string().allow('').default(''),
     order_type: Joi.string().allow('').default(''),
-    address: Joi.string().required(),
+    addresses: addressesSchema.required(),
     image_url: Joi.string().uri().allow('').default(''),
     items: Joi.array().items(orderItemSchema).default([])
 });
 const updateOrderSchema = Joi.object({
-    rider_id: Joi.alternatives().try(objectId, Joi.valid(null)),
+    assigned_to: Joi.alternatives().try(objectId, Joi.valid(null)),
     status: Joi.string().valid(...statusEnum),
     progress: progressSchema,
     total_price: Joi.number(),
@@ -42,7 +53,7 @@ const updateOrderSchema = Joi.object({
     delivery_fee: Joi.number().min(0),
     estimated_time: Joi.string().allow(''),
     order_type: Joi.string().allow(''),
-    address: Joi.string(),
+    addresses: addressesSchema.allow(''),
     image_url: Joi.string().uri().allow('')
 }).min(1);
 module.exports = {

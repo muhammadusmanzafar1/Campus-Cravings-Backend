@@ -19,7 +19,7 @@ const getAllOrders = async () => {
 };
 const createOrder = async (req) => {
     try {
-        const { status, payment_method, items, tip, delivery_fee, address } = req.body;
+        const {  payment_method, items, tip, delivery_fee, address } = req.body;
         const user_id = req.user._id;
         let total_price = 0;
         let restaurant_id = null;
@@ -41,7 +41,7 @@ const createOrder = async (req) => {
         const newOrder = new Order({
             user_id,
             restaurant_id,
-            status,
+            status: 'pending',
             total_price,
             payment_method,
             items,
