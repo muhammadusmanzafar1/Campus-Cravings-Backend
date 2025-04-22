@@ -4,6 +4,7 @@ const Order = require("../../admin/models/order");
 const Restaurant = require("../models/restaurant");
 const Category = require("../models/category");
 const mongoose = require("mongoose");
+const Item = require("../../restaurant/models/items");
 
 
 exports.getRestaurantAnalytics = async (req, res, next) => {
@@ -253,28 +254,19 @@ exports.searchRestaurantsandFoodItems = async (req) => {
                 },
             },
         });
-
         const nearbyRestaurantIds = nearbyRestaurants.map(r => r._id);
-
         // Filter restaurants by search term (storeName or brandName)
         const filteredRestaurants = nearbyRestaurants.filter(r =>
             r.storeName.toLowerCase().includes(search.toLowerCase()) ||
             r.brandName.toLowerCase().includes(search.toLowerCase())
         );
-
-        // Find categories linked to nearby restaurants where any item's name matches the search
-        const matchedCategories = await Category.find({
+        const matchedItems = await Item.find({
             restaurant: { $in: nearbyRestaurantIds },
-            items: {
-                $elemMatch: {
-                    name: { $regex: search, $options: "i" }
-                }
-            }
-        });
-
+            name: { $regex: search, $options: 'i' }
+        }).populate('category');
         return {
             restaurants: filteredRestaurants,
-            categories: matchedCategories
+            FoodItems: matchedItems
         };
     } catch (error) {
         console.error(error);
