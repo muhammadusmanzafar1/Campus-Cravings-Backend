@@ -209,7 +209,7 @@ const getTopRestaurants = async (req) => {
         ]);
         return topRestaurants;
     } catch (error) {
-        throw new ApiError("Error fetching top Restaurants", httpStatus.status.INTERNAL_SERVER_ERROR);
+        throw new ApiError(`Error fetching top Restaurants: ${error.message}`, httpStatus.status.INTERNAL_SERVER_ERROR);
     }
 };
 module.exports = {
