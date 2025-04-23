@@ -54,7 +54,7 @@ exports.login = asyncHandler(async (req, res) => {
     //     secure: process.env.NODE_ENV == 'prod',
     //     httpOnly: true,
     // };
-    res.cookie('refreshToken', session.refreshToken, option).cookie(
+    res.cookie('refreshToken', session.refreshToken).cookie(
         'accessToken',
         session.accessToken
     );
