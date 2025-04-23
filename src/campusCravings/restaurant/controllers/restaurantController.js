@@ -62,3 +62,8 @@ exports.getpoplarFoodItems = asyncHandler(async (req, res, next) => {
         throw new ApiError(error.message, httpStatus.status.NOT_FOUND);
     }
 });
+// Resturant Analytics
+exports.getResturantAnalytics = asyncHandler(async (req, res) => {
+    const orders = await restaurantService.getResturantAnalytics(req);
+    return orders;
+});
