@@ -59,7 +59,20 @@ exports.getAllCategoryByRestaurantId = async (req, res, next) => {
         const restaurantId = req.params.id;
         const isUser = req.user.isCustomer;
         if (isUser) {
+            const today = new Date();
+            const todayStart = new Date(today.setHours(0, 0, 0, 0));
             await Restaurant.findByIdAndUpdate(restaurantId, { $inc: { view_count: 1 } });
+            const updated = await Restaurant.findOneAndUpdate(
+                { _id: restaurantId, 'views.date': todayStart },
+                { $inc: { 'views.$.views': 1 } }
+            );
+
+            if (!updated) {
+                await Restaurant.updateOne(
+                    { _id: restaurantId },
+                    { $push: { views: { date: todayStart, views: 1 } } }
+                );
+            }
         }
 
         if (!mongoose.Types.ObjectId.isValid(restaurantId)) {
