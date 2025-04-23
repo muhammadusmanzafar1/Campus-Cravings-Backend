@@ -64,7 +64,7 @@ const updateTicket = async (req) => {
     if (!userAdmin) {
         throw new ApiError('You are not authorized to perform this action', httpStatus.status.UNAUTHORIZED);
     }
-    const updatedTicket = await Ticket.findByIdAndUpdate(req.id, req.body, {
+    const updatedTicket = await Ticket.findByIdAndUpdate(req.params.id, req.body, {
         new: true,
         runValidators: true,
     });

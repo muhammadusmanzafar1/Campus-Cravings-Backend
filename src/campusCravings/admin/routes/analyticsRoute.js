@@ -6,7 +6,7 @@ const { getAnalytics, getRevenueAnalytics, getTopRestaurants } = require('../con
 
 
 // Get data analytics
-router.get("/:days", async (req, res) => {
+router.get("/report/:days", async (req, res) => {
     try {
         const analyticReport = await getAnalytics(req, res);
         res.status(httpStatus.status.OK).json({ message: "Analytic data fetched successfully", analytics: analyticReport });
