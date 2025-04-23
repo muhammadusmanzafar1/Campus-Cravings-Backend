@@ -1,5 +1,6 @@
 const User = require('../../../auth/models/user');
 const mongoose = require('mongoose');
+
 const Order = require('../models/order');
 const { getGrowthPercentage } = require('../helpers/AnalyticHelper');
 const getAnalytics = async (req) => {
@@ -187,7 +188,7 @@ const getTopRestaurants = async (req) => {
             { $limit: 6 },
             {
                 $lookup: {
-                    from: 'restaurants', 
+                    from: 'restaurants',
                     localField: '_id',
                     foreignField: '_id',
                     as: 'restaurant'
@@ -207,7 +208,7 @@ const getTopRestaurants = async (req) => {
         ]);
         return topRestaurants;
     } catch (error) {
-        throw new Error('Error fetching analytics: ' + error.message);
+        throw new ApiError("Error fetching top Restaurants", httpStatus.status.INTERNAL_SERVER_ERROR);
     }
 };
 module.exports = {

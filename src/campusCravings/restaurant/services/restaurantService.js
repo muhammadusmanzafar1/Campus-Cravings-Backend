@@ -303,14 +303,60 @@ exports.getResturantAnalytics = async (req) => {
                 { $group: { _id: null, total: { $sum: '$total_price' } } }
             ])
         ]);
+        const [restaurant] = await Restaurant.aggregate([
+            { $match: { _id: restaurantId } },
+            {
+                $project: {
+                    currentViews: {
+                        $sum: {
+                            $map: {
+                                input: {
+                                    $filter: {
+                                        input: '$views',
+                                        as: 'view',
+                                        cond: { $gte: ['$$view.date', currentStart] }
+                                    }
+                                },
+                                as: 'v',
+                                in: '$$v.views'
+                            }
+                        }
+                    },
+                    previousViews: {
+                        $sum: {
+                            $map: {
+                                input: {
+                                    $filter: {
+                                        input: '$views',
+                                        as: 'view',
+                                        cond: {
+                                            $and: [
+                                                { $gte: ['$$view.date', previousStart] },
+                                                { $lt: ['$$view.date', currentStart] }
+                                            ]
+                                        }
+                                    }
+                                },
+                                as: 'v',
+                                in: '$$v.views'
+                            }
+                        }
+                    }
+                }
+            }
+        ]);
+
         const currentRevenue = currentRevenueAgg[0]?.total || 0;
         const previousRevenue = previousRevenueAgg[0]?.total || 0;
-        // Also need to send total view when schema is ready 
+        const currentViews = restaurant?.currentViews || 0;
+        const previousViews = restaurant?.previousViews || 0;
         return {
             totalOrdersProcessed: currentOrders,
             totalRevenue: currentRevenue,
             orderGrowthPercent: getGrowthPercentage(currentOrders, previousOrders),
-            revenueGrowthPercent: getGrowthPercentage(currentRevenue, previousRevenue)
+            revenueGrowthPercent: getGrowthPercentage(currentRevenue, previousRevenue),
+            totalViews: currentViews,
+            viewGrowthPercent: getGrowthPercentage(currentViews, previousViews)
         };
 
     } catch (error) {
