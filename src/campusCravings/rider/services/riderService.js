@@ -169,7 +169,7 @@ exports.deliverOrder = async (req, res) => {
     };
   } catch (err) {
     console.error(err);
-    throw new ApiError('Failed to deliver order', httpStatus.status.INTERNAL_SERVER_ERROR);
+    throw new ApiError(err.message, httpStatus.status.INTERNAL_SERVER_ERROR);
   }
 };
 
