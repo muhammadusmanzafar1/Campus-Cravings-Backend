@@ -57,6 +57,10 @@ exports.getRestaurantAnalytics = async (req, res, next) => {
 exports.getAllCategoryByRestaurantId = async (req, res, next) => {
     try {
         const restaurantId = req.params.id;
+        const isUser = req.user.isCustomer;
+        if (isUser) {
+            await Restaurant.findByIdAndUpdate(restaurantId, { $inc: { view_count: 1 } });
+        }
 
         if (!mongoose.Types.ObjectId.isValid(restaurantId)) {
             throw new ApiError("Invalid restaurant ID", httpStatus.status.BAD_REQUEST);
@@ -182,7 +186,8 @@ exports.getpoplarFoodItems = async (req, res, next) => {
 
         const popularItems = orders
             .filter(order => order.itemDetails)
-            .map(order => ({ ...order
+            .map(order => ({
+                ...order
             }));
 
 
