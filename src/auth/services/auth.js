@@ -2,6 +2,7 @@
 const httpStatus = require('http-status');
 const userService = require('./users');
 const ApiError = require("../../../utils/ApiError");
+const crypto  = require('../../../utils/crypto')
 const userDB = require('../models/user')
 const restaurantDB = require('../../campusCravings/restaurant/models/restaurant')
 const utils = require('../../../utils/utils');
@@ -209,6 +210,93 @@ const validateUser = async (user) => {
 };
 
 
+const resendOtp = async (body) => {
+     const { userId } = body;
+     const user = await userService.get(userId);
+
+     if (!user) {
+          throw new ApiError('User not found', httpStatus.status.UNAUTHORIZED);
+     }
+     user.activationCode = utils.randomPin();
+     if (user.authMethod === 'email') {
+          !user.isEmailVerified
+               ? await email.sendOTPonEmail(user.email, user.activationCode)
+               : await email.sendForgotOTP(user.email, user.activationCode);
+     } else {
+          !user.isPhoneVerified
+               ? await email.PhoneVerificationOTP(
+                    user.phone,
+                    user.activationCode
+               )
+               : await email.PhoneForgotOTP(user.phone, user.activationCode);
+     }
+
+     const savedUser = await user.save();
+     const userResponse = savedUser.toObject();
+     delete userResponse.activationCode;
+
+     return userResponse;
+};
+
+
+const forgotPassword = async (body) => {
+     let user;
+     if (body.authMethod == 'email') {
+          user = await userService.get({ email: body.email });
+     } else {
+          user = await userService.get({ phone: body.phone });
+     }
+     if (!user) {
+          throw new ApiError(
+               'Please enter registered email address',
+               httpStatus.status.UNAUTHORIZED
+          );
+     }
+     await validateUser(user);
+     user.activationCode = utils.randomPin();
+     body.authMethod === 'email'
+          ? email.sendForgotOTP(user.email, user.activationCode)
+          : email.PhoneForgotOTP(user.phone, user.activationCode);
+     return await user.save();
+};
+
+const updatePassword = async (id, body) => {
+     const user = await userService.get(id);
+     if (!user) {
+          throw new ApiError('Oops! User not found', httpStatus.status.NOT_FOUND);
+     }
+     await validateUser(user);
+     const isPasswordMatch = await crypto.comparePassword(
+          body.password,
+          user.password
+     );
+     if (!isPasswordMatch) {
+          throw new ApiError('Old password is incorrect', httpStatus.status.NOT_FOUND);
+     }
+     const isBothPasswordMatch = await crypto.comparePassword(
+          body.newPassword,
+          user.password
+     );
+     if (isBothPasswordMatch) {
+          throw new ApiError(
+               'New password should be different from old password',
+               httpStatus.status.NOT_FOUND
+          );
+     }
+     user.password = await crypto.setPassword(body.newPassword);
+     return await user.save();
+};
+
+const resetPassword = async (id, body) => {
+     const user = await userService.get(id);
+     if (!user) {
+          throw new ApiError('Oops! User not found', httpStatus.status.UNAUTHORIZED);
+     }
+     user.password = await crypto.setPassword(body.password);
+     user.isOtpVerified = false;
+     return await user.save();
+};
+
 // const createAdminNotification = async (user) => {
 //      try {
 //        const notification = new Notification({
@@ -229,5 +317,9 @@ module.exports = {
      registerWithEmail,
      registerWithPhone,
      verifyOTP,
-     login
+     login,
+     resendOtp,
+     forgotPassword,
+     updatePassword,
+     resetPassword
 }

@@ -61,3 +61,24 @@ exports.login = asyncHandler(async (req, res) => {
     );
     return responseData;
 });
+
+
+exports.resendOTP = asyncHandler(async (req, res) => {
+   const data = await authService.resendOtp(req.body);
+    return data;
+});
+
+exports.handleForgotPassword = async (req, res) => {
+    let user = await authService.forgotPassword(req.body);
+    return res.data(mapper.toModel(user), httpStatus.CREATED);
+};
+
+exports.handleUpdatePassword = async (req, res) => {
+    const data = await authService.updatePassword(req.params.id, req.body);
+    return data;
+};
+
+exports.handleResetPassword = async (req, res) => {
+    const data = await authService.resetPassword(req.params.id, req.body);
+    return data;
+};
