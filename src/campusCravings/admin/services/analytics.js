@@ -209,9 +209,51 @@ const getResturantAnalytics = async (req) => {
     }
 };
 // Get top Restaurants
-
+const getTopRestaurants = async (req) => {
+    try {
+        const isAdmin = req.user?.isAdmin;
+        if (!isAdmin) {
+            throw new ApiError("Unauthorized", httpStatus.status.UNAUTHORIZED);
+        }
+        const orderStatusFilter = { status: { $in: ['delivered', 'completed'] } };
+        const topRestaurants = await Order.aggregate([
+            { $match: { ...orderStatusFilter } },
+            {
+                $group: {
+                    _id: '$restaurant_id',
+                    total: { $sum: 1 }
+                }
+            },
+            { $sort: { total: -1 } },
+            { $limit: 6 },
+            {
+                $lookup: {
+                    from: 'restaurants', 
+                    localField: '_id',
+                    foreignField: '_id',
+                    as: 'restaurant'
+                }
+            },
+            {
+                $unwind: '$restaurant'
+            },
+            {
+                $project: {
+                    _id: 0,
+                    restaurant_id: '$_id',
+                    total: 1,
+                    storeName: '$restaurant.storeName'
+                }
+            }
+        ]);
+        return topRestaurants;
+    } catch (error) {
+        throw new Error('Error fetching analytics: ' + error.message);
+    }
+};
 module.exports = {
     getAnalytics,
     getRevenueAnalytics,
-    getResturantAnalytics
+    getResturantAnalytics,
+    getTopRestaurants
 };
