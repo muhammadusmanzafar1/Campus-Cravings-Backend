@@ -19,6 +19,10 @@ const itemSchema = new mongoose.Schema({
   category: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Category'
+  },
+  rating: {
+    type: Number,
+    min: 0, max: 5
   }
 }, {
   timestamps: true

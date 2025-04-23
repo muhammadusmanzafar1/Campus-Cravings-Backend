@@ -10,7 +10,10 @@ const entitySchema = new mongoose.Schema({
     fullName: String,
     userName: String,
     universityName: String,
-    imgUrl: String,
+    imgUrl: {
+        type: String,
+        default: "",
+    },
     authMethod: {
         type: String,
         enum: authMethods,

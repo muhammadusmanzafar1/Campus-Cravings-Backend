@@ -15,7 +15,7 @@ const registerViaEmail = {
         facebookId: Joi.string().optional(),
         appleId: Joi.string().optional(),
         universityName: Joi.string().optional(),
-        imgUrl: Joi.string(),
+        imgUrl: Joi.string().allow(""),
         status: Joi.string(),
         deviceType: Joi.string().optional().valid('web', 'android', 'ios'),
         role: Joi.string().default("user"),
