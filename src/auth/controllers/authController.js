@@ -56,8 +56,7 @@ exports.login = asyncHandler(async (req, res) => {
     // };
     res.cookie('refreshToken', session.refreshToken, option).cookie(
         'accessToken',
-        session.accessToken,
-        option
+        session.accessToken
     );
     return responseData;
 });
