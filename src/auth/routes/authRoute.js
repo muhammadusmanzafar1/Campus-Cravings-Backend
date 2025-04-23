@@ -136,7 +136,7 @@ router.post('/forgotPassword', async (req, res) => {
     }
 });
 
-router.post('/updatePassword/:id', async (req, res) => {
+router.put('/updatePassword/:id', async (req, res) => {
     const { error, value } = updatePassword.body.validate(req.body, { abortEarly: false });
     if (error) {
         return res.status(httpStatus.status.BAD_REQUEST).json({ message: "Validation Error", errors: error.details.map(err => err.message), });
