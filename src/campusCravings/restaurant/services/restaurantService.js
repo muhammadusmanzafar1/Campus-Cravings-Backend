@@ -189,19 +189,17 @@ exports.getpoplarFoodItems = async (req, res, next) => {
             return res.status(404).json({ message: 'No popular items found' });
         }
 
-        const popularItems = orders.map(order => ({
-            item_id: order.item_id,
-            name: order.itemDetails.name,
-            price: order.itemDetails.price,
-            description: order.itemDetails.description,
-            totalOrdered: order.totalOrdered,
-            image: order.itemDetails.image,
-        }));
 
-        return res.status(200).json({ popularItems });
+        const popularItems = orders
+            .filter(order => order.itemDetails) // only include orders that have itemDetails
+            .map(order => ({ ...order
+            }));
+
+
+        return popularItems
     } catch (error) {
         console.error(error);
-        return res.status(500).json({ error: 'An error occurred while fetching popular items' });
+        throw new ApiError('An error occurred while fetching popular items', httpStatus.status.INTERNAL_SERVER_ERROR)
     }
 };
 
