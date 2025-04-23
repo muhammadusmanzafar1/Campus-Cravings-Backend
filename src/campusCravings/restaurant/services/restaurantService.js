@@ -64,7 +64,7 @@ exports.getAllCategoryByRestaurantId = async (req, res, next) => {
         }
 
         const categories = await Category.find({ restaurant: restaurantId })
-            .populate('items'); // Populate item details
+            .populate('items');
 
         if (!categories || categories.length === 0) {
             throw new ApiError("No categories found for this restaurant", httpStatus.status.NOT_FOUND);
@@ -191,7 +191,7 @@ exports.getpoplarFoodItems = async (req, res, next) => {
 
 
         const popularItems = orders
-            .filter(order => order.itemDetails) // only include orders that have itemDetails
+            .filter(order => order.itemDetails)
             .map(order => ({ ...order
             }));
 
@@ -239,7 +239,6 @@ exports.searchRestaurantsandFoodItems = async (req) => {
             throw new ApiError("Missing required parameters: latitude, longitude and search are required.", httpStatus.status.BAD_REQUEST);
         }
         const radiusInMeters = 15 * 1609.34;
-        // Find nearby restaurants
         const nearbyRestaurants = await Restaurant.find({
             'addresses.coordinates': {
                 $nearSphere: {
@@ -254,13 +253,11 @@ exports.searchRestaurantsandFoodItems = async (req) => {
 
         const nearbyRestaurantIds = nearbyRestaurants.map(r => r._id);
 
-        // Filter restaurants by search term (storeName or brandName)
         const filteredRestaurants = nearbyRestaurants.filter(r =>
             r.storeName.toLowerCase().includes(search.toLowerCase()) ||
             r.brandName.toLowerCase().includes(search.toLowerCase())
         );
 
-        // Find categories linked to nearby restaurants where any item's name matches the search
         const matchedCategories = await Category.find({
             restaurant: { $in: nearbyRestaurantIds },
             items: {
