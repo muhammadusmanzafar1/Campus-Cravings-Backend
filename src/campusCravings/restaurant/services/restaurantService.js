@@ -7,7 +7,6 @@ const mongoose = require("mongoose");
 const Item = require("../../restaurant/models/items");
 const { getGrowthPercentage } = require('../../admin/helpers/AnalyticHelper');
 
-
 exports.getRestaurantAnalytics = async (req, res, next) => {
 
     const { restaurantId } = req.userId;
@@ -55,8 +54,6 @@ exports.getRestaurantAnalytics = async (req, res, next) => {
         next(error);
     }
 };
-
-
 exports.getAllCategoryByRestaurantId = async (req, res, next) => {
     try {
         const restaurantId = req.params.id;
