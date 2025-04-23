@@ -26,3 +26,8 @@ exports.getUserTickets = async (req, res) => {
     const tickets = await userService.getUserTickets(req);
     return tickets;
 };
+
+exports.getAllusers = asyncHandler(async (req, res) => {
+    const users = await userService.getAllUsers(req, res);
+    return users;
+    });

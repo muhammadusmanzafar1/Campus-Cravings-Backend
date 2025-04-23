@@ -77,7 +77,7 @@ exports.handleUpdatePassword = async (req, res) => {
     return data;
 };
 
-exports.handleResetPassword = async (req, res) => {
-    const data = await authService.resetPassword(req.params.id, req.body);
+exports.handleResetPassword = async (userId, reqbody) => {
+    const data = await authService.resetPassword(userId, reqbody);
     return data;
 };

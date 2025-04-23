@@ -1,11 +1,24 @@
 const express = require('express');
 const router = express.Router();
-const { addUserAddress, updateUserAddress, getUser, updateUser, getUserTickets } = require('../controllers/userController');
+const { addUserAddress, updateUserAddress, getUser, updateUser, getUserTickets, getAllusers } = require('../controllers/userController');
 const { validateBody } = require("../../../../middlewares/validate");
 const { addAddressSchema, updateAddressSchema, updateUserSchema } = require("../validators/user");
 const httpStatus = require("http-status");
 const ApiError = require('../../../../utils/ApiError');
 
+// Get All Users
+router.get('/getAllUsers', async (req, res) => {
+    try {
+        const users = await getAllusers(req, res);
+        res.status(httpStatus.status.OK).json({ 
+            isSuccess: true,
+            message: "Users fetched successfully",
+            data: users 
+        });
+        } catch (error) {
+            return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
+            }
+        });
 // Get User Info
 router.get("/", async (req, res) => {
     try {

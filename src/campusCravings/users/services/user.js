@@ -89,10 +89,22 @@ const getUserTickets = async (req) => {
     const tickets = await Ticket.find({ userId: req.user._id });
     return tickets;
 };
+
+const getAllUsers = async (req, res) => {
+    try {
+        const users = await User.find();
+        return users;
+    } catch (error) {
+        throw new ApiError(error.message, httpStatus.status.INTERNAL_SERVER_ERROR);
+    }
+
+}
+
 module.exports = {
     getUser,
     addUserAddress,
     updateUserAddress,
     updateUser,
-    getUserTickets
+    getUserTickets,
+    getAllUsers
 };

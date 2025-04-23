@@ -3,6 +3,7 @@ const httpStatus = require('http-status')
 const mongoose = require('mongoose');
 const Order = require('../models/order');
 const { getGrowthPercentage } = require('../helpers/AnalyticHelper');
+const ApiError = require('../../../../utils/ApiError');
 const getAnalytics = async (req) => {
     try {
         const duration = parseInt(req.params.days) || 7;
@@ -52,7 +53,7 @@ const getAnalytics = async (req) => {
         };
 
     } catch (error) {
-        throw new Error('Error fetching analytics: ' + error.message);
+        throw new ApiError('Error fetching analytics: ', httpStatus.status.INTERNAL_SERVER_ERROR);
     }
 };
 const getRevenueAnalytics = async (req) => {
@@ -117,7 +118,7 @@ const getRevenueAnalytics = async (req) => {
                 break;
 
             default:
-                throw new Error('Invalid duration. Use week, month, year, or all.');
+                throw new ApiError('Invalid duration. Use week, month, year, or all.', httpStatus.status.BAD_REQUEST);
         }
 
         const revenueData = await Order.aggregate([
@@ -164,7 +165,8 @@ const getRevenueAnalytics = async (req) => {
 
         return result;
     } catch (error) {
-        throw new Error('Error fetching analytics: ' + error.message);
+        console.error(error);
+        throw new ApiError(error.message, httpStatus.status.INTERNAL_SERVER_ERROR);
     }
 };
 
@@ -208,7 +210,8 @@ const getTopRestaurants = async (req) => {
         ]);
         return topRestaurants;
     } catch (error) {
-        throw new Error('Error fetching analytics: ' + error.message);
+        console.error(error)
+        throw new ApiError(error, httpStatus.status.UNAUTHORIZED);
     }
 };
 module.exports = {
