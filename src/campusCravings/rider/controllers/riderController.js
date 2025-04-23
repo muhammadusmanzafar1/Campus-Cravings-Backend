@@ -18,3 +18,8 @@ exports.deliverOrder = asyncHandler(async (req, res, next) => {
     const data = await riderService.deliverOrder(req, res, next);
     return data;
 });
+
+exports.updateLocation = asyncHandler(async (req, res, next) => {
+    const data = await riderService.updateLocation(req, res, next);
+    return data;
+});

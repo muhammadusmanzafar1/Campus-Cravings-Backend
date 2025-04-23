@@ -172,3 +172,22 @@ exports.deliverOrder = async (req, res) => {
     throw new ApiError('Failed to deliver order', httpStatus.status.INTERNAL_SERVER_ERROR);
   }
 };
+
+exports.updateLocation = async (req, res) => {
+  try {
+    const { latitude, longitude } = req.body;
+    const rider = await Rider.findOne({ user: req.user._id });
+    if (!rider) {
+      throw new ApiError('Rider not found', httpStatus.status.NOT_FOUND);
+    }
+    rider.location = {
+      type: 'Point',
+      coordinates: [longitude, latitude]
+    };
+    await rider.save();
+    return rider;
+  } catch (err) {
+    console.error(err);
+    throw new ApiError('Failed to update location', httpStatus.status.INTERNAL_SERVER_ERROR);
+  }
+};

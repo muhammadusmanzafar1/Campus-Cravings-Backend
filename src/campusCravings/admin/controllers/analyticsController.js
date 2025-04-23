@@ -11,11 +11,6 @@ exports.getRevenueAnalytics = asyncHandler(async (req, res) => {
     const orders = await analyticsService.getRevenueAnalytics(req);
     return orders;
 });
-// Resturant Analytics
-exports.getResturantAnalytics = asyncHandler(async (req, res) => {
-    const orders = await analyticsService.getResturantAnalytics(req);
-    return orders;
-});
 // Top Restaurants
 exports.getTopRestaurants = asyncHandler(async (req, res) => {
     const orders = await analyticsService.getTopRestaurants(req);

@@ -4,7 +4,8 @@ const Order = require("../../admin/models/order");
 const Restaurant = require("../models/restaurant");
 const Category = require("../models/category");
 const mongoose = require("mongoose");
-
+const Item = require("../../restaurant/models/items");
+const { getGrowthPercentage } = require('../../admin/helpers/AnalyticHelper');
 
 exports.getRestaurantAnalytics = async (req, res, next) => {
 
@@ -53,8 +54,6 @@ exports.getRestaurantAnalytics = async (req, res, next) => {
         next(error);
     }
 };
-
-
 exports.getAllCategoryByRestaurantId = async (req, res, next) => {
     try {
         const restaurantId = req.params.id;
@@ -81,10 +80,6 @@ exports.getAllCategoryByRestaurantId = async (req, res, next) => {
         );
     }
 };
-
-
-
-
 exports.getAllRestaurant = async (req, res, next) => {
     try {
         const restaurantId = req.params.id;
@@ -100,9 +95,6 @@ exports.getAllRestaurant = async (req, res, next) => {
         next(error);
     }
 };
-
-
-
 exports.getNearbyRestaurantsWithCategories = async (req, res, next) => {
     try {
         const { latitude, longitude } = req.query;
@@ -127,8 +119,6 @@ exports.getNearbyRestaurantsWithCategories = async (req, res, next) => {
         next(error);
     }
 };
-
-
 exports.getpoplarFoodItems = async (req, res, next) => {
     const { latitude, longitude } = req.query;
     if (!latitude || !longitude) {
@@ -202,7 +192,6 @@ exports.getpoplarFoodItems = async (req, res, next) => {
         throw new ApiError('An error occurred while fetching popular items', httpStatus.status.INTERNAL_SERVER_ERROR)
     }
 };
-
 exports.nearbyRestaurant = async (req) => {
     try {
         const { latitude, longitude } = req.body;
@@ -230,7 +219,6 @@ exports.nearbyRestaurant = async (req) => {
         throw new ApiError(error.message, httpStatus.status.BAD_REQUEST);
     }
 };
-
 // Search Restaurants or Food Items
 exports.searchRestaurantsandFoodItems = async (req) => {
     try {
@@ -250,29 +238,64 @@ exports.searchRestaurantsandFoodItems = async (req) => {
                 },
             },
         });
-
         const nearbyRestaurantIds = nearbyRestaurants.map(r => r._id);
-
+        // Filter restaurants by search term (storeName or brandName)
         const filteredRestaurants = nearbyRestaurants.filter(r =>
             r.storeName.toLowerCase().includes(search.toLowerCase()) ||
             r.brandName.toLowerCase().includes(search.toLowerCase())
         );
-
-        const matchedCategories = await Category.find({
+        const matchedItems = await Item.find({
             restaurant: { $in: nearbyRestaurantIds },
-            items: {
-                $elemMatch: {
-                    name: { $regex: search, $options: "i" }
-                }
-            }
-        });
-
+            name: { $regex: search, $options: 'i' }
+        }).populate('category');
         return {
             restaurants: filteredRestaurants,
-            categories: matchedCategories
+            FoodItems: matchedItems
         };
     } catch (error) {
         console.error(error);
         throw new ApiError(error.message, httpStatus.BAD_REQUEST);
+    }
+};
+
+// Resturant Analytics
+exports.getResturantAnalytics = async (req) => {
+    try {
+        const restaurantId = req.user.restaurant;
+        const duration = parseInt(req.params.days) || 7;
+        if (isNaN(duration) || duration <= 0) throw new Error('Invalid duration, please provide a positive integer.');
+        const now = new Date();
+        const currentStart = new Date(now.getTime() - duration * 24 * 60 * 60 * 1000);
+        const previousStart = new Date(currentStart.getTime() - duration * 24 * 60 * 60 * 1000);
+        const orderStatusFilter = { status: { $in: ['delivered', 'completed'] } };
+        const [
+            currentOrders,
+            previousOrders
+        ] = await Promise.all([
+            Order.countDocuments({ ...orderStatusFilter, restaurant_id: restaurantId, created_at: { $gte: currentStart } }),
+            Order.countDocuments({ ...orderStatusFilter, restaurant_id: restaurantId, created_at: { $gte: previousStart, $lt: currentStart } }),
+        ]);
+        const [currentRevenueAgg, previousRevenueAgg] = await Promise.all([
+            Order.aggregate([
+                { $match: { ...orderStatusFilter, restaurant_id: restaurantId, created_at: { $gte: currentStart } } },
+                { $group: { _id: null, total: { $sum: '$total_price' } } }
+            ]),
+            Order.aggregate([
+                { $match: { ...orderStatusFilter, restaurant_id: restaurantId, created_at: { $gte: previousStart, $lt: currentStart } } },
+                { $group: { _id: null, total: { $sum: '$total_price' } } }
+            ])
+        ]);
+        const currentRevenue = currentRevenueAgg[0]?.total || 0;
+        const previousRevenue = previousRevenueAgg[0]?.total || 0;
+        // Also need to send total view when schema is ready 
+        return {
+            totalOrdersProcessed: currentOrders,
+            totalRevenue: currentRevenue,
+            orderGrowthPercent: getGrowthPercentage(currentOrders, previousOrders),
+            revenueGrowthPercent: getGrowthPercentage(currentRevenue, previousRevenue)
+        };
+
+    } catch (error) {
+        throw new Error('Error fetching analytics: ' + error.message);
     }
 };
