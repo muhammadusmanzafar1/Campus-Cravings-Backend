@@ -124,7 +124,7 @@ exports.getRandomUnassignedOrder = async (req, res) => {
 
 exports.deliverOrder = async (req, res) => {
   try {
-    const { orderId } = req.body;
+    const { orderId, imageUrl } = req.body;
     let order = await Order.findById(orderId);
     if (!order) {
       throw new ApiError('Order not found', httpStatus.status.NOT_FOUND);
@@ -133,7 +133,7 @@ exports.deliverOrder = async (req, res) => {
     if (!rider) {
       throw new ApiError('Rider not found', httpStatus.status.NOT_FOUND);
     }
-    order = await patchOrder(orderId, { status: 'delivered' });
+    order = await patchOrder(orderId, { status: 'delivered', image_url: imageUrl });
     const progress = order.progress;
     const dispatched = progress.find(p => p.status === 'order_dispatched');
     const delivered = progress.find(p => p.status === 'delivered');
