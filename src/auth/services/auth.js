@@ -307,7 +307,7 @@ const resetPassword = async (id, body) => {
          throw new ApiError('Incorrect current password', httpStatus.status.BAD_REQUEST);
      }
  
-     user.password = await crypto.setPassword(body.newPassword);
+     user.password = await crypto.setPassword(body.password);
      user.isOtpVerified = false;
  
      return await user.save();
