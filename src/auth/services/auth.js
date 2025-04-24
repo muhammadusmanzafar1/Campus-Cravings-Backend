@@ -160,7 +160,7 @@ const login = async (body) => {
                if (!isPasswordMatch) {
                     throw new ApiError(
                          'Incorrect email or password',
-                         httpStatus.status.OK
+                         httpStatus.status.BAD_REQUEST
                     );
                }
                break;
