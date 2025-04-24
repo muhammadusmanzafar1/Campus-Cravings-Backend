@@ -234,22 +234,28 @@ const getUserAllOrders = async (req, res) => {
 
         const result = orders.map(order => {
             const cleanItems = (order?.items || []).map(item => {
-                const i = item?.item_id;
+                const itemData = item?.item_id;
                 const quantity = item?.quantity || 0;
+                const basePrice = itemData?.price || 0;
 
-                const basePrice = i?.price || 0;
-                const customizations = item?.customizations || [];
+                const selectedCustomizationIds = item?.customizations?.map(c => c?.toString()) || [];
+                const customizationList = itemData?.customization || [];
 
-                const customPrice = (i?.customization || [])
-                    .filter(c => customizations.includes(c?._id?.toString()))
-                    .reduce((sum, c) => sum + (c?.price || 0), 0);
+                const matchedCustomizations = customizationList.filter(c =>
+                    c?._id && selectedCustomizationIds.includes(c._id.toString())
+                );
 
-                const sizePrice = i?.sizes?.find(s => s?._id?.toString() === item?.size?.toString())?.price || 0;
+                const customPrice = matchedCustomizations.reduce((sum, c) => sum + (c?.price || 0), 0);
+
+                const sizeId = item?.size?.toString();
+                const sizePrice = itemData?.sizes?.find(s => s?._id?.toString() === sizeId)?.price || 0;
+
+                const total = (basePrice + customPrice + sizePrice);
 
                 return {
-                    name: i?.name || "Unknown Item",
+                    name: itemData?.name || "Unknown Item",
                     quantity,
-                    total_price_per_item: +((basePrice + customPrice + sizePrice) * quantity).toFixed(2)
+                    total_price_per_item: +total.toFixed(2)
                 };
             });
 
@@ -273,7 +279,8 @@ const getUserAllOrders = async (req, res) => {
                 items: cleanItems
             };
         });
-        return result;
+
+        return result[result.length - 1];
     } catch (error) {
         console.error("Error fetching orders:", error.message);
         return res.status(500).json({
@@ -283,6 +290,7 @@ const getUserAllOrders = async (req, res) => {
         });
     }
 };
+
 
 
 module.exports = {
