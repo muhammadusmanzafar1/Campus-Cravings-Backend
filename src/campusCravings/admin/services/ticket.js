@@ -9,9 +9,15 @@ const getAllTickets = async (req) => {
         if (!isAdmin) {
             throw new ApiError('You are not authorized to perform this action', httpStatus.status.UNAUTHORIZED);
         }
+
         const period = req.params.period || 'all';
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
         const now = new Date();
         let match = {};
+
         switch (period) {
             case 'today':
                 const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -38,7 +44,16 @@ const getAllTickets = async (req) => {
             default:
                 throw new ApiError('Invalid period', httpStatus.status.BAD_REQUEST);
         }
-        const tickets = await Ticket.find(match).populate('userId', 'fullName email isCustomer isDelivery isRestaurant');
+
+        const [total, tickets] = await Promise.all([
+            Ticket.countDocuments(match),
+            Ticket.find(match)
+                .skip(skip)
+                .limit(limit)
+                .sort({ createdAt: -1 })
+                .populate('userId', 'fullName email isCustomer isDelivery isRestaurant')
+        ]);
+
         const formattedTickets = tickets.map(ticket => ({
             id: ticket._id,
             subject: ticket.subject,
@@ -68,11 +83,21 @@ const getAllTickets = async (req) => {
                 time: msg.time
             }))
         }));
-        return formattedTickets;
+
+        return {
+            data: formattedTickets,
+            pagination: {
+                totalPages: Math.ceil(total / limit),
+                total,
+                currentPage: page,
+                pageSize: limit
+            }
+        };
     } catch (error) {
         throw new ApiError(error.message || 'Internal Server Error', httpStatus.status.INTERNAL_SERVER_ERROR);
     }
 };
+
 
 const createTicket = async (req) => {
     const { subject, description, status, priority, imgUrl, messages } = req.body;

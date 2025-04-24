@@ -72,16 +72,17 @@ exports.getRandomUnassignedOrder = async (req, res) => {
   }
 
   try {
+    // Get nearby restaurant IDs within 20 miles
     const restaurantIds = await Restaurant.aggregate([
       {
         $geoNear: {
           near: {
             type: 'Point',
-            coordinates: [parseFloat(longitude), parseFloat(latitude)]
+            coordinates: [parseFloat(longitude), parseFloat(latitude)],
           },
           distanceField: 'distance',
-          maxDistance: 32186.9,
-          spherical: true
+          maxDistance: 32186.9, // 20 miles in meters
+          spherical: true,
         }
       },
       {
@@ -91,6 +92,7 @@ exports.getRandomUnassignedOrder = async (req, res) => {
 
     const nearbyIds = restaurantIds.map(r => r._id);
 
+    // Get 1 random unassigned order from those restaurants
     const randomOrder = await Order.aggregate([
       {
         $match: {
@@ -116,12 +118,31 @@ exports.getRandomUnassignedOrder = async (req, res) => {
       throw new ApiError('No unassigned orders found', httpStatus.status.NOT_FOUND);
     }
 
-    return randomOrder;
+    const nearbyRiders = await Rider.find({
+      location: {
+        $nearSphere: {
+          $geometry: {
+            type: 'Point',
+            coordinates: [parseFloat(longitude), parseFloat(latitude)]
+          },
+          $maxDistance: 32186.9
+        }
+      },
+      order_accepted: false,
+      isAvailable: true,
+      status: 'active'
+    }).select('-SSN -national_id_image_url'); 
+
+    return {
+      order: randomOrder[0],
+      nearbyRiders
+    }
   } catch (err) {
     console.error(err);
-    throw new ApiError('Failed to retrieve order', httpStatus.status.INTERNAL_SERVER_ERROR);
+    throw new ApiError('Failed to retrieve order and riders', httpStatus.status.INTERNAL_SERVER_ERROR);
   }
 };
+
 
 exports.deliverOrder = async (req, res) => {
   try {
