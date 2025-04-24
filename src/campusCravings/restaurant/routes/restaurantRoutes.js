@@ -5,6 +5,7 @@ const ApiError = require('../../../../utils/ApiError');
 const restaurant = require('../controllers/restaurantController')
 const { validateBody } = require("../../../../middlewares/validate");
 const { nearbyRestaurantSchema, searchSchema } = require("../validators/restaurant");
+const Restaurant = require("../models/restaurant");
 
 
 router.get("/getrestaurantAnalytics", async (req, res, next) => {
@@ -30,7 +31,7 @@ router.get("/getrestaurantAllCategory/:id", async (req, res, next) => {
         res.status(httpStatus.status.OK).json({
             isSuccess: true,
             message: "Items retrieved successfully",
-            items: getItem
+            RestaurantData: getItem
         });
 
     } catch (error) {

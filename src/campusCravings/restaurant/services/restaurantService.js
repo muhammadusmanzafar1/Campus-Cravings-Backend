@@ -58,6 +58,9 @@ exports.getAllCategoryByRestaurantId = async (req, res, next) => {
     try {
         const restaurantId = req.params.id;
         const isUser = req.user.isCustomer;
+        if (!mongoose.Types.ObjectId.isValid(restaurantId)) {
+            throw new ApiError("Invalid restaurant ID", httpStatus.status.BAD_REQUEST);
+        }
         if (isUser) {
             const today = new Date();
             const todayStart = new Date(today.setHours(0, 0, 0, 0));
@@ -75,18 +78,18 @@ exports.getAllCategoryByRestaurantId = async (req, res, next) => {
             }
         }
 
-        if (!mongoose.Types.ObjectId.isValid(restaurantId)) {
-            throw new ApiError("Invalid restaurant ID", httpStatus.status.BAD_REQUEST);
-        }
-
         const categories = await Category.find({ restaurant: restaurantId })
             .populate('items');
 
         if (!categories || categories.length === 0) {
             throw new ApiError("No categories found for this restaurant", httpStatus.status.NOT_FOUND);
         }
+        const restaurant = await Restaurant.findById(restaurantId);
 
-        return categories;
+        return {
+            "categories": categories,
+            "restaurant": restaurant
+        };
     } catch (error) {
         console.error('Error occurred while fetching categories:', error);
         next(

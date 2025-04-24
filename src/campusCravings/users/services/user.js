@@ -199,16 +199,56 @@ const deleteUser = async (req, res) => {
 const getUserAllOrders = async (req, res) => {
     try {
         const userType = req.query.for || 'customer';
-        const userId = req.user._id;
+        const userId = req?.user?._id;
         const comparingId = userType === 'rider' ? 'rider_id' : 'user_id';
 
-        // Step 1: Fetch orders with populated references
         const orders = await Order.find({ [comparingId]: userId })
             .populate('user_id', 'firstName lastName email')
             .populate('restaurant_id', 'storeName brandName phoneNumber')
             .populate('items.item_id', 'name price customization sizes');
-        return orders;
 
+        const result = orders.map(order => {
+            const cleanItems = (order?.items || []).map(item => {
+                const i = item?.item_id;
+                const quantity = item?.quantity || 0;
+
+                const basePrice = i?.price || 0;
+                const customizations = item?.customizations || [];
+
+                const customPrice = (i?.customization || [])
+                    .filter(c => customizations.includes(c?._id?.toString()))
+                    .reduce((sum, c) => sum + (c?.price || 0), 0);
+
+                const sizePrice = i?.sizes?.find(s => s?._id?.toString() === item?.size?.toString())?.price || 0;
+
+                return {
+                    name: i?.name || "Unknown Item",
+                    quantity,
+                    total_price_per_item: +((basePrice + customPrice + sizePrice) * quantity).toFixed(2)
+                };
+            });
+
+            return {
+                _id: order?._id,
+                status: order?.status,
+                payment_method: order?.payment_method,
+                total_price: order?.total_price,
+                tip: order?.tip,
+                delivery_fee: order?.delivery_fee,
+                order_type: order?.order_type,
+                created_at: order?.created_at,
+                user: order?.user_id ? {
+                    name: `${order.user_id?.firstName || ''} ${order.user_id?.lastName || ''}`.trim(),
+                    email: order.user_id?.email
+                } : null,
+                restaurant: order?.restaurant_id ? {
+                    name: order.restaurant_id?.storeName || order.restaurant_id?.brandName,
+                    phone: order.restaurant_id?.phoneNumber
+                } : null,
+                items: cleanItems
+            };
+        });
+        return result;
     } catch (error) {
         console.error("Error fetching orders:", error.message);
         return res.status(500).json({
@@ -218,6 +258,7 @@ const getUserAllOrders = async (req, res) => {
         });
     }
 };
+
 
 module.exports = {
     getUser,
