@@ -50,14 +50,34 @@ exports.login = asyncHandler(async (req, res) => {
         refreshToken: session.refreshToken
 
     };
-    const option = {
-        secure: process.env.NODE_ENV == 'prod',
-        httpOnly: true,
-    };
-    res.cookie('refreshToken', session.refreshToken, option).cookie(
+    // const option = {
+    //     secure: process.env.NODE_ENV == 'prod',
+    //     httpOnly: true,
+    // };
+    res.cookie('refreshToken', session.refreshToken).cookie(
         'accessToken',
-        session.accessToken,
-        option
+        session.accessToken
     );
     return responseData;
 });
+
+
+exports.resendOTP = asyncHandler(async (req, res) => {
+   const data = await authService.resendOtp(req.body);
+    return data;
+});
+
+exports.handleForgotPassword = async (req, res) => {
+    let user = await authService.forgotPassword(req.body);
+    return res.data(mapper.toModel(user), httpStatus.CREATED);
+};
+
+exports.handleUpdatePassword = async (req, res) => {
+    const data = await authService.updatePassword(req.params.id, req.body);
+    return data;
+};
+
+exports.handleResetPassword = async (userId, reqbody) => {
+    const data = await authService.resetPassword(userId, reqbody);
+    return data;
+};

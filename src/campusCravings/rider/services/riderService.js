@@ -11,20 +11,38 @@ const { patchOrder } = require('../../admin/services/order')
 
 exports.registerRider = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user._id;
 
     const existing = await Rider.findOne({ user: userId });
     if (existing) {
       return res.status(400).json({ message: 'You are already registered as a rider' });
     }
 
-    const { vehicleType, vehicleNumber, licenseNumber, location } = req.body;
+    const {
+      location,
+      batch_year,
+      majors,
+      monirs,
+      club_organizations,
+      bio,
+      SSN,
+      national_id_image_url
+    } = req.body;
+
+    // Ensure required fields are present
+    if (!batch_year || !majors || !SSN || !national_id_image_url) {
+      throw new ApiError('Missing required fields', httpStatus.status.BAD_REQUEST);
+    }
 
     const newRider = new Rider({
       user: userId,
-      vehicleType,
-      vehicleNumber,
-      licenseNumber,
+      batch_year,
+      majors,
+      monirs,
+      club_organizations,
+      bio,
+      SSN,
+      national_id_image_url,
       location: {
         type: 'Point',
         coordinates: [location.lng, location.lat]
@@ -35,10 +53,11 @@ exports.registerRider = async (req, res) => {
 
     await User.findByIdAndUpdate(userId, { isRider: true });
 
-    res.status(201).json({ message: 'Rider registered successfully', rider: newRider });
+    return newRider;
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Server Error' });
+    throw new ApiError(err.message, httpStatus.status.INTERNAL_SERVER_ERROR);
+
   }
 };
 
@@ -151,5 +170,25 @@ exports.deliverOrder = async (req, res) => {
   } catch (err) {
     console.error(err);
     throw new ApiError('Failed to deliver order', httpStatus.status.INTERNAL_SERVER_ERROR);
+  }
+};
+
+exports.updateLocation = async (req, res) => {
+  try {
+    const { latitude, longitude } = req.body;
+    const rider = await Rider.findOne({ user: req.user._id });
+    if (!rider) {
+      throw new ApiError('Rider not found', httpStatus.status.NOT_FOUND);
+    }
+    rider.location = {
+      type: 'Point',
+      coordinates: [longitude, latitude]
+    };
+    await rider.save();
+    return rider;
+  } catch (err) {
+    console.error(err);
+    throw new ApiError('Failed to update location', httpStatus.status.INTERNAL_SERVER_ERROR);
+
   }
 };

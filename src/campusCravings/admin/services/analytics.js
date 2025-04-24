@@ -1,7 +1,9 @@
 const User = require('../../../auth/models/user');
+const httpStatus = require('http-status')
 const mongoose = require('mongoose');
 const Order = require('../models/order');
 const { getGrowthPercentage } = require('../helpers/AnalyticHelper');
+const ApiError = require('../../../../utils/ApiError');
 const getAnalytics = async (req) => {
     try {
         const duration = parseInt(req.params.days) || 7;
@@ -51,7 +53,7 @@ const getAnalytics = async (req) => {
         };
 
     } catch (error) {
-        throw new Error('Error fetching analytics: ' + error.message);
+        throw new ApiError('Error fetching analytics: ', httpStatus.status.INTERNAL_SERVER_ERROR);
     }
 };
 const getRevenueAnalytics = async (req) => {
@@ -116,7 +118,7 @@ const getRevenueAnalytics = async (req) => {
                 break;
 
             default:
-                throw new Error('Invalid duration. Use week, month, year, or all.');
+                throw new ApiError('Invalid duration. Use week, month, year, or all.', httpStatus.status.BAD_REQUEST);
         }
 
         const revenueData = await Order.aggregate([
@@ -163,55 +165,57 @@ const getRevenueAnalytics = async (req) => {
 
         return result;
     } catch (error) {
-        throw new Error('Error fetching analytics: ' + error.message);
+        console.error(error);
+        throw new ApiError(error.message, httpStatus.status.INTERNAL_SERVER_ERROR);
     }
 };
 
-// Resturant Analytics
-const getResturantAnalytics = async (req) => {
-    try {
-        const restaurantId = new mongoose.Types.ObjectId(req.params.restaurantId);
-        const duration = parseInt(req.params.days) || 7;
-        if (isNaN(duration) || duration <= 0) throw new Error('Invalid duration, please provide a positive integer.');
-        const now = new Date();
-        const currentStart = new Date(now.getTime() - duration * 24 * 60 * 60 * 1000);
-        const previousStart = new Date(currentStart.getTime() - duration * 24 * 60 * 60 * 1000);
-        const orderStatusFilter = { status: { $in: ['delivered', 'completed'] } };
-        const [
-            currentOrders,
-            previousOrders
-        ] = await Promise.all([
-            Order.countDocuments({ ...orderStatusFilter, restaurant_id: restaurantId, created_at: { $gte: currentStart } }),
-            Order.countDocuments({ ...orderStatusFilter, restaurant_id: restaurantId, created_at: { $gte: previousStart, $lt: currentStart } }),
-        ]);
-        const [currentRevenueAgg, previousRevenueAgg] = await Promise.all([
-            Order.aggregate([
-                { $match: { ...orderStatusFilter, restaurant_id: restaurantId, created_at: { $gte: currentStart } } },
-                { $group: { _id: null, total: { $sum: '$total_price' } } }
-            ]),
-            Order.aggregate([
-                { $match: { ...orderStatusFilter, restaurant_id: restaurantId, created_at: { $gte: previousStart, $lt: currentStart } } },
-                { $group: { _id: null, total: { $sum: '$total_price' } } }
-            ])
-        ]);
-        const currentRevenue = currentRevenueAgg[0]?.total || 0;
-        const previousRevenue = previousRevenueAgg[0]?.total || 0;
-        // Also need to send total view when schema is ready 
-        return {
-            totalOrdersProcessed: currentOrders,
-            totalRevenue: currentRevenue,
-            orderGrowthPercent: getGrowthPercentage(currentOrders, previousOrders),
-            revenueGrowthPercent: getGrowthPercentage(currentRevenue, previousRevenue)
-        };
-
-    } catch (error) {
-        throw new Error('Error fetching analytics: ' + error.message);
-    }
-};
 // Get top Restaurants
-
+const getTopRestaurants = async (req) => {
+    try {
+        const isAdmin = req.user?.isAdmin;
+        if (!isAdmin) {
+            throw new ApiError("Unauthorized", httpStatus.status.UNAUTHORIZED);
+        }
+        const orderStatusFilter = { status: { $in: ['delivered', 'completed'] } };
+        const topRestaurants = await Order.aggregate([
+            { $match: { ...orderStatusFilter } },
+            {
+                $group: {
+                    _id: '$restaurant_id',
+                    total: { $sum: 1 }
+                }
+            },
+            { $sort: { total: -1 } },
+            { $limit: 6 },
+            {
+                $lookup: {
+                    from: 'restaurants', 
+                    localField: '_id',
+                    foreignField: '_id',
+                    as: 'restaurant'
+                }
+            },
+            {
+                $unwind: '$restaurant'
+            },
+            {
+                $project: {
+                    _id: 0,
+                    restaurant_id: '$_id',
+                    total: 1,
+                    storeName: '$restaurant.storeName'
+                }
+            }
+        ]);
+        return topRestaurants;
+    } catch (error) {
+        console.error(error)
+        throw new ApiError(error, httpStatus.status.UNAUTHORIZED);
+    }
+};
 module.exports = {
     getAnalytics,
     getRevenueAnalytics,
-    getResturantAnalytics
+    getTopRestaurants
 };

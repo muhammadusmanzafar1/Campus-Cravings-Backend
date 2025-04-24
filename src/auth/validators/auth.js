@@ -15,7 +15,7 @@ const registerViaEmail = {
         facebookId: Joi.string().optional(),
         appleId: Joi.string().optional(),
         universityName: Joi.string().optional(),
-        imgUrl: Joi.string(),
+        imgUrl: Joi.string().allow(""),
         status: Joi.string(),
         deviceType: Joi.string().optional().valid('web', 'android', 'ios'),
         role: Joi.string().default("user"),
@@ -99,7 +99,7 @@ const resendOtp = {
     body: Joi.object().keys({
         userId: Joi.string().required(),
         authMethod: Joi.string().required().valid('phone', 'email'),
-        deviceId: Joi.string().required(),
+        deviceId: Joi.string().optional(),
         deviceType: Joi.string().required().valid('web', 'android', 'ios')
     })
 };

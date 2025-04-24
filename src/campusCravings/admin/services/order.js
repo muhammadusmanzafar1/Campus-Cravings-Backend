@@ -1,6 +1,5 @@
 'use strict';
 const Order = require('../models/order');
-const category = require('../../restaurant/models/category');
 const itemsDB = require('../../restaurant/models/items')
 const mongoose = require('mongoose');
 const APIError = require('../../../../utils/ApiError');
@@ -19,7 +18,8 @@ const getAllOrders = async () => {
 };
 const createOrder = async (req) => {
     try {
-        const {  payment_method, items, tip, delivery_fee, address } = req.body;
+        const { payment_method, items, tip, delivery_fee, addresses, customizations = [] } = req.body;
+
         const user_id = req.user._id;
         let total_price = 0;
         let restaurant_id = null;
@@ -34,7 +34,17 @@ const createOrder = async (req) => {
             } else if (response.restaurant.toString() !== restaurant_id) {
                 throw new APIError('All items must be from the same restaurant', httpStatus.status.BAD_REQUEST);
             }
-            total_price += response.price * quantity;
+            let customizedItemPrice = 0;
+            const itemCustomizations = item.customizations || [];
+            for (const customizationId of itemCustomizations) {
+                const matchedCustomization = response.customization.find(
+                    (c) => c._id.toString() === customizationId.toString()
+                );
+                if (matchedCustomization) {
+                    customizedItemPrice += matchedCustomization.price;
+                }
+            }
+            total_price += (response.price + customizedItemPrice) * quantity;
         }
         total_price += tip;
         total_price += delivery_fee;
@@ -45,7 +55,7 @@ const createOrder = async (req) => {
             total_price,
             payment_method,
             items,
-            address
+            addresses
         });
         await newOrder.save();
         return newOrder;
@@ -127,20 +137,57 @@ const getResturantAllOrders = async (req) => {
     }
 };
 // User orders 
-const getUserAllOrders = async (req) => {
+const getUserAllOrders = async (req, res) => {
     try {
         const userType = req.query.for || 'customer';
-        const userId = new mongoose.Types.ObjectId(req.params.userId);
+        const userId = mongoose.Types.ObjectId.createFromHexString(req.params.userId);
         const comparingId = userType === 'rider' ? 'rider_id' : 'user_id';
+
+        // Step 1: Fetch orders with populated references
         const orders = await Order.find({ [comparingId]: userId })
             .populate('user_id', 'firstName lastName email')
             .populate('restaurant_id', 'storeName brandName phoneNumber')
-            .populate('items.item_id', 'name price');
-        return orders;
+            .populate('items.item_id', 'name price customization');
+
+        // Step 2: Attach customization objects to each item
+        const formattedOrders = orders.map(order => {
+            const updatedItems = order.items.map(item => {
+                const fullItem = item.item_id;
+
+                // Find matching customizations by ID
+                const customizationDetails = item.customizations?.map(customId => {
+                    return fullItem.customization.find(c => c._id.toString() === customId.toString());
+                }).filter(Boolean); // Remove undefined matches
+
+                return {
+                    ...item.toObject(),
+                    item_id: {
+                        _id: fullItem._id,
+                        name: fullItem.name,
+                        price: fullItem.price
+                    },
+                    customizations: customizationDetails
+                };
+            });
+
+            return {
+                ...order.toObject(),
+                items: updatedItems
+            };
+        });
+
+        return formattedOrders;
+
     } catch (error) {
-        throw new APIError(`Error fetching orders: ${error.message}`, error.statusCode || httpStatus.status.INTERNAL_SERVER_ERROR);
+        console.error("Error fetching orders:", error.message);
+        return res.status(500).json({
+            success: false,
+            message: "Error fetching orders",
+            error: error.message
+        });
     }
 };
+
 
 module.exports = {
     getAllOrders,

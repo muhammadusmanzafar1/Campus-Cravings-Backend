@@ -159,5 +159,16 @@ router.get("/search", validateBody(searchSchema), async (req, res) => {
     }
 });
 
-
+// Get data analytics with respect to restaurant id
+router.get("/analytics/:days", async (req, res) => {
+    try {
+        const analyticReport = await restaurant.getResturantAnalytics(req, res);
+        res.status(httpStatus.status.OK).json({ message: "Analytic data fetched successfully", analytics: analyticReport });
+    } catch (error) {
+        if (error instanceof ApiError) {
+            return res.status(error.statusCode).json({ message: error.message });
+        }
+        return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
+    }
+});
 module.exports = router;
