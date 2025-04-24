@@ -13,6 +13,10 @@ const riderSchema = new Schema({
     type: String,
     required: true
   },
+  order_accepted: {
+    type: Boolean,
+    default: false
+  },
   majors: {
     type: [String],
     required: true

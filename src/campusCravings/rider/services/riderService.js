@@ -218,6 +218,7 @@ exports.orderAccept = async (req, res) => {
     order.assigned_to = riderId;
     order.status = "order_dispatched";
     order.estimated_time = estimated_time;
+    order.order_accepted = true
 
     const updatedOrder = await order.save();
 
