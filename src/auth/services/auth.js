@@ -303,13 +303,19 @@ const updatePassword = async (id, body) => {
 const resetPassword = async (id, body) => {
      const user = await userService.get(id);
      if (!user) {
-          throw new ApiError('Oops! User not found', httpStatus.status.UNAUTHORIZED);
+         throw new ApiError('Oops! User not found', httpStatus.status.UNAUTHORIZED);
      }
-     user.password = await crypto.setPassword(body.password);
+ 
+     const isMatch = await crypto.comparePassword(body.oldPassword, user.password);
+     if (!isMatch) {
+         throw new ApiError('Incorrect current password', httpStatus.status.BAD_REQUEST);
+     }
+ 
+     user.password = await crypto.setPassword(body.newPassword);
      user.isOtpVerified = false;
+ 
      return await user.save();
-};
-
+ };
 // const createAdminNotification = async (user) => {
 //      try {
 //        const notification = new Notification({
