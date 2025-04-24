@@ -192,3 +192,41 @@ exports.updateLocation = async (req, res) => {
 
   }
 };
+
+exports.orderAccept = async (req, res) => {
+  const { riderId, orderId, estimated_time } = req.body;
+
+  try {
+    if (!orderId || !riderId) {
+      throw new ApiError("Order ID and Rider ID are required", httpStatus.status.BAD_REQUEST);
+    }
+
+    const rider = await Rider.findById(riderId);
+    if (!rider) {
+      throw new ApiError("No Rider Found", httpStatus.status.NOT_FOUND);
+    }
+
+    const order = await Order.findById(orderId);
+    if (!order) {
+      throw new ApiError("No Order Found", httpStatus.status.NOT_FOUND);
+    }
+
+    if (order.status !== "order_prepared") {
+      throw new ApiError("Order is not in a prepared state to be accepted", httpStatus.status.FORBIDDEN)
+    }
+
+    order.assigned_to = riderId;
+    order.status = "order_dispatched";
+    order.estimated_time = estimated_time;
+    order.order_accepted = true
+
+    const updatedOrder = await order.save();
+
+    return updatedOrder
+
+  } catch (err) {
+    console.error(err);
+    throw new ApiError('Failed to update location', httpStatus.status.INTERNAL_SERVER_ERROR);
+
+  }
+};

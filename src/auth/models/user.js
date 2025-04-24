@@ -21,7 +21,7 @@ const entitySchema = new mongoose.Schema({
     },
     countryCode: String,
     ISOCode: String,
-    phoneNumber: Number,
+    phoneNumber: String,
     phone: String,
     email: {
         type: String,
@@ -109,6 +109,7 @@ const entitySchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
+    stripeCustomerId: String,
     restaurant: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "restaurant",

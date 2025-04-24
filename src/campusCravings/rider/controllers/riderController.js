@@ -23,3 +23,8 @@ exports.updateLocation = asyncHandler(async (req, res, next) => {
     const data = await riderService.updateLocation(req, res, next);
     return data;
 });
+
+exports.orderAccept = asyncHandler(async (req, res) => {
+    const data = await riderService.orderAccept(req, res);
+    return data;
+})

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { addUserAddress, updateUserAddress, getUser, updateUser, getUserTickets, getAllusers,
-    createNewUser, delUser, getUserAllOrders
+    createNewUser, delUser, getUserAllOrders, getUserDetail
 } = require('../controllers/userController');
 const { validateBody } = require("../../../../middlewares/validate");
 const { registerViaEmail } = require('../../../auth/validators/auth')
@@ -142,5 +142,22 @@ router.get("/orders", async (req, res) => {
         return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
     }
 });
+
+
+router.get('/getuser/:id', async (req, res) => {
+    try {
+        const getUserD = await getUserDetail(req, res);
+        res.status(httpStatus.status.OK).json({
+            isSuccess: true,
+            message: "Detail fetched",
+            data: getUserD
+        });
+    } catch (error) {
+        if (error instanceof ApiError) {
+            return res.status(error.statusCode).json({ message: error.message });
+        }
+        return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
+    }
+})
 
 module.exports = router;
