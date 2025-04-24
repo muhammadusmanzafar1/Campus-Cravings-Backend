@@ -286,14 +286,34 @@ const getUserAllOrders = async (req, res) => {
 
         return result;
     } catch (error) {
-        console.error("Error fetching orders:", error.message);
-        return res.status(500).json({
-            success: false,
-            message: "Error fetching orders",
-            error: error.message
-        });
+        if (!(error instanceof ApiError)) {
+            console.error('Unexpected error during user registration:', error);
+        }
+
+        throw error instanceof ApiError
+            ? error
+            : new ApiError(error.message || 'Internal Server Error', httpStatus.status.INTERNAL_SERVER_ERROR);
     }
 };
+
+const getUserDetail = async (req, res) => {
+    const userId =  req.params.id
+    try {
+        const existing = await User.findById(userId);
+        if (!existing) throw new ApiError("Oops! User Not Fount", httpStatus.status.NOT_FOUND);
+
+        return existing;
+    } catch (error) {
+        if (!(error instanceof ApiError)) {
+            console.error('Unexpected error during user registration:', error);
+        }
+
+        throw error instanceof ApiError
+            ? error
+            : new ApiError(error.message || 'Internal Server Error', httpStatus.status.INTERNAL_SERVER_ERROR);
+    }
+
+}
 
 
 
@@ -306,5 +326,6 @@ module.exports = {
     getAllUsers,
     newUser,
     deleteUser,
-    getUserAllOrders
+    getUserAllOrders,
+    getUserDetail
 };
