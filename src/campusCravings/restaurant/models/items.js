@@ -11,6 +11,16 @@ const itemSchema = new mongoose.Schema({
       price: Number
     }
   ],
+  sizes: [
+    {
+      name: String,
+      price: Number
+    }
+  ],
+  calories: {
+    type: Number,
+    min: 0
+  },
   image: [String],
   restaurant: {
     type: mongoose.Schema.Types.ObjectId,

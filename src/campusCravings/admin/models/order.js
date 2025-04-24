@@ -103,6 +103,7 @@ const orderSchema = new mongoose.Schema({
     items: {
         type: [
             {
+                _id: false,
                 item_id: {
                     type: mongoose.Schema.Types.ObjectId,
                     ref: 'Item',
@@ -116,6 +117,9 @@ const orderSchema = new mongoose.Schema({
                 customizations: {
                     type: [String],
                     default: []
+                },
+                size: {
+                    type: mongoose.Schema.Types.ObjectId,
                 }
             }
         ],

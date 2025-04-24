@@ -57,9 +57,25 @@ exports.getRestaurantAnalytics = async (req, res, next) => {
 exports.getAllCategoryByRestaurantId = async (req, res, next) => {
     try {
         const restaurantId = req.params.id;
-
+        const isUser = req.user.isCustomer;
         if (!mongoose.Types.ObjectId.isValid(restaurantId)) {
             throw new ApiError("Invalid restaurant ID", httpStatus.status.BAD_REQUEST);
+        }
+        if (isUser) {
+            const today = new Date();
+            const todayStart = new Date(today.setHours(0, 0, 0, 0));
+            await Restaurant.findByIdAndUpdate(restaurantId, { $inc: { view_count: 1 } });
+            const updated = await Restaurant.findOneAndUpdate(
+                { _id: restaurantId, 'views.date': todayStart },
+                { $inc: { 'views.$.views': 1 } }
+            );
+
+            if (!updated) {
+                await Restaurant.updateOne(
+                    { _id: restaurantId },
+                    { $push: { views: { date: todayStart, views: 1 } } }
+                );
+            }
         }
 
         const categories = await Category.find({ restaurant: restaurantId })
@@ -68,8 +84,12 @@ exports.getAllCategoryByRestaurantId = async (req, res, next) => {
         if (!categories || categories.length === 0) {
             throw new ApiError("No categories found for this restaurant", httpStatus.status.NOT_FOUND);
         }
+        const restaurant = await Restaurant.findById(restaurantId);
 
-        return categories;
+        return {
+            "categories": categories,
+            "restaurant": restaurant
+        };
     } catch (error) {
         console.error('Error occurred while fetching categories:', error);
         next(
@@ -182,7 +202,8 @@ exports.getpoplarFoodItems = async (req, res, next) => {
 
         const popularItems = orders
             .filter(order => order.itemDetails)
-            .map(order => ({ ...order
+            .map(order => ({
+                ...order
             }));
 
 
@@ -285,14 +306,60 @@ exports.getResturantAnalytics = async (req) => {
                 { $group: { _id: null, total: { $sum: '$total_price' } } }
             ])
         ]);
+        const [restaurant] = await Restaurant.aggregate([
+            { $match: { _id: restaurantId } },
+            {
+                $project: {
+                    currentViews: {
+                        $sum: {
+                            $map: {
+                                input: {
+                                    $filter: {
+                                        input: '$views',
+                                        as: 'view',
+                                        cond: { $gte: ['$$view.date', currentStart] }
+                                    }
+                                },
+                                as: 'v',
+                                in: '$$v.views'
+                            }
+                        }
+                    },
+                    previousViews: {
+                        $sum: {
+                            $map: {
+                                input: {
+                                    $filter: {
+                                        input: '$views',
+                                        as: 'view',
+                                        cond: {
+                                            $and: [
+                                                { $gte: ['$$view.date', previousStart] },
+                                                { $lt: ['$$view.date', currentStart] }
+                                            ]
+                                        }
+                                    }
+                                },
+                                as: 'v',
+                                in: '$$v.views'
+                            }
+                        }
+                    }
+                }
+            }
+        ]);
+
         const currentRevenue = currentRevenueAgg[0]?.total || 0;
         const previousRevenue = previousRevenueAgg[0]?.total || 0;
-        // Also need to send total view when schema is ready 
+        const currentViews = restaurant?.currentViews || 0;
+        const previousViews = restaurant?.previousViews || 0;
         return {
             totalOrdersProcessed: currentOrders,
             totalRevenue: currentRevenue,
             orderGrowthPercent: getGrowthPercentage(currentOrders, previousOrders),
-            revenueGrowthPercent: getGrowthPercentage(currentRevenue, previousRevenue)
+            revenueGrowthPercent: getGrowthPercentage(currentRevenue, previousRevenue),
+            totalViews: currentViews,
+            viewGrowthPercent: getGrowthPercentage(currentViews, previousViews)
         };
 
     } catch (error) {

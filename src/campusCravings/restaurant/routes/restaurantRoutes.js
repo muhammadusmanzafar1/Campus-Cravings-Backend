@@ -5,12 +5,13 @@ const ApiError = require('../../../../utils/ApiError');
 const restaurant = require('../controllers/restaurantController')
 const { validateBody } = require("../../../../middlewares/validate");
 const { nearbyRestaurantSchema, searchSchema } = require("../validators/restaurant");
+const Restaurant = require("../models/restaurant");
 
 
 router.get("/getrestaurantAnalytics", async (req, res, next) => {
     try {
         const getItem = await restaurant.getRestaurantAnalytics(req, res, next);
-        res.status(httpStatus.status.OK).json({ message: "Items retrieved successfully", itens: getItem });
+        res.status(httpStatus.status.OK).json({ message: "Items retrieved successfully", items: getItem });
     } catch (error) {
         if (error instanceof ApiError) {
             return res.status(error.statusCode).json({ message: error.message });
@@ -30,7 +31,7 @@ router.get("/getrestaurantAllCategory/:id", async (req, res, next) => {
         res.status(httpStatus.status.OK).json({
             isSuccess: true,
             message: "Items retrieved successfully",
-            items: getItem
+            RestaurantData: getItem
         });
 
     } catch (error) {

@@ -4,6 +4,7 @@ const ApiError = require("../../../../utils/ApiError");
 const Category = require('../models/category');
 const Restaurant = require('../models/restaurant');
 const items = require('../models/items')
+const cloudinary = require('../../../../utils/cloudinary');
 
 // Create a new category with items
 const createCategory = async (req) => {
@@ -39,12 +40,15 @@ const createCategory = async (req) => {
 
 const createItem = async (data) => {
     try {
-        const { id, ...itemData } = data;
-
+        const { id, image, ...itemData } = data;
         const category = await Category.findById(id);
         if (!category) {
             throw new ApiError("Category not found", httpStatus.status.NOT_FOUND);
         }
+        const uploadCloudnary = await cloudinary.uploader.upload(image);
+        const imageUrl = uploadCloudnary.url;
+        itemData.image = imageUrl;
+        console.log(imageUrl);
         const itemsData = new items(itemData)
         itemsData.category = category._id;
         itemsData.restaurant = category.restaurant;
@@ -61,7 +65,7 @@ const createItem = async (data) => {
 
 const getCategoryItemsById = async (itemId) => {
     try {
-        const item = await items.findById(itemId)
+        const item = await items.findById(itemId).populate('category', 'name');
 
         if (!item) throw new Error('Item not found');
         return item;

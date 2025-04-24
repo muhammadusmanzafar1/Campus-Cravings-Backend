@@ -43,6 +43,10 @@ const restaurantSchema = new Schema({
     type: Number,
     default: 0
   },
+  views: [{
+    date: { type: Date, required: true },
+    views: { type: Number, required: true, default: 1 }
+  }],
   ratings: {
     averageRating: { type: Number, default: 0 },
     totalRatings: { type: Number, default: 0 }
