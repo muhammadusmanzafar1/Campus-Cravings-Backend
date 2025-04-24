@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { addUserAddress, updateUserAddress, getUser, updateUser, getUserTickets, getAllusers,
     createNewUser, delUser, getUserAllOrders
- } = require('../controllers/userController');
+} = require('../controllers/userController');
 const { validateBody } = require("../../../../middlewares/validate");
 const { registerViaEmail } = require('../../../auth/validators/auth')
 const { addAddressSchema, updateAddressSchema, updateUserSchema } = require("../validators/user");
@@ -13,15 +13,15 @@ const ApiError = require('../../../../utils/ApiError');
 router.get('/getAllUsers', async (req, res) => {
     try {
         const users = await getAllusers(req, res);
-        res.status(httpStatus.status.OK).json({ 
+        res.status(httpStatus.status.OK).json({
             isSuccess: true,
             message: "Users fetched successfully",
-            data: users 
+            data: users
         });
-        } catch (error) {
-            return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
-            }
-        });
+    } catch (error) {
+        return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
+    }
+});
 // Get User Info
 router.get("/", async (req, res) => {
     try {
@@ -87,7 +87,7 @@ router.get("/tickets", async (req, res) => {
     }
 });
 
-router.post("/addUser", async (req, res)=> {
+router.post("/addUser", async (req, res) => {
     const { error, value } = registerViaEmail.body.validate(req.body, { abortEarly: false });
 
     if (error) {

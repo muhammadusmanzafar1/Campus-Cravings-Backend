@@ -5,6 +5,7 @@ const Ticket = require('../../admin/models/ticket')
 const userService = require('../../../auth/services/users');
 const ApiError = require('../../../../utils/ApiError');
 const httpStatus = require('http-status');
+const cloudinary = require('../../../../utils/cloudinary');
 
 // fetch User Info 
 const getUser = async (query) => {
@@ -22,9 +23,12 @@ const getUser = async (query) => {
 // Update User Info
 const updateUser = async ({ user: { _id }, body }) => {
     try {
+        const {imgUrl, ...body } = body;
         const user = await User.findById(_id);
         if (!user) throw new ApiError('User not found', httpStatus.status.NOT_FOUND);
-
+        const uploadImg = await cloudinary.uploader.upload(imgUrl);
+        const uploadImgUrl = uploadImg.url;
+        body.imgUrl = uploadImgUrl;
         Object.assign(user, body);
         const updatedUser = await user.save();
         if (!updatedUser) {
@@ -161,9 +165,11 @@ const newUser = async (req) => {
 
         if (existingUser) throw new ApiError("This user is already Registered", httpStatus.status.FORBIDDEN);
 
-
+        const uploadImg = await cloudinary.uploader.upload(body.imgUrl);
+        const imgUrl = uploadImg.url;
         if (body.isRestaurant === true) {
-            const userModel = await User.newEntity(body, isAdmin);
+
+            const userModel = await User.newEntity(body, imgUrl, isAdmin);
             const restaurantModel = await Restaurant.newEntity(body, isAdmin);
 
             const newUser = new User(userModel);
@@ -180,7 +186,7 @@ const newUser = async (req) => {
             return userResponse;
         }
 
-        const model = await User.newEntity(body, false);
+        const model = await User.newEntity(body, imgUrl, false);
         const newUser = new User(model);
 
         const savedUser = await newUser.save();
