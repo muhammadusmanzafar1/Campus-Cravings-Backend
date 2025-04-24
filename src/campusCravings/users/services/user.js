@@ -113,6 +113,9 @@ const getAllUsers = async (req, res) => {
             case 'customer':
                 filter.isCustomer = true;
                 break;
+            case 'admin':
+                filter.isAdmin = true;
+                break;
             case 'all':
             default:
                 break;
