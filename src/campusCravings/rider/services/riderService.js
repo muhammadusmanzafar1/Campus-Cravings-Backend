@@ -189,5 +189,6 @@ exports.updateLocation = async (req, res) => {
   } catch (err) {
     console.error(err);
     throw new ApiError('Failed to update location', httpStatus.status.INTERNAL_SERVER_ERROR);
+
   }
 };

@@ -19,6 +19,7 @@ const getAllOrders = async () => {
 const createOrder = async (req) => {
     try {
         const { payment_method, items, tip, delivery_fee, addresses, order_type, customizations = [] } = req.body;
+
         const user_id = req.user._id;
         let total_price = 0;
         let restaurant_id = null;
@@ -115,6 +116,12 @@ const patchOrder = async (id, body) => {
             new: true,
             runValidators: true
         });
+
+        global.io.to(`order-${order._id}`).emit('order-status-updated', {
+            orderId: order._id,
+            status: body.status
+        });
+        
         return updatedOrder;
     } catch (error) {
         throw new APIError(`Error updating order: ${error.message}`, error.statusCode || httpStatus.status.INTERNAL_SERVER_ERROR);
