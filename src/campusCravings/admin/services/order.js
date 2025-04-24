@@ -43,7 +43,15 @@ const createOrder = async (req) => {
                     customizedItemPrice += matchedCustomization.price;
                 }
             }
-            total_price += (response.price + customizedItemPrice) * quantity;
+            // add on of size
+
+            // console.log("Response Size",response);
+            const addSizePrice = response.sizes.find((s) => s._id.toString() === item.size.toString());
+            if (addSizePrice) {
+                total_price += (response.price + customizedItemPrice + addSizePrice.price) * quantity;
+            } else {
+                total_price += (response.price + customizedItemPrice) * quantity;
+            }
         }
         total_price += tip;
         total_price += delivery_fee;

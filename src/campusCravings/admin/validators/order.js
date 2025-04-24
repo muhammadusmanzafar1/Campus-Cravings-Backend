@@ -24,7 +24,9 @@ const statusEnum = [
 const orderItemSchema = Joi.object({
     item_id: objectId.required(),
     quantity: Joi.number().min(1).required(),
-    customizations: Joi.array().items(Joi.string()).default([])
+    customizations: Joi.array().items(Joi.string()).default([]),
+    size: objectId.optional()
+    
 });
 const progressSchema = Joi.array().items(
     Joi.object({

@@ -17,6 +17,10 @@ const itemSchema = new mongoose.Schema({
       price: Number
     }
   ],
+  calories: {
+    type: Number,
+    min: 0
+  },
   image: [String],
   restaurant: {
     type: mongoose.Schema.Types.ObjectId,

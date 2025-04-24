@@ -10,7 +10,7 @@ const { nearbyRestaurantSchema, searchSchema } = require("../validators/restaura
 router.get("/getrestaurantAnalytics", async (req, res, next) => {
     try {
         const getItem = await restaurant.getRestaurantAnalytics(req, res, next);
-        res.status(httpStatus.status.OK).json({ message: "Items retrieved successfully", itens: getItem });
+        res.status(httpStatus.status.OK).json({ message: "Items retrieved successfully", items: getItem });
     } catch (error) {
         if (error instanceof ApiError) {
             return res.status(error.statusCode).json({ message: error.message });
