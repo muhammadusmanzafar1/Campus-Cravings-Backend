@@ -19,7 +19,7 @@ const registerRiderSchema = {
 const deliverOrderSchema = {
     body: Joi.object({
         orderId: Joi.string().required(),
-        imageUrl : Joi.string().uri().required()
+        imageUrl : Joi.string().required()
     })
 }
 

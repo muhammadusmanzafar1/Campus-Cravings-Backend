@@ -2,6 +2,7 @@
 const Ticket = require('../models/ticket');
 const ApiError = require('../../../../utils/ApiError');
 const httpStatus = require('http-status');
+const cloudinary = require('../../../../utils/cloudinary');
 const getAllTickets = async (req) => {
     try {
         const isAdmin = req.user?.isAdmin;
@@ -76,12 +77,14 @@ const getAllTickets = async (req) => {
 const createTicket = async (req) => {
     const { subject, description, status, priority, imgUrl, messages } = req.body;
     const userId = req.user?._id;
+    const uploadImg = await cloudinary.uploader.upload(imgUrl);
+    const uploadImgUrl = uploadImg.url;
     const newTicket = await Ticket.create({
         subject,
         description,
         status,
         priority,
-        imgUrl,
+        imgUrl: uploadImgUrl,
         messages,
         userId,
     });
@@ -154,6 +157,10 @@ const replyticket = async (req) => {
     }
     const sender = req.user?.isAdmin ? "admin" : "user";
     const { text = '', imageUrl = [] } = req.body;
+    for (let i = 0; i < imageUrl.length; i++) {
+        const uploadImg = await cloudinary.uploader.upload(imageUrl[i]);
+        imageUrl[i] = uploadImg.url;
+    }
     const message = {
         sender,
         text,
