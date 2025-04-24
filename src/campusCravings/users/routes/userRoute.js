@@ -1,7 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const { addUserAddress, updateUserAddress, getUser, updateUser, getUserTickets, getAllusers } = require('../controllers/userController');
+const { addUserAddress, updateUserAddress, getUser, updateUser, getUserTickets, getAllusers,
+    createNewUser, delUser
+ } = require('../controllers/userController');
 const { validateBody } = require("../../../../middlewares/validate");
+const { registerViaEmail } = require('../../../auth/validators/auth')
 const { addAddressSchema, updateAddressSchema, updateUserSchema } = require("../validators/user");
 const httpStatus = require("http-status");
 const ApiError = require('../../../../utils/ApiError');
@@ -83,5 +86,47 @@ router.get("/tickets", async (req, res) => {
         return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
     }
 });
+
+router.post("/addUser", async (req, res)=> {
+    const { error, value } = registerViaEmail.body.validate(req.body, { abortEarly: false });
+
+    if (error) {
+        return res.status(httpStatus.status.BAD_REQUEST).json({
+            message: "Validation Error",
+            errors: error.details.map(err => err.message),
+        });
+    }
+    try {
+        const user = await createNewUser(req, res);
+        res.status(httpStatus.status.CREATED).json({
+            isSuccess: true,
+            message: "New User Created Successfully",
+            data: user
+        });
+    } catch (error) {
+        console.error(error)
+        if (error instanceof ApiError) {
+            return res.status(error.statusCode).json({ message: error.message });
+        }
+        return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
+    }
+});
+
+router.delete('/deleteUser/:id', async (req, res) => {
+    try {
+        const user = await delUser(req, res);
+        res.status(httpStatus.status.CREATED).json({
+            isSuccess: true,
+            message: "User Deleted Successfully",
+            data: user
+        });
+    } catch (error) {
+        console.error(error)
+        if (error instanceof ApiError) {
+            return res.status(error.statusCode).json({ message: error.message });
+        }
+        return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
+    }
+})
 
 module.exports = router;

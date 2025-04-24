@@ -34,9 +34,11 @@ const errorHandler = (err, req, res, next) => {
 
     const response = {
         isSuccess: false,
-        statusCode: err.statusCode || httpStatus.status.INTERNAL_SERVER_ERROR,
+        name: err.name || 'Error',
         message: err.message || httpStatus[err.statusCode || httpStatus.status.INTERNAL_SERVER_ERROR],
-        stack: config.env === "development" ? err.stack : undefined, 
+        statusCode: err.statusCode || httpStatus.status.INTERNAL_SERVER_ERROR,
+        isOperational: err.isOperational || false,
+        stack: config.env === "development" ? err.stack : undefined,
     };
 
     if (!res.failure) {

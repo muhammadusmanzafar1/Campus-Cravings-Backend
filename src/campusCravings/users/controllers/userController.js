@@ -30,4 +30,14 @@ exports.getUserTickets = async (req, res) => {
 exports.getAllusers = asyncHandler(async (req, res) => {
     const users = await userService.getAllUsers(req, res);
     return users;
-    });
+});
+
+exports.createNewUser = asyncHandler(async (req, res) => {
+    const users = await userService.newUser(req);
+    return users;
+});
+
+exports.delUser = asyncHandler(async (req, res) => {
+    const data = await userService.deleteUser(req, res);
+    return data;
+})
