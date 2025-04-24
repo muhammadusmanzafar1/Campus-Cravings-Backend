@@ -226,7 +226,6 @@ const getUserAllOrders = async (req, res) => {
         const userType = req.query.for || 'customer';
         const userId = req?.user?._id;
         const comparingId = userType === 'rider' ? 'assigned_to' : 'user_id';
-        console.log(comparingId);
 
         const orders = await Order.find({ [comparingId]: userId })
             .populate('user_id', 'firstName lastName email')
@@ -256,12 +255,14 @@ const getUserAllOrders = async (req, res) => {
                 return {
                     name: itemData?.name || "Unknown Item",
                     quantity,
-                    total_price_per_item: +total.toFixed(2)
+                    total_price_per_item: +total.toFixed(2),
+                    customizationList: matchedCustomizations,
+                    size: itemData?.sizes?.find(s => s?._id?.toString() === sizeId)
                 };
             });
-
             return {
                 _id: order?._id,
+                address: order?.addresses,
                 status: order?.status,
                 payment_method: order?.payment_method,
                 total_price: order?.total_price,
