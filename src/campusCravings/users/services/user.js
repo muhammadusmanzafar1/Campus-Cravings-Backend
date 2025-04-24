@@ -225,7 +225,8 @@ const getUserAllOrders = async (req, res) => {
     try {
         const userType = req.query.for || 'customer';
         const userId = req?.user?._id;
-        const comparingId = userType === 'rider' ? 'rider_id' : 'user_id';
+        const comparingId = userType === 'rider' ? 'assigned_to' : 'user_id';
+        console.log(comparingId);
 
         const orders = await Order.find({ [comparingId]: userId })
             .populate('user_id', 'firstName lastName email')
@@ -280,7 +281,7 @@ const getUserAllOrders = async (req, res) => {
             };
         });
 
-        return result[result.length - 1];
+        return result;
     } catch (error) {
         console.error("Error fetching orders:", error.message);
         return res.status(500).json({
