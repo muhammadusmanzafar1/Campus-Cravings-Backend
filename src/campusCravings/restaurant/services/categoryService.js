@@ -48,7 +48,6 @@ const createItem = async (data) => {
         const uploadCloudnary = await cloudinary.uploader.upload(image);
         const imageUrl = uploadCloudnary.url;
         itemData.image = imageUrl;
-        console.log(imageUrl);
         const itemsData = new items(itemData)
         itemsData.category = category._id;
         itemsData.restaurant = category.restaurant;

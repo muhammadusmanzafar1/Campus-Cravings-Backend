@@ -45,8 +45,6 @@ const createOrder = async (req) => {
                 }
             }
             // add on of size
-
-            // console.log("Response Size",response);
             const addSizePrice = response.sizes.find((s) => s._id.toString() === item.size.toString());
             if (addSizePrice) {
                 total_price += (response.price + customizedItemPrice + addSizePrice.price) * quantity;
