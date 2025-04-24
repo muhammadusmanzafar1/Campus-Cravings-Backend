@@ -4,98 +4,99 @@ const ApiError = require('../../../../utils/ApiError');
 const httpStatus = require('http-status');
 const getAllTickets = async (req) => {
     try {
-      const isAdmin = req.user?.isAdmin;
-      if (!isAdmin) {
-        throw new ApiError('You are not authorized to perform this action', httpStatus.status.UNAUTHORIZED);
-      }
-  
-      const period = req.params.period || 'all';
-      const page = parseInt(req.query.page) || 1;
-      const limit = parseInt(req.query.limit) || 10;
-      const skip = (page - 1) * limit;
-  
-      const now = new Date();
-      let match = {};
-  
-      switch (period) {
-        case 'today':
-          const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-          match.createdAt = { $gte: startOfDay };
-          break;
-        case 'week':
-          const day = now.getDay();
-          const diffToMonday = day === 0 ? 6 : day - 1;
-          const startOfWeek = new Date(now);
-          startOfWeek.setDate(now.getDate() - diffToMonday);
-          startOfWeek.setHours(0, 0, 0, 0);
-          match.createdAt = { $gte: startOfWeek };
-          break;
-        case 'month':
-          const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-          match.createdAt = { $gte: startOfMonth };
-          break;
-        case 'year':
-          const startOfYear = new Date(now.getFullYear(), 0, 1);
-          match.createdAt = { $gte: startOfYear };
-          break;
-        case 'all':
-          break;
-        default:
-          throw new ApiError('Invalid period', httpStatus.status.BAD_REQUEST);
-      }
-  
-      const [total, tickets] = await Promise.all([
-        Ticket.countDocuments(match),
-        Ticket.find(match)
-          .skip(skip)
-          .limit(limit)
-          .sort({ createdAt: -1 })
-          .populate('userId', 'fullName email isCustomer isDelivery isRestaurant')
-      ]);
-  
-      const formattedTickets = tickets.map(ticket => ({
-        id: ticket._id,
-        subject: ticket.subject,
-        description: ticket.description,
-        status: ticket.status,
-        priority: ticket.priority,
-        createdAt: ticket.createdAt,
-        updatedAt: ticket.updatedAt,
-        imgUrls: ticket.imgUrl,
-        user: {
-          id: ticket.userId?._id,
-          fullName: ticket.userId?.fullName,
-          email: ticket.userId?.email,
-          role:
-            ticket.userId?.isDelivery
-              ? 'Rider'
-              : ticket.userId?.isCustomer
-                ? 'Customer'
-                : ticket.userId?.isRestaurant
-                  ? 'Restaurant'
-                  : 'unknown'
-        },
-        messages: ticket.messages.map(msg => ({
-          sender: msg.sender,
-          text: msg.text,
-          imageUrls: msg.imageUrl.filter(Boolean),
-          time: msg.time
-        }))
-      }));
-  
-      return {
-        total,
-        data: formattedTickets,
-        pagination: {totalPages: Math.ceil(total / limit),
-        currentPage: page,
-        pageSize: limit
-    }
-      };
+        const isAdmin = req.user?.isAdmin;
+        if (!isAdmin) {
+            throw new ApiError('You are not authorized to perform this action', httpStatus.status.UNAUTHORIZED);
+        }
+
+        const period = req.params.period || 'all';
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        const now = new Date();
+        let match = {};
+
+        switch (period) {
+            case 'today':
+                const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                match.createdAt = { $gte: startOfDay };
+                break;
+            case 'week':
+                const day = now.getDay();
+                const diffToMonday = day === 0 ? 6 : day - 1;
+                const startOfWeek = new Date(now);
+                startOfWeek.setDate(now.getDate() - diffToMonday);
+                startOfWeek.setHours(0, 0, 0, 0);
+                match.createdAt = { $gte: startOfWeek };
+                break;
+            case 'month':
+                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                match.createdAt = { $gte: startOfMonth };
+                break;
+            case 'year':
+                const startOfYear = new Date(now.getFullYear(), 0, 1);
+                match.createdAt = { $gte: startOfYear };
+                break;
+            case 'all':
+                break;
+            default:
+                throw new ApiError('Invalid period', httpStatus.status.BAD_REQUEST);
+        }
+
+        const [total, tickets] = await Promise.all([
+            Ticket.countDocuments(match),
+            Ticket.find(match)
+                .skip(skip)
+                .limit(limit)
+                .sort({ createdAt: -1 })
+                .populate('userId', 'fullName email isCustomer isDelivery isRestaurant')
+        ]);
+
+        const formattedTickets = tickets.map(ticket => ({
+            id: ticket._id,
+            subject: ticket.subject,
+            description: ticket.description,
+            status: ticket.status,
+            priority: ticket.priority,
+            createdAt: ticket.createdAt,
+            updatedAt: ticket.updatedAt,
+            imgUrls: ticket.imgUrl,
+            user: {
+                id: ticket.userId?._id,
+                fullName: ticket.userId?.fullName,
+                email: ticket.userId?.email,
+                role:
+                    ticket.userId?.isDelivery
+                        ? 'Rider'
+                        : ticket.userId?.isCustomer
+                            ? 'Customer'
+                            : ticket.userId?.isRestaurant
+                                ? 'Restaurant'
+                                : 'unknown'
+            },
+            messages: ticket.messages.map(msg => ({
+                sender: msg.sender,
+                text: msg.text,
+                imageUrls: msg.imageUrl.filter(Boolean),
+                time: msg.time
+            }))
+        }));
+
+        return {
+            data: formattedTickets,
+            pagination: {
+                totalPages: Math.ceil(total / limit),
+                total,
+                currentPage: page,
+                pageSize: limit
+            }
+        };
     } catch (error) {
-      throw new ApiError(error.message || 'Internal Server Error', httpStatus.status.INTERNAL_SERVER_ERROR);
+        throw new ApiError(error.message || 'Internal Server Error', httpStatus.status.INTERNAL_SERVER_ERROR);
     }
-  };
-  
+};
+
 
 const createTicket = async (req) => {
     const { subject, description, status, priority, imgUrl, messages } = req.body;
