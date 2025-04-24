@@ -124,6 +124,7 @@ const updatePassword = {
 const resetPassword = {
     body: Joi.object().keys({
         password: Joi.string().required().custom(password),
+        oldPassword: Joi.string().required()
     })
 };
 
