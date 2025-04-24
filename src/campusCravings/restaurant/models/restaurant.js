@@ -92,6 +92,5 @@ restaurantSchema.statics.isPhoneTaken = async function (phone) {
   return !!(await this.findOne({ phone }));
 };
 
-const Restaurant = mongoose.model('Restaurant', restaurantSchema);
-
+const Restaurant = mongoose.models.Restaurant || mongoose.model('Restaurant', restaurantSchema);
 module.exports = Restaurant;

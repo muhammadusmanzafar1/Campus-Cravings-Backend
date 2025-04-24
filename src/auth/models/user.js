@@ -112,7 +112,7 @@ const entitySchema = new mongoose.Schema({
     stripeCustomerId: String,
     restaurant: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "restaurant",
+        ref: "Restaurant",
     }
 });
 
