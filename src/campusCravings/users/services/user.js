@@ -94,10 +94,15 @@ const getUserTickets = async (req) => {
 
 const getAllUsers = async (req, res) => {
     try {
-        const filterType = req.query.type; // e.g., 'all', 'restaurant', 'rider', 'customer'
+        const filterType = req.query.type; // 'all', 'restaurant', 'rider', 'customer'
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+        const search = req.query.search || ''; // search on firstName
 
         let filter = {};
 
+        // Apply user type filter
         switch (filterType) {
             case 'restaurant':
                 filter.isRestaurant = true;
@@ -113,12 +118,32 @@ const getAllUsers = async (req, res) => {
                 break;
         }
 
-        const users = await User.find(filter);
-        return users;
+        // If search is provided, filter only by search (within the given type)
+        if (search) {
+            filter.firstName = { $regex: search, $options: 'i' }; // case-insensitive match
+        }
+
+        const users = await User.find(filter)
+            .skip(skip)
+            .limit(limit)
+            .sort({ createdAt: -1 });
+
+        const total = await User.countDocuments(filter);
+
+        return {
+            users,
+            pagination: {
+                total,
+                page,
+                pages: Math.ceil(total / limit),
+            }
+        }
     } catch (error) {
         throw new ApiError(error.message, httpStatus.status.INTERNAL_SERVER_ERROR);
     }
 };
+
+
 
 
 const newUser = async (req) => {
