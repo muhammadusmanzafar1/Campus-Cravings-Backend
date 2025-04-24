@@ -59,14 +59,14 @@ app.use(compression());
 // Routes 
 app.use("/api", apiRoutes);
 
-// convert error to CustomError, if needed
-app.use(errorConverter);
-
-// handle error
-app.use(errorHandler);
-
 app.get("/", (req, res) => {
     res.send("Welcome to Campus Cravings!");
 });
+
+// Convert error to ApiError
+app.use(errorConverter);
+
+// Handle error
+app.use(errorHandler);
 
 module.exports = app;
