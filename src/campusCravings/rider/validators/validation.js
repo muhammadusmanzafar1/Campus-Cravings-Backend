@@ -23,13 +23,6 @@ const deliverOrderSchema = {
     })
 }
 
-const deliverOrderSchema = {
-    body: Joi.object({
-        orderId: Joi.string().required()
-    })
-
-}
-
 module.exports = {
     registerRiderSchema,
     deliverOrderSchema
