@@ -1,6 +1,7 @@
 const User = require('../../../auth/models/user');
 const Order = require('../../admin/models/order');
 const Restaurant = require('../../restaurant/models/restaurant')
+const Rider = require('../../rider/models/rider')
 const Ticket = require('../../admin/models/ticket')
 const userService = require('../../../auth/services/users');
 const ApiError = require('../../../../utils/ApiError');
@@ -297,26 +298,47 @@ const getUserAllOrders = async (req, res) => {
 };
 
 const getUserDetail = async (req, res) => {
-    const userId =  req.params.id
+    const userId = req.params.id;
+  
     try {
-        const existing = await User.findById(userId);
-        if (!existing) throw new ApiError("Oops! User Not Fount", httpStatus.status.NOT_FOUND);
-
-        return existing;
+      // First, fetch user without population
+      const user = await User.findById(userId);
+  
+      if (!user) {
+        throw new ApiError("Oops! User Not Found", httpStatus.status.NOT_FOUND);
+      }
+  
+      // Prepare a new query to optionally populate
+      let query = User.findById(userId);
+  
+      if (user.isRestaurant) {
+        query = query.populate('restaurant');
+      }
+  
+      const populatedUser = await query.exec();
+      const userData = populatedUser.toObject();
+  
+      if (user.isDelivery) {
+        const riderDetails = await Rider.findOne({ user: userId });
+        userData.rider = riderDetails;
+      }
+  
+      return userData;
     } catch (error) {
-        if (!(error instanceof ApiError)) {
-            console.error('Unexpected error during user registration:', error);
-        }
-
-        throw error instanceof ApiError
-            ? error
-            : new ApiError(error.message || 'Internal Server Error', httpStatus.status.INTERNAL_SERVER_ERROR);
+      if (!(error instanceof ApiError)) {
+        console.error('Unexpected error during user detail fetch:', error);
+      }
+  
+      throw error instanceof ApiError
+        ? error
+        : new ApiError(
+            error.message || 'Internal Server Error',
+            httpStatus.status.INTERNAL_SERVER_ERROR
+          );
     }
-
-}
-
-
-
+  };
+  
+  
 module.exports = {
     getUser,
     addUserAddress,
