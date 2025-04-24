@@ -96,11 +96,11 @@ const getUserTickets = async (req) => {
 
 const getAllUsers = async (req, res) => {
     try {
-        const filterType = req.query.type; // 'all', 'restaurant', 'rider', 'customer'
+        const filterType = req.query.type; 
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
         const skip = (page - 1) * limit;
-        const search = req.query.search || ''; // search on firstName
+        const search = req.query.search || ''; 
 
         let filter = {};
 
@@ -123,9 +123,8 @@ const getAllUsers = async (req, res) => {
                 break;
         }
 
-        // If search is provided, filter only by search (within the given type)
         if (search) {
-            filter.firstName = { $regex: search, $options: 'i' }; // case-insensitive match
+            filter.firstName = { $regex: search, $options: 'i' }; 
         }
 
         const users = await User.find(filter)
@@ -301,14 +300,12 @@ const getUserDetail = async (req, res) => {
     const userId = req.params.id;
   
     try {
-      // First, fetch user without population
       const user = await User.findById(userId);
   
       if (!user) {
         throw new ApiError("Oops! User Not Found", httpStatus.status.NOT_FOUND);
       }
   
-      // Prepare a new query to optionally populate
       let query = User.findById(userId);
   
       if (user.isRestaurant) {
