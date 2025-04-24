@@ -122,7 +122,7 @@ const patchOrder = async (id, body) => {
 };
 const getOrder = async (id) => {
     try {
-        const order = await Order.findById(id);
+        const order = await Order.findById(id).populate('user_id', 'firstName lastName fullName imgUrl phoneNumber email').populate('items.item_id', 'name price image');
         return order;
     } catch (error) {
         throw new APIError(`Error fetching order: ${error.message}`, error.statusCode || httpStatus.status.INTERNAL_SERVER_ERROR);
@@ -141,57 +141,6 @@ const getResturantAllOrders = async (req) => {
         throw new APIError(`Error fetching orders: ${error.message}`, error.statusCode || httpStatus.status.INTERNAL_SERVER_ERROR);
     }
 };
-// User orders 
-const getUserAllOrders = async (req, res) => {
-    try {
-        const userType = req.query.for || 'customer';
-        const userId = mongoose.Types.ObjectId.createFromHexString(req.params.userId);
-        const comparingId = userType === 'rider' ? 'rider_id' : 'user_id';
-
-        // Step 1: Fetch orders with populated references
-        const orders = await Order.find({ [comparingId]: userId })
-            .populate('user_id', 'firstName lastName email')
-            .populate('restaurant_id', 'storeName brandName phoneNumber')
-            .populate('items.item_id', 'name price customization');
-
-        // Step 2: Attach customization objects to each item
-        const formattedOrders = orders.map(order => {
-            const updatedItems = order.items.map(item => {
-                const fullItem = item.item_id;
-
-                // Find matching customizations by ID
-                const customizationDetails = item.customizations?.map(customId => {
-                    return fullItem.customization.find(c => c._id.toString() === customId.toString());
-                }).filter(Boolean); // Remove undefined matches
-
-                return {
-                    ...item.toObject(),
-                    item_id: {
-                        _id: fullItem._id,
-                        name: fullItem.name,
-                        price: fullItem.price
-                    },
-                    customizations: customizationDetails
-                };
-            });
-
-            return {
-                ...order.toObject(),
-                items: updatedItems
-            };
-        });
-
-        return formattedOrders;
-
-    } catch (error) {
-        console.error("Error fetching orders:", error.message);
-        return res.status(500).json({
-            success: false,
-            message: "Error fetching orders",
-            error: error.message
-        });
-    }
-};
 
 
 module.exports = {
@@ -200,6 +149,6 @@ module.exports = {
     deleteOrder,
     patchOrder,
     getOrder,
-    getResturantAllOrders,
-    getUserAllOrders
+    getResturantAllOrders
+
 };

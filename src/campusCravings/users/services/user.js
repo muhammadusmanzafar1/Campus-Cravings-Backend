@@ -1,4 +1,5 @@
 const User = require('../../../auth/models/user');
+const Order = require('../../admin/models/order');
 const Restaurant = require('../../restaurant/models/restaurant')
 const Ticket = require('../../admin/models/ticket')
 const userService = require('../../../auth/services/users');
@@ -124,50 +125,50 @@ const getAllUsers = async (req, res) => {
 const newUser = async (req) => {
     const body = req.body;
     const isAdmin = req.user?.isAdmin;
-     try {
-          let existingUser;
+    try {
+        let existingUser;
 
-          if (body.email) {
-               existingUser = await userService.get({ email: body.email });
-          } else if (body.phone) {
-               existingUser = await userService.get({ phone: body.phone });
-          }
+        if (body.email) {
+            existingUser = await userService.get({ email: body.email });
+        } else if (body.phone) {
+            existingUser = await userService.get({ phone: body.phone });
+        }
 
-          if (existingUser) throw new ApiError("This user is already Registered", httpStatus.status.FORBIDDEN);
+        if (existingUser) throw new ApiError("This user is already Registered", httpStatus.status.FORBIDDEN);
 
 
-          if (body.isRestaurant === true) {
-               const userModel = await User.newEntity(body, isAdmin);
-               const restaurantModel = await Restaurant.newEntity(body, isAdmin);
+        if (body.isRestaurant === true) {
+            const userModel = await User.newEntity(body, isAdmin);
+            const restaurantModel = await Restaurant.newEntity(body, isAdmin);
 
-               const newUser = new User(userModel);
-               const newRestaurant = new Restaurant(restaurantModel);
+            const newUser = new User(userModel);
+            const newRestaurant = new Restaurant(restaurantModel);
 
-               await newRestaurant.save();
+            await newRestaurant.save();
 
-               newUser.restaurant = newRestaurant._id;
+            newUser.restaurant = newRestaurant._id;
 
-               const savedUser = await newUser.save();
-               const userResponse = savedUser.toObject();
-               delete userResponse.activationCode;
+            const savedUser = await newUser.save();
+            const userResponse = savedUser.toObject();
+            delete userResponse.activationCode;
 
-               return userResponse;
-          }
+            return userResponse;
+        }
 
-          const model = await User.newEntity(body, false);
-          const newUser = new User(model);
+        const model = await User.newEntity(body, false);
+        const newUser = new User(model);
 
-          const savedUser = await newUser.save();
-          const userResponse = savedUser.toObject();
-          delete userResponse.activationCode;
+        const savedUser = await newUser.save();
+        const userResponse = savedUser.toObject();
+        delete userResponse.activationCode;
 
-          return userResponse;
+        return userResponse;
 
-     } catch (error) {
+    } catch (error) {
         if (!(error instanceof ApiError)) {
             console.error('Unexpected error during user registration:', error);
         }
-    
+
         throw error instanceof ApiError
             ? error
             : new ApiError(error.message || 'Internal Server Error', httpStatus.status.INTERNAL_SERVER_ERROR);
@@ -187,12 +188,36 @@ const deleteUser = async (req, res) => {
         if (!(error instanceof ApiError)) {
             console.error('Unexpected error during user registration:', error);
         }
-    
+
         throw error instanceof ApiError
             ? error
             : new ApiError(error.message || 'Internal Server Error', httpStatus.status.INTERNAL_SERVER_ERROR);
     }
 }
+
+// User orders 
+const getUserAllOrders = async (req, res) => {
+    try {
+        const userType = req.query.for || 'customer';
+        const userId = req.user._id;
+        const comparingId = userType === 'rider' ? 'rider_id' : 'user_id';
+
+        // Step 1: Fetch orders with populated references
+        const orders = await Order.find({ [comparingId]: userId })
+            .populate('user_id', 'firstName lastName email')
+            .populate('restaurant_id', 'storeName brandName phoneNumber')
+            .populate('items.item_id', 'name price customization sizes');
+        return orders;
+
+    } catch (error) {
+        console.error("Error fetching orders:", error.message);
+        return res.status(500).json({
+            success: false,
+            message: "Error fetching orders",
+            error: error.message
+        });
+    }
+};
 
 module.exports = {
     getUser,
@@ -202,5 +227,6 @@ module.exports = {
     getUserTickets,
     getAllUsers,
     newUser,
-    deleteUser
+    deleteUser,
+    getUserAllOrders
 };
