@@ -87,4 +87,20 @@ router.patch('/location', async (req, res, next) => {
     }
 });
 
+router.put('/acceptOrder', async (req, res) => {
+    try {
+        const location = await rider.orderAccept(req, res, next);
+        if (!location) {
+            return next(new ApiError("Invalid request", httpStatus.status.BAD_REQUEST));
+        }
+        res.status(httpStatus.status.OK).json({ message: "Order Accpted", data: location });
+    } catch (error) {
+        console.error("Error in /location route:", error);
+        if (error instanceof ApiError) {
+            return res.status(error.statusCode).json({ message: error.message });
+        }
+        return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
+    }
+})
+
 module.exports = router;
