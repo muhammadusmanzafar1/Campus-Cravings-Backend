@@ -1,6 +1,7 @@
 const User = require('../../../auth/models/user');
 const httpStatus = require('http-status')
 const mongoose = require('mongoose');
+
 const Order = require('../models/order');
 const { getGrowthPercentage } = require('../helpers/AnalyticHelper');
 const ApiError = require('../../../../utils/ApiError');
@@ -190,7 +191,7 @@ const getTopRestaurants = async (req) => {
             { $limit: 6 },
             {
                 $lookup: {
-                    from: 'restaurants', 
+                    from: 'restaurants',
                     localField: '_id',
                     foreignField: '_id',
                     as: 'restaurant'

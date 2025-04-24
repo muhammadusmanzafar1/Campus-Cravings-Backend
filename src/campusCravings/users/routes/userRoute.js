@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { addUserAddress, updateUserAddress, getUser, updateUser, getUserTickets, getAllusers,
-    createNewUser, delUser
+    createNewUser, delUser, getUserAllOrders
  } = require('../controllers/userController');
 const { validateBody } = require("../../../../middlewares/validate");
 const { registerViaEmail } = require('../../../auth/validators/auth')
@@ -128,5 +128,19 @@ router.delete('/deleteUser/:id', async (req, res) => {
         return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
     }
 })
+
+// Get All Order
+// Get all orders with respect to User id
+router.get("/orders", async (req, res) => {
+    try {
+        const allOrders = await getUserAllOrders(req, res);
+        res.status(httpStatus.status.OK).json({ message: "Orders fetched successfully", orders: allOrders });
+    } catch (error) {
+        if (error instanceof ApiError) {
+            return res.status(error.statusCode).json({ message: error.message });
+        }
+        return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
+    }
+});
 
 module.exports = router;

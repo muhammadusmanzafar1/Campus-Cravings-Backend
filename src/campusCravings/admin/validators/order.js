@@ -24,7 +24,9 @@ const statusEnum = [
 const orderItemSchema = Joi.object({
     item_id: objectId.required(),
     quantity: Joi.number().min(1).required(),
-    customizations: Joi.array().items(Joi.string()).default([])
+    customizations: Joi.array().items(Joi.string()).default([]),
+    size: objectId.optional()
+    
 });
 const progressSchema = Joi.array().items(
     Joi.object({
@@ -38,7 +40,7 @@ const createOrderSchema = Joi.object({
     tip: Joi.number().min(0).default(0),
     delivery_fee: Joi.number().min(0).default(0),
     estimated_time: Joi.string().allow('').default(''),
-    order_type: Joi.string().allow('').default(''),
+    order_type: Joi.string().default('').valid('delivery', 'pickup').required(),
     addresses: addressesSchema.required(),
     image_url: Joi.string().uri().allow('').default(''),
     items: Joi.array().items(orderItemSchema).default([])

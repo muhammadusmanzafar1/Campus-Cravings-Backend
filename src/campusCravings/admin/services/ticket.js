@@ -37,8 +37,37 @@ const getAllTickets = async (req) => {
             default:
                 throw new ApiError('Invalid period', httpStatus.status.BAD_REQUEST);
         }
-        const tickets = await Ticket.find(match).populate('userId', 'name email');
-        return tickets;
+        const tickets = await Ticket.find(match).populate('userId', 'fullName email isCustomer isDelivery isRestaurant');
+        const formattedTickets = tickets.map(ticket => ({
+            id: ticket._id,
+            subject: ticket.subject,
+            description: ticket.description,
+            status: ticket.status,
+            priority: ticket.priority,
+            createdAt: ticket.createdAt,
+            updatedAt: ticket.updatedAt,
+            imgUrls: ticket.imgUrl,
+            user: {
+                id: ticket.userId?._id,
+                fullName: ticket.userId?.fullName,
+                email: ticket.userId?.email,
+                role:
+                    ticket.userId?.isDelivery
+                        ? 'Rider'
+                        : ticket.userId?.isCustomer
+                            ? 'Customer'
+                            : ticket.userId?.isRestaurant
+                                ? 'Restaurant'
+                                : 'unknown'
+            },
+            messages: ticket.messages.map(msg => ({
+                sender: msg.sender,
+                text: msg.text,
+                imageUrls: msg.imageUrl.filter(Boolean),
+                time: msg.time
+            }))
+        }));
+        return formattedTickets;
     } catch (error) {
         throw new ApiError(error.message || 'Internal Server Error', httpStatus.status.INTERNAL_SERVER_ERROR);
     }
@@ -93,11 +122,30 @@ const patchTicket = async (id, updates) => {
     return updated;
 };
 const getTicket = async (id) => {
-    const ticket = await Ticket.findById(id);
+    const ticket = await Ticket.findById(id).populate('userId', 'fullName email isCustomer isDelivery isRestaurant');
     if (!ticket) {
         throw new ApiError("Ticket not found", httpStatus.status.NOT_FOUND);
     }
-    return ticket;
+    const user = ticket.userId;
+    const role = user?.isDelivery
+        ? 'delivery'
+        : user?.isCustomer
+            ? 'customer'
+            : user?.isRestaurant
+                ? 'restaurant'
+                : 'unknown';
+
+    const response = {
+        ...ticket.toObject(),
+        userData: {
+            fullName: user?.fullName,
+            email: user?.email,
+            role
+        },
+        userId: user._id
+    };
+
+    return response;
 };
 const replyticket = async (req) => {
     const ticket = await Ticket.findById(req.params.id);

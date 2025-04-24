@@ -31,8 +31,3 @@ exports.getResturantAllOrders = asyncHandler(async (req, res) => {
     const orders = await orderService.getResturantAllOrders(req);
     return orders;
 });
-// User All Orders
-exports.getUserAllOrders = asyncHandler(async (req, res) => {
-    const orders = await orderService.getUserAllOrders(req);
-    return orders;
-});

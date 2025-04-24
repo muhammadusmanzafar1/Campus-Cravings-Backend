@@ -61,7 +61,7 @@ const createItem = async (data) => {
 
 const getCategoryItemsById = async (itemId) => {
     try {
-        const item = await items.findById(itemId)
+        const item = await items.findById(itemId).populate('category', 'name');
 
         if (!item) throw new Error('Item not found');
         return item;
