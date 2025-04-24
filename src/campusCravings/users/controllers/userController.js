@@ -40,7 +40,7 @@ exports.createNewUser = asyncHandler(async (req, res) => {
 exports.delUser = asyncHandler(async (req, res) => {
     const data = await userService.deleteUser(req, res);
     return data;
-})
+});
 
 // User All Orders
 exports.getUserAllOrders = asyncHandler(async (req, res) => {
