@@ -2,11 +2,12 @@
 const httpStatus = require('http-status');
 const userService = require('./users');
 const ApiError = require("../../../utils/ApiError");
-const crypto  = require('../../../utils/crypto')
+const crypto = require('../../../utils/crypto')
 const userDB = require('../models/user')
 const restaurantDB = require('../../campusCravings/restaurant/models/restaurant')
 const utils = require('../../../utils/utils');
 const email = require('../../../utils/email');
+const cloudinary = require('../../../utils/cloudinary');
 
 const registerWithEmail = async (body) => {
      try {
@@ -34,9 +35,11 @@ const registerWithEmail = async (body) => {
                     throw new ApiError(errorMessage, httpStatus.status.BAD_REQUEST);
                }
           }
+          const uploadImg = await cloudinary.uploader.upload(body.imgUrl);
+          const imgUrl = uploadImg.url;
 
           if (body.isRestaurant === true) {
-               const userModel = await userDB.newEntity(body, false);
+               const userModel = await userDB.newEntity(body,imgUrl, false);
                const restaurantModel = await restaurantDB.newEntity(body, false);
 
                const newUser = new userDB(userModel);
@@ -59,7 +62,7 @@ const registerWithEmail = async (body) => {
                return userResponse;
           }
 
-          const model = await userDB.newEntity(body, false);
+          const model = await userDB.newEntity(body, imgUrl, false);
           const newUser = new userDB(model);
 
           if (body.authMethod === 'phone') {
@@ -100,8 +103,9 @@ const registerWithPhone = async (body) => {
                throw new ApiError('Phone number already exists', httpStatus.status.BAD_REQUEST);
           }
      }
-
-     const model = await userDB.newEntity(body, false);
+     const uploadImg = await cloudinary.uploader.upload(body.imgUrl);
+     const imgUrl = uploadImg.url;
+     const model = await userDB.newEntity(body, imgUrl, false);
      const newUser = new userDB(model);
 
      newUser.activationCode = utils.randomPin();
