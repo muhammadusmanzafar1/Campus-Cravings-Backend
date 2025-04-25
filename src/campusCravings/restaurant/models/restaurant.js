@@ -6,6 +6,12 @@ const restaurantSchema = new Schema({
     type: String,
     required: true
   },
+  restaurantImages : {
+    type: [String],
+  },
+  openingHours : { 
+    type: String,
+  },
   brandName: {
     type: String,
     required: true
