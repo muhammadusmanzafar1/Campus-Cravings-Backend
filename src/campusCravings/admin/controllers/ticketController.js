@@ -36,3 +36,9 @@ exports.replyticket = async (req, res) => {
     const ticket = await ticketService.replyticket(req);
     return ticket;
 };
+
+exports.getNotifications = async (req) => {
+    const { page = 1, limit = 10, type } = req.query;
+    const data = await ticketService.getNotifications({ page, limit, type });
+    return data;
+};
