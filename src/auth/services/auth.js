@@ -2,6 +2,7 @@
 const httpStatus = require('http-status');
 const userService = require('./users');
 const Stripe = require('stripe');
+const sessionService = require('../services/session')
 const ApiError = require("../../../utils/ApiError");
 const crypto = require('../../../utils/crypto')
 const userDB = require('../models/user')
@@ -315,6 +316,16 @@ const resetPassword = async (id, body) => {
  
      return await user.save();
  };
+const handleLogout = async (req) => {
+     const userId = req.user._id
+     const user = await userService.get(userId);
+     if (!user) {
+         throw new ApiError('Oops! User not found', httpStatus.status.UNAUTHORIZED);
+     }
+
+     await sessionService.expireSingleSession(sessionId);
+
+ };
 // const createAdminNotification = async (user) => {
 //      try {
 //        const notification = new Notification({
@@ -339,5 +350,6 @@ module.exports = {
      resendOtp,
      forgotPassword,
      updatePassword,
-     resetPassword
+     resetPassword,
+     handleLogout
 }

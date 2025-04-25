@@ -363,6 +363,29 @@ exports.getResturantAnalytics = async (req) => {
         };
 
     } catch (error) {
-        throw new Error('Error fetching analytics: ' + error.message);
+        throw new ApiError('Error fetching analytics: ', httpStatus.status.INTERNAL_SERVER_ERROR);
+    }
+};
+
+exports.OrderAccept = async (req, res) => {
+    const { restaurantId, orderId, status, progress } = req.body;
+    try {
+        const order = await Order.findById(orderId);
+        if (!order) throw new ApiError('Oops! Order Not Found', httpStatus.status.NOT_FOUND);
+
+        order.restaurant_id = restaurantId;
+        order.status = status;
+
+        order.progress.push({
+            status: progress,
+            updated_at: new Date()
+        });
+
+        await order.save();
+
+        return order;
+    } catch (error) {
+        console.error(error.message)
+        throw new ApiError('Error fetching analytics: ', httpStatus.status.INTERNAL_SERVER_ERROR);
     }
 };
