@@ -9,6 +9,8 @@ const { differenceInMinutes } = require('date-fns');
 const haversine = require('haversine-distance');
 const { patchOrder } = require('../../admin/services/order')
 const cloudinary  = require('../../../../utils/cloudinary');
+const { getIO } = require('../../../sockets/service/socketService');
+const { sendOrderToSpecificRiders } = require('../../../sockets/controllers/rider');
 
 
 exports.registerRider = async (req, res) => {
@@ -135,6 +137,9 @@ exports.getRandomUnassignedOrder = async (req, res) => {
 
     const riderUserIds = nearbyRiders.map(rider => rider.user);
 
+    // Send the orders and riderUserIds to the client
+    await sendOrderToSpecificRiders(riderUserIds, orders);
+
     return {
       orders,
       nearbyRiderUserIds: riderUserIds
@@ -254,7 +259,9 @@ exports.orderAccept = async (req, res) => {
       rider: updatedOrder.assigned_to,
     });
 
-    global.io.to(`order-${order._id}`).emit('order-status-updated', {
+    const io = getIO();
+
+    io.to(`order-${order._id}`).emit('order-status-updated', {
       orderId: updatedOrder._id,
       status: updatedOrder.status,
     });

@@ -1,4 +1,4 @@
-const { messageSending, markMessageAsRead } = require('../controllers/conversationController');
+const { messageSending, markMessageAsRead } = require('../controllers/conversation');
 const { sendMessageSchema, markMessageReadSchema } = require('../validators/conversation');
 
 module.exports = (io, socket) => {
