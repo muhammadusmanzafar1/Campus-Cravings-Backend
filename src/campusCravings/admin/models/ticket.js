@@ -49,6 +49,10 @@ const ticketSchema = new mongoose.Schema({
     messages: {
         type: [messageSchema],
         default: []
+    },
+    read: {
+        type: Boolean,
+        default: false
     }
 }, { timestamps: true });
 
