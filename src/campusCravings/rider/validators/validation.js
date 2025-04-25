@@ -8,7 +8,7 @@ const registerRiderSchema = {
         club_organizations: Joi.array().items(Joi.string()).optional(),
         bio: Joi.string().optional(),
         SSN: Joi.string().required(),
-        national_id_image_url: Joi.string().uri().required(),
+        national_id_image_url: Joi.string().required(),
         location: Joi.object({
             lat: Joi.number().required(),
             lng: Joi.number().required()
@@ -19,7 +19,7 @@ const registerRiderSchema = {
 const deliverOrderSchema = {
     body: Joi.object({
         orderId: Joi.string().required(),
-        imageUrl : Joi.string().uri().required()
+        imageUrl : Joi.string().required()
     })
 }
 

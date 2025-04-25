@@ -17,7 +17,6 @@ exports.registerRider = async (req, res) => {
     if (existing) {
       return res.status(400).json({ message: 'You are already registered as a rider' });
     }
-
     const {
       location,
       batch_year,
@@ -29,6 +28,8 @@ exports.registerRider = async (req, res) => {
       national_id_image_url
     } = req.body;
 
+    const uploadImg = await cloudinary.uploader.upload(national_id_image_url);
+    const imgUrl = uploadImg.url;
     // Ensure required fields are present
     if (!batch_year || !majors || !SSN || !national_id_image_url) {
       throw new ApiError('Missing required fields', httpStatus.status.BAD_REQUEST);
@@ -42,7 +43,7 @@ exports.registerRider = async (req, res) => {
       club_organizations,
       bio,
       SSN,
-      national_id_image_url,
+      national_id_image_url: imgUrl,
       location: {
         type: 'Point',
         coordinates: [location.lng, location.lat]
@@ -51,7 +52,7 @@ exports.registerRider = async (req, res) => {
 
     await newRider.save();
 
-    await User.findByIdAndUpdate(userId, { isRider: true });
+    await User.findByIdAndUpdate(userId, { isDelivery: true });
 
     return newRider;
   } catch (err) {
@@ -154,7 +155,9 @@ exports.deliverOrder = async (req, res) => {
     if (!rider) {
       throw new ApiError('Rider not found', httpStatus.status.NOT_FOUND);
     }
-    order = await patchOrder(orderId, { status: 'delivered', image_url: imageUrl });
+    const uploadImg = await cloudinary.uploader.upload(imageUrl);
+    const imgUrl = uploadImg.url;
+    order = await patchOrder(orderId, { status: 'delivered', image_url: imgUrl });
     const progress = order.progress;
     const dispatched = progress.find(p => p.status === 'order_dispatched');
     const delivered = progress.find(p => p.status === 'delivered');
