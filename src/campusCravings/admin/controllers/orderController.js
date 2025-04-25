@@ -3,7 +3,7 @@ const orderService = require('../services/order');
 const asyncHandler = require('express-async-handler');
 
 exports.getAllOrders = asyncHandler(async (req, res) => {
-    const orders = await orderService.getAllOrders(req.body);
+    const orders = await orderService.getAllOrders(req);
     return orders;
 });
 
