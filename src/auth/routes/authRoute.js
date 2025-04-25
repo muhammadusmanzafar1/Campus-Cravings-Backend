@@ -6,6 +6,8 @@ const { registerUser, verifyOTP, login, registerViaPhone, resendOTP, handleForgo
 const { registerViaEmail, validateVerifyOTP, loginVerify, registerViaPhone: registerViaPhones,
     resendOtp, forgotPassword, updatePassword, resetPassword, resetPasswordOTP } = require("../validators/auth");
 const { validate } = require('../../../middlewares/auth')
+const sessionService = require('../../auth/services/session');
+
 
 // RegisterWithEmail
 router.post("/register/email", async (req, res) => {
@@ -196,7 +198,14 @@ router.post('/logout', validate, async (req, res) => {
 // Sesssion Validator
 router.get('/validateSession', validate, async (req, res) => {
     try {
-        res.status(httpStatus.status.OK).json({ message: "Token Valid" });
+        let session = await sessionService.get(req.sessionId);
+        if (!session) {
+            throw new ApiError('Session not found', httpStatus.status.UNAUTHORIZED);
+        }
+        if (session.status === 'expired') {
+            throw new ApiError('Session expired', httpStatus.status.UNAUTHORIZED);
+        }
+        return res.status(httpStatus.status.OK).json({ message: "Session Validated successfully", data: session });
     } catch (error) {
         console.error(error);
         if (error instanceof ApiError) {
