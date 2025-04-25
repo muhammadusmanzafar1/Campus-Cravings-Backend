@@ -1,4 +1,5 @@
 const Restaurant = require('../../campusCravings/restaurant/models/restaurant');
+const User = require('../../auth/models/user');
 const { restaurantSockets } = require('../store/socketStore');
 const { getIO } = require('../service/socketService');
 
@@ -12,9 +13,9 @@ const isRestaurant = async ({ data, socket }) => {
             throw new Error('User not found');
         }
 
-        if (user.isRestaurant == true) 
+        if (user.isRestaurant == true && user.restaurant) 
         {
-            const restaurant = await Restaurant.findOne({ user: user._id });
+            const restaurant = await Restaurant.findById(user.restaurant);
             if (!restaurant) {
                 throw new Error('Restaurant not found');
             }
@@ -32,14 +33,22 @@ const sendOrderToRestaurant = async (restaurantId, order) =>
 {
     try
     {
+
+        const restaurantUserId = await User.findOne({ isRestaurant: true, restaurant: restaurantId }).select('_id');
+        if (!restaurantUserId) {
+            throw new Error('Restaurant user not found');
+        }
+
+        console.log("Restaurant's UserId: " + restaurantUserId);
+
         const io = getIO();
-        const socketId = restaurantSockets.get(restaurantId); // Get the socketId from the map
+        const socketId = restaurantSockets.get(restaurantUserId); // Get the socketId from the map
     
         if (socketId) {
             io.to(socketId).emit('new-customer-order', order);
-            console.log(`Orders sent to restaurant ${restaurantId} with socketId ${socketId}`);
+            console.log(`Orders sent to restaurant ${restaurantUserId} with socketId ${socketId}`);
         } else {
-            console.log(`Restaurant ${restaurantId} is not connected.`);
+            console.log(`Restaurant ${restaurantUserId} is not connected.`);
         }
     }
     catch (error) {
