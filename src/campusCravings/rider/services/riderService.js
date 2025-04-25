@@ -7,6 +7,7 @@ const Order = require('../../admin/models/order')
 const { differenceInMinutes } = require('date-fns');
 const haversine = require('haversine-distance');
 const { patchOrder } = require('../../admin/services/order')
+const cloudinary  = require('../../../../utils/cloudinary');
 
 
 exports.registerRider = async (req, res) => {
