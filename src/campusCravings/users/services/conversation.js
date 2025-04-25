@@ -4,6 +4,7 @@ const Rider = require('../../rider/models/rider');
 const Order = require('../../admin/models/order');
 const ApiError = require('../../../../utils/ApiError');
 const httpStatus = require('http-status');
+const { getIO } = require('../../../sockets/service/socketService');
 
 // fetch Conversation Details
 const getConversationDetails = async (req) => {
@@ -11,6 +12,7 @@ const getConversationDetails = async (req) => {
 
         const { isCustomer, orderId } = req.body;
         let { _id } = req.user;
+        const io = getIO();
 
         if (!_id) {
             throw new ApiError('id not found', httpStatus.status.NOT_FOUND);
@@ -68,7 +70,7 @@ const getConversationDetails = async (req) => {
             { _id: { $in: unreadMessageIds } },
             { $set: { status: 'read' } });
 
-            global.io.to(conversation._id).emit('messages-read', { messageIds: unreadMessageIds, readerId: _id.toString(), readerType: isCustomer ? 'customer' : 'rider' });
+            io.to(conversation._id).emit('messages-read', { messageIds: unreadMessageIds, readerId: _id.toString(), readerType: isCustomer ? 'customer' : 'rider' });
         }
 
     
