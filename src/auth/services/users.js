@@ -11,6 +11,15 @@ const getByCondition = async (condition) => {
 };
 
 const get = async (query) => {
+    if (Buffer.isBuffer(query)) {
+        query = query.toString('hex');
+        console.log("🔧 Converted Buffer to hex string:", query);
+    }
+
+    if (typeof query === 'object' && query._id) {
+        query = query._id.toString(); // Normalize ObjectId to string
+    }
+
     if (typeof query === 'string') {
         if (mongoose.Types.ObjectId.isValid(query)) {
             return getById(query);

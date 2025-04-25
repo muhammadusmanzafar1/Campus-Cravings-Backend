@@ -173,7 +173,10 @@ router.post('/logout', validate, async (req, res) => {
         res.status(httpStatus.status.OK).json({ message: "User Logout successfully", result });
     } catch (error) {
         console.error(error);
-        if (error instanceof ApiError) { return res.status(error.statusCode).json({ message: error.message }); } return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
+        if (error instanceof ApiError) {
+            return res.status(error.statusCode).json({ message: error.message });
+        }
+        return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
     }
 });
 
