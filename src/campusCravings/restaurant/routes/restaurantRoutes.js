@@ -172,4 +172,16 @@ router.get("/analytics/:days", async (req, res) => {
         return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
     }
 });
+
+router.put('/orderAcceptByRestaurant', async (req, res) => {
+    try {
+        const orderAccept = await restaurant.OrderAccept(req, res);
+        res.status(httpStatus.status.OK).json({ message: "Nearby Restaurants fetched successfully", data: orderAccept });
+    } catch (error) {
+        if (error instanceof ApiError) {
+            return res.status(error.statusCode).json({ message: error.message });
+        }
+        return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
+    }
+})
 module.exports = router;

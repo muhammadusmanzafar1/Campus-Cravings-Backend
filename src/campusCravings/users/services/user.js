@@ -22,10 +22,31 @@ const getUser = async (query) => {
     }
 };
 // Update User Info
-const updateUser = async ({ user: { _id }, body }) => {
+const updateUser = async (req) => {
+    const userId = req.user._id;
+    const {imgUrl, ...body } = req.body;
     try {
-        const {imgUrl, ...body } = body;
-        const user = await User.findById(_id);
+        const user = await User.findById(userId);
+        if (!user) throw new ApiError('User not found', httpStatus.status.NOT_FOUND);
+        const uploadImg = await cloudinary.uploader.upload(imgUrl);
+        const uploadImgUrl = uploadImg.url;
+        body.imgUrl = uploadImgUrl;
+        Object.assign(user, body);
+        const updatedUser = await user.save();
+        if (!updatedUser) {
+            throw new ApiError('Failed to update user', httpStatus.status.INTERNAL_SERVER_ERROR);
+        }
+        return await User.findById(_id).select('-password');
+    } catch (error) {
+        throw new ApiError(error.message, httpStatus.status.INTERNAL_SERVER_ERROR);
+    }
+};
+
+const updateUserByAdmin = async (req) => {
+    const userId = req.params.id;
+    const {imgUrl, ...body } = req.body;
+    try {
+        const user = await User.findById(userId);
         if (!user) throw new ApiError('User not found', httpStatus.status.NOT_FOUND);
         const uploadImg = await cloudinary.uploader.upload(imgUrl);
         const uploadImgUrl = uploadImg.url;
@@ -353,5 +374,6 @@ module.exports = {
     newUser,
     deleteUser,
     getUserAllOrders,
-    getUserDetail
+    getUserDetail,
+    updateUserByAdmin
 };
