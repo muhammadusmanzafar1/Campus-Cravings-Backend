@@ -193,6 +193,17 @@ router.post('/logout', validate, async (req, res) => {
         return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
     }
 });
-
+// Sesssion Validator
+router.get('/validateSession', validate, async (req, res) => {
+    try {
+        res.status(httpStatus.status.OK).json({ message: "Token Valid" });
+    } catch (error) {
+        console.error(error);
+        if (error instanceof ApiError) {
+            return res.status(error.statusCode).json({ message: error.message });
+        }
+        return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
+    }
+})
 
 module.exports = router;
