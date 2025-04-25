@@ -41,16 +41,16 @@ const sendOrderToRestaurant = async (restaurantId, order) =>
             throw new Error('Restaurant user not found');
         }
 
-        console.log("Restaurant's UserId: " + restaurantUserId);
+        console.log("Restaurant's UserId: " + restaurantUserId._id);
 
         const io = getIO();
         const socketId = restaurantSockets.get(restaurantUserId._id); // Get the socketId from the map
     
         if (socketId) {
             io.to(socketId).emit('new-customer-order', order);
-            console.log(`Orders sent to restaurant ${restaurantUserId} with socketId ${socketId}`);
+            console.log(`Orders sent to restaurant ${restaurantUserId._id} with socketId ${socketId}`);
         } else {
-            console.log(`Restaurant ${restaurantUserId} is not connected.`);
+            console.log(`Restaurant ${restaurantUserId._id} is not connected.`);
         }
     }
     catch (error) {
