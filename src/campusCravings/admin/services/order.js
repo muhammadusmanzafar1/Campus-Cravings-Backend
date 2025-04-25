@@ -4,6 +4,8 @@ const itemsDB = require('../../restaurant/models/items')
 const mongoose = require('mongoose');
 const APIError = require('../../../../utils/ApiError');
 const httpStatus = require('http-status');
+const { getIO } = require('../../../sockets/service/socketService');
+const { sendOrderToRestaurant } = require('../../../sockets/controllers/restaurant');
 
 const getAllOrders = async (req) => {
     try {
@@ -107,7 +109,7 @@ const getAllOrders = async (req) => {
                     tip: 1,
                     delivery_fee: 1,
                     estimated_time: 1,
-                    address: 1,
+                    addresses: 1,
                     image_url: 1,
                     order_type: 1,
                     progress: 1,
@@ -197,6 +199,9 @@ const createOrder = async (req) => {
         });
         await newOrder.save();
         newOrder = await patchOrder(newOrder._id, { status: 'pending' });
+
+        //Socket here to send order to restaurant in real-time
+        await sendOrderToRestaurant(restaurant_id, newOrder);
         return newOrder;
 
     } catch (err) {
@@ -244,7 +249,9 @@ const patchOrder = async (id, body) => {
             runValidators: true
         });
 
-        global.io.to(`order-${order._id}`).emit('order-status-updated', {
+        const io = getIO();
+
+        io.to(`order-${order._id}`).emit('order-status-updated', {
             orderId: order._id,
             status: body.status
         });
@@ -265,7 +272,7 @@ const getOrder = async (id) => {
 // Resturant orders 
 const getResturantAllOrders = async (req) => {
     try {
-        const restaurantId = new mongoose.Types.ObjectId(req.params.restaurantId);
+        const restaurantId = mongoose.Types.ObjectId.createFromHexString(req.params.restaurantId);
         const orders = await Order.find({ restaurant_id: restaurantId })
             .populate('user_id', 'firstName lastName email')
             .populate('restaurant_id', 'storeName brandName phoneNumber')

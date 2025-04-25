@@ -1,12 +1,17 @@
-const { messageSending, markMessageAsRead } = require('../controllers/conversationController');
+const { messageSending, markMessageAsRead } = require('../controllers/conversation');
 const { sendMessageSchema, markMessageReadSchema } = require('../validators/conversation');
 
 module.exports = (io, socket) => {
 
   // Event to join the private chat room between rider and customer
   socket.on('join-conversation', ({ conversationId}) => {
-    socket.join(conversationId);
-    console.log(`Socket ${socket.id} joined conversation room: ${conversationId}`);
+    try {
+      socket.join(conversationId);
+      console.log(`Socket ${socket.id} joined conversation room: ${conversationId}`);
+    } catch (err) {
+      console.error('Error in join-conversation:', err.message);
+      socket.emit('chat-error', { error: `Failed to join conversation. Error: ${err.message}` });
+    }
   });
   
   // Event for sending messages from rider to customer or vice versa

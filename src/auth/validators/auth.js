@@ -127,6 +127,12 @@ const resetPassword = {
     })
 };
 
+const resetPasswordOTP = {
+    body: Joi.object().keys({
+        password: Joi.string().required().custom(password),
+    })
+};
+
 const socialLogin = {
     body: Joi.object().keys({
         authMethod: Joi.string().required().valid('email', 'google', 'facebook', 'apple'),
@@ -153,5 +159,6 @@ module.exports = {
     forgotPassword,
     updatePassword,
     resetPassword,
-    socialLogin
+    socialLogin,
+    resetPasswordOTP
 };
