@@ -316,6 +316,19 @@ const resetPassword = async (id, body) => {
  
      return await user.save();
  };
+
+ const resetPasswordOTP = async (id, body) => {
+     const user = await userService.get(id);
+     if (!user) {
+         throw new ApiError('Oops! User not found', httpStatus.status.UNAUTHORIZED);
+     }
+ 
+     user.password = await crypto.setPassword(body.password);
+     user.isOtpVerified = false;
+ 
+     return await user.save();
+ };
+
 const handleLogout = async (req) => {
      let userId = req.user._id;
      let sessionId = req.sessionId
@@ -353,5 +366,6 @@ module.exports = {
      forgotPassword,
      updatePassword,
      resetPassword,
-     handleLogout
+     handleLogout,
+     resetPasswordOTP
 }
