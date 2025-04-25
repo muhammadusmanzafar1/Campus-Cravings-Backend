@@ -44,20 +44,26 @@ const updateUser = async (req) => {
 
 const updateUserByAdmin = async (req) => {
     const userId = req.params.id;
-    const {imgUrl, ...body } = req.body;
+    const { imgUrl, ...body } = req.body;
     try {
         const user = await User.findById(userId);
         if (!user) throw new ApiError('User not found', httpStatus.status.NOT_FOUND);
-        const uploadImg = await cloudinary.uploader.upload(imgUrl);
-        const uploadImgUrl = uploadImg.url;
-        body.imgUrl = uploadImgUrl;
+
+        if (imgUrl) {
+            const uploadImg = await cloudinary.uploader.upload(imgUrl);
+            body.imgUrl = uploadImg.url;
+        }
+
         Object.assign(user, body);
         const updatedUser = await user.save();
+
         if (!updatedUser) {
             throw new ApiError('Failed to update user', httpStatus.status.INTERNAL_SERVER_ERROR);
         }
-        return await User.findById(_id).select('-password');
+
+        return await User.findById(userId).select('-password');
     } catch (error) {
+        console.log(error);
         throw new ApiError(error.message, httpStatus.status.INTERNAL_SERVER_ERROR);
     }
 };

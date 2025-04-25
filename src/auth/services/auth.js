@@ -317,8 +317,10 @@ const resetPassword = async (id, body) => {
      return await user.save();
  };
 const handleLogout = async (req) => {
-     const userId = req.user._id
+     let userId = req.user._id;
+     let sessionId = req.sessionId
      const user = await userService.get(userId);
+
      if (!user) {
          throw new ApiError('Oops! User not found', httpStatus.status.UNAUTHORIZED);
      }
