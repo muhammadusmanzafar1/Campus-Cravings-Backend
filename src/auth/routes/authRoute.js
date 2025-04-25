@@ -5,7 +5,7 @@ const ApiError = require('../../../utils/ApiError');
 const { registerUser, verifyOTP, login, registerViaPhone, resendOTP, handleForgotPassword, handleResetPassword, handleLogout } = require('../controllers/authController')
 const { registerViaEmail, validateVerifyOTP, loginVerify, registerViaPhone: registerViaPhones,
     resendOtp, forgotPassword, updatePassword, resetPassword } = require("../validators/auth");
-const { validate } = require('../../../middlewares/auth')
+const { validate } = require('../../../middlewares/auth');
 
 // RegisterWithEmail
 router.post("/register/email", async (req, res) => {
@@ -179,6 +179,18 @@ router.post('/logout', validate, async (req, res) => {
         return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
     }
 });
+// Sesssion Validator
+router.get('/validateSession', validate, async (req, res) => {
+    try {
+        res.status(httpStatus.status.OK).json({ message: "Token Valid" });
+    } catch (error) {
+        console.error(error);
+        if (error instanceof ApiError) {
+            return res.status(error.statusCode).json({ message: error.message });
+        }
+        return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
+    }
+})
 
 
 module.exports = router;

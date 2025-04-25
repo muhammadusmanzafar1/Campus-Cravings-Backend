@@ -102,6 +102,5 @@ router.patch("/reply/:id", validateBody(replyTicketSchema), async (req, res) => 
         return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
     }
 });
-
-
+// fetch all ticket Notification 
 module.exports = router;
