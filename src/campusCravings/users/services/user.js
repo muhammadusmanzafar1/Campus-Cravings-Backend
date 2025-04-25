@@ -334,18 +334,20 @@ const getUserDetail = async (req, res) => {
     const userId = req.params.id;
   
     try {
-      let query = User.findById(userId);
-  
-      // Always populate restaurant, if exists
-      query = query.populate('restaurant');
-  
-      const user = await query.exec();
+      const user = await User.findById(userId);
   
       if (!user) {
         throw new ApiError("Oops! User Not Found", httpStatus.status.NOT_FOUND);
       }
   
-      const userData = user.toObject();
+      let query = User.findById(userId);
+  
+      if (user.isRestaurant) {
+        query = query.populate('restaurant');
+      }
+  
+      const populatedUser = await query.exec();
+      const userData = populatedUser.toObject();
   
       if (user.isDelivery) {
         const riderDetails = await Rider.findOne({ user: userId });
@@ -366,7 +368,6 @@ const getUserDetail = async (req, res) => {
           );
     }
   };
-  
   
   
 module.exports = {
