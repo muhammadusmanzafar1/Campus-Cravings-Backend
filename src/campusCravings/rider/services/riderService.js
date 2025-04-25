@@ -7,6 +7,7 @@ const Order = require('../../admin/models/order')
 const { differenceInMinutes } = require('date-fns');
 const haversine = require('haversine-distance');
 const { patchOrder } = require('../../admin/services/order')
+const cloudinary  = require('../../../../utils/cloudinary');
 
 
 exports.registerRider = async (req, res) => {
@@ -131,7 +132,7 @@ exports.getRandomUnassignedOrder = async (req, res) => {
       order_accepted: false,
       isAvailable: true,
       status: 'active'
-    }).select('-SSN -national_id_image_url'); 
+    }).select('-SSN -national_id_image_url');
 
     return {
       order: randomOrder[0],
