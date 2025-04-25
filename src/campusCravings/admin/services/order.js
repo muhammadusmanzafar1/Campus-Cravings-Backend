@@ -148,7 +148,7 @@ const getAllOrders = async (req) => {
 
 const createOrder = async (req) => {
     try {
-        const { payment_method, items, tip, delivery_fee, addresses, order_type, customizations = [] } = req.body;
+        const { payment_method, items, tip, delivery_fee, addresses, order_note, order_type, customizations = [] } = req.body;
 
         const user_id = req.user._id;
         let total_price = 0;
@@ -160,7 +160,7 @@ const createOrder = async (req) => {
                 throw new APIError('Item not found', httpStatus.status.NOT_FOUND);
             }
             if (!restaurant_id) {
-                restaurant_id = response.restaurant.toString();
+                restaurant_id = response.restaurant?.toString();
             } else if (response.restaurant.toString() !== restaurant_id) {
                 throw new APIError('All items must be from the same restaurant', httpStatus.status.BAD_REQUEST);
             }
@@ -194,7 +194,8 @@ const createOrder = async (req) => {
             payment_method,
             items,
             addresses,
-            order_type
+            order_type,
+            order_note
         });
         await newOrder.save();
         newOrder = await patchOrder(newOrder._id, { status: 'pending' });
