@@ -4,7 +4,7 @@ const httpStatus = require("http-status");
 const ApiError = require('../../../utils/ApiError');
 const { registerUser, verifyOTP, login, registerViaPhone, resendOTP, handleForgotPassword, handleResetPassword, handleResetPasswordOTP, handleLogout } = require('../controllers/authController')
 const { registerViaEmail, validateVerifyOTP, loginVerify, registerViaPhone: registerViaPhones,
-    resendOtp, forgotPassword, updatePassword, resetPassword } = require("../validators/auth");
+    resendOtp, forgotPassword, updatePassword, resetPassword, resetPasswordOTP } = require("../validators/auth");
 const { validate } = require('../../../middlewares/auth')
 
 // RegisterWithEmail
@@ -168,7 +168,7 @@ router.post('/resetPassword/:id', async (req, res) => {
 });
 
 router.post('/resetPasswordOTP/:id', async (req, res) => {
-    const { error, value } = resetPassword.body.validate(req.body, { abortEarly: false });
+    const { error, value } = resetPasswordOTP.body.validate(req.body, { abortEarly: false });
     if (error) {
         return res.status(httpStatus.status.BAD_REQUEST).json({ message: "Validation Error", errors: error.details.map(err => err.message), });
     }

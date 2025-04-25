@@ -272,7 +272,7 @@ const getOrder = async (id) => {
 // Resturant orders 
 const getResturantAllOrders = async (req) => {
     try {
-        const restaurantId = new mongoose.Types.ObjectId(req.params.restaurantId);
+        const restaurantId = mongoose.Types.ObjectId.createFromHexString(req.params.restaurantId);
         const orders = await Order.find({ restaurant_id: restaurantId })
             .populate('user_id', 'firstName lastName email')
             .populate('restaurant_id', 'storeName brandName phoneNumber')
