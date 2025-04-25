@@ -1,7 +1,15 @@
 module.exports = (io, socket) => {
     socket.on('join-order-room', (orderId) => {
-      socket.join(`order-${orderId}`);
-      console.log(`Socket ${socket.id} Joined room order-${orderId}`);
+      try
+      {
+        socket.join(`order-${orderId}`);
+        console.log(`Socket ${socket.id} Joined room order-${orderId}`);
+      }
+      catch (error)
+      {
+        console.log(error.message);
+        socket.emit('order-joining-error', error.message);
+      }
     });
 };
 

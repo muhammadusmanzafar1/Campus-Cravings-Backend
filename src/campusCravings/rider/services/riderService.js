@@ -4,6 +4,7 @@ const Rider = require('../models/rider');
 const Restaurant = require('../../restaurant/models/restaurant')
 const User = require('../../../auth/models/user')
 const Order = require('../../admin/models/order')
+const Conversation = require('../../users/models/conversation')
 const { differenceInMinutes } = require('date-fns');
 const haversine = require('haversine-distance');
 const { patchOrder } = require('../../admin/services/order')
@@ -220,6 +221,17 @@ exports.orderAccept = async (req, res) => {
     order.estimated_time = estimated_time;
 
     const updatedOrder = await order.save();
+
+    await Conversation.create({
+      order: updatedOrder._id,
+      customer: updatedOrder.customer,
+      rider: updatedOrder.assigned_to,
+    });
+
+    global.io.to(`order-${order._id}`).emit('order-status-updated', {
+      orderId: updatedOrder._id,
+      status: updatedOrder.status,
+    });
 
     return updatedOrder
 
