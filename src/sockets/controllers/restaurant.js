@@ -44,7 +44,7 @@ const sendOrderToRestaurant = async (restaurantId, order) =>
         console.log("Restaurant's UserId: " + restaurantUserId);
 
         const io = getIO();
-        const socketId = restaurantSockets.get(restaurantUserId); // Get the socketId from the map
+        const socketId = restaurantSockets.get(restaurantUserId._id); // Get the socketId from the map
     
         if (socketId) {
             io.to(socketId).emit('new-customer-order', order);
