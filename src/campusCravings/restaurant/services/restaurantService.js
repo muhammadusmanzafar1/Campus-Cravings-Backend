@@ -243,7 +243,7 @@ exports.nearbyRestaurant = async (req) => {
 // Search Restaurants or Food Items
 exports.searchRestaurantsandFoodItems = async (req) => {
     try {
-        const { latitude, longitude, search } = req.body;
+        const { latitude, longitude, search } = req.query;
         if (!latitude || !longitude || !search) {
             throw new ApiError("Missing required parameters: latitude, longitude and search are required.", httpStatus.status.BAD_REQUEST);
         }
@@ -275,7 +275,7 @@ exports.searchRestaurantsandFoodItems = async (req) => {
         };
     } catch (error) {
         console.error(error);
-        throw new ApiError(error.message, httpStatus.BAD_REQUEST);
+        throw new ApiError(error.message, httpStatus.status.BAD_REQUEST);
     }
 };
 

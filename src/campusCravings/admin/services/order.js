@@ -158,7 +158,7 @@ const createOrder = async (req) => {
                 throw new APIError('Item not found', httpStatus.status.NOT_FOUND);
             }
             if (!restaurant_id) {
-                restaurant_id = response.restaurant.toString();
+                restaurant_id = response.restaurant?.toString();
             } else if (response.restaurant.toString() !== restaurant_id) {
                 throw new APIError('All items must be from the same restaurant', httpStatus.status.BAD_REQUEST);
             }
