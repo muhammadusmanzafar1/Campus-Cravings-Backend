@@ -19,6 +19,8 @@ const isRestaurant = async ({ data, socket }) => {
             if (!restaurant) {
                 throw new Error('Restaurant not found');
             }
+
+            console.log("Socket is Restaurant.")
         }
 
     }

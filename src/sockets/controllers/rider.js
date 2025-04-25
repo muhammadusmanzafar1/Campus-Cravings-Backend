@@ -17,6 +17,8 @@ const isRider = async ({ data, socket }) => {
             if (!rider) {
                 throw new Error('Rider not found');
             }
+
+            console.log("Socket is Rider.")
         }
 
     }
