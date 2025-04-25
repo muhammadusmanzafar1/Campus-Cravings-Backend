@@ -4,6 +4,8 @@ const itemsDB = require('../../restaurant/models/items')
 const mongoose = require('mongoose');
 const APIError = require('../../../../utils/ApiError');
 const httpStatus = require('http-status');
+const { getIO } = require('../../../sockets/service/socketService');
+const { sendOrderToRestaurant } = require('../../../sockets/controllers/restaurant');
 
 const getAllOrders = async (req) => {
     try {
@@ -196,6 +198,9 @@ const createOrder = async (req) => {
         });
         await newOrder.save();
         newOrder = await patchOrder(newOrder._id, { status: 'pending' });
+
+        //Socket here to send order to restaurant in real-time
+        await sendOrderToRestaurant(restaurant_id, newOrder);
         return newOrder;
 
     } catch (err) {
@@ -243,7 +248,9 @@ const patchOrder = async (id, body) => {
             runValidators: true
         });
 
-        global.io.to(`order-${order._id}`).emit('order-status-updated', {
+        const io = getIO();
+
+        io.to(`order-${order._id}`).emit('order-status-updated', {
             orderId: order._id,
             status: body.status
         });

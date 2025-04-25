@@ -6,6 +6,18 @@ const restaurantSchema = new Schema({
     type: String,
     required: true
   },
+  restaurantImages : {
+    type: [String],
+  },
+  openingHours: {
+    monday: { type: String },
+    tuesday: { type: String },
+    wednesday: { type: String },
+    thursday: { type: String },
+    friday: { type: String },
+    saturday: { type: String },
+    sunday: { type: String },
+  },
   brandName: {
     type: String,
     required: true
@@ -79,6 +91,7 @@ restaurantSchema.statics.newEntity = async function (body, createdByAdmin = true
     paymentMethods: body.paymentMethods,
     floor: body.floor,
     openingHours: body.openingHours,
+    restaurantImages : body.restaurantImages,
     categories: body.categories || [],
     userId: body.userId,
   };

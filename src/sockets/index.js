@@ -1,6 +1,7 @@
 const { Server } = require('socket.io');
 const connectionHandler = require('./connectionHandler');
 const { validateSocketAuth } = require('./middlewares/socketAuth');
+const socketService = require('./service/socketService');
 
 function setupSocket(server) {
   const io = new Server(server, {
@@ -10,6 +11,9 @@ function setupSocket(server) {
       allowedHeaders: ['Content-Type', 'Authorization']
     }
   });
+
+  // Initialize socket io instance
+  socketService.init(io);
 
   // Authentication middleware
   io.use(async (socket, next) => {
@@ -28,8 +32,6 @@ function setupSocket(server) {
   io.on('connection', (socket) => {
     connectionHandler(io, socket);
   });
-
-  global.io = io;
 }
 
 module.exports = { setupSocket };

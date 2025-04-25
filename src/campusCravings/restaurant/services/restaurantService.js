@@ -6,6 +6,7 @@ const Category = require("../models/category");
 const mongoose = require("mongoose");
 const Item = require("../../restaurant/models/items");
 const { getGrowthPercentage } = require('../../admin/helpers/AnalyticHelper');
+const { getIO } = require('../../../sockets/service/socketService');
 
 exports.getRestaurantAnalytics = async (req, res, next) => {
 
@@ -382,6 +383,15 @@ exports.OrderAccept = async (req, res) => {
         });
 
         await order.save();
+
+        //Socket here
+
+        const io = getIO();
+        
+        io.to(`order-${orderId}`).emit('order-status-updated', {
+            orderId,
+            status
+        });
 
         return order;
     } catch (error) {
