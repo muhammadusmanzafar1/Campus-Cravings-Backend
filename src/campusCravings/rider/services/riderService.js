@@ -73,7 +73,6 @@ exports.getRandomUnassignedOrder = async (req, res) => {
   }
 
   try {
-    // Get nearby restaurant IDs within 20 miles
     const restaurantIds = await Restaurant.aggregate([
       {
         $geoNear: {
@@ -82,7 +81,7 @@ exports.getRandomUnassignedOrder = async (req, res) => {
             coordinates: [parseFloat(longitude), parseFloat(latitude)],
           },
           distanceField: 'distance',
-          maxDistance: 32186.9, // 20 miles in meters
+          maxDistance: 32186.9,
           spherical: true,
         }
       },
@@ -93,15 +92,14 @@ exports.getRandomUnassignedOrder = async (req, res) => {
 
     const nearbyIds = restaurantIds.map(r => r._id);
 
-    // Get 1 random unassigned order from those restaurants
-    const randomOrder = await Order.aggregate([
+    const orders = await Order.aggregate([
       {
         $match: {
           assigned_to: null,
           restaurant_id: { $in: nearbyIds }
         }
       },
-      { $sample: { size: 1 } },
+      { $sample: { size: 5 } }, 
       {
         $lookup: {
           from: 'restaurants',
@@ -115,7 +113,7 @@ exports.getRandomUnassignedOrder = async (req, res) => {
       }
     ]);
 
-    if (!randomOrder.length) {
+    if (!orders.length) {
       throw new ApiError('No unassigned orders found', httpStatus.status.NOT_FOUND);
     }
 
@@ -132,11 +130,13 @@ exports.getRandomUnassignedOrder = async (req, res) => {
       order_accepted: false,
       isAvailable: true,
       status: 'active'
-    }).select('-SSN -national_id_image_url');
+    }).select('user');
+
+    const riderUserIds = nearbyRiders.map(rider => rider.user);
 
     return {
-      order: randomOrder[0],
-      nearbyRiders
+      orders,
+      nearbyRiderUserIds: riderUserIds
     }
   } catch (err) {
     console.error(err);
