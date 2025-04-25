@@ -5,6 +5,7 @@ const ApiError = require('../../../utils/ApiError');
 const { registerUser, verifyOTP, login, registerViaPhone, resendOTP, handleForgotPassword, handleResetPassword, handleLogout } = require('../controllers/authController')
 const { registerViaEmail, validateVerifyOTP, loginVerify, registerViaPhone: registerViaPhones,
     resendOtp, forgotPassword, updatePassword, resetPassword } = require("../validators/auth");
+const { validate } = require('../../../middlewares/auth')
 
 // RegisterWithEmail
 router.post("/register/email", async (req, res) => {
@@ -166,7 +167,7 @@ router.post('/resetPassword/:id', async (req, res) => {
     }
 });
 
-router.post('/logout', async (req, res) => {
+router.post('/logout', validate, async (req, res) => {
     try {
         const result = await handleLogout(req);
         res.status(httpStatus.status.OK).json({ message: "User Logout successfully", result });
