@@ -12,7 +12,7 @@ const cloudinary = require('../../../../utils/cloudinary');
 const getUser = async (query) => {
     try {
         const userId = query.user._id;
-        const user = await User.findById(userId).select('-password');
+        const user = await User.findById(userId).select('-password -activationCode');
         if (!user) {
             throw new ApiError('User not found', httpStatus.status.NOT_FOUND);
         }
@@ -24,7 +24,7 @@ const getUser = async (query) => {
 // Update User Info
 const updateUser = async (req) => {
     const userId = req.user._id;
-    const {imgUrl, ...body } = req.body;
+    const { imgUrl, ...body } = req.body;
     try {
         const user = await User.findById(userId);
         if (!user) throw new ApiError('User not found', httpStatus.status.NOT_FOUND);
@@ -44,7 +44,7 @@ const updateUser = async (req) => {
 
 const updateUserByAdmin = async (req) => {
     const userId = req.params.id;
-    const {imgUrl, ...body } = req.body;
+    const { imgUrl, ...body } = req.body;
     try {
         const user = await User.findById(userId);
         if (!user) throw new ApiError('User not found', httpStatus.status.NOT_FOUND);
@@ -121,11 +121,11 @@ const getUserTickets = async (req) => {
 
 const getAllUsers = async (req, res) => {
     try {
-        const filterType = req.query.type; 
+        const filterType = req.query.type;
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
         const skip = (page - 1) * limit;
-        const search = req.query.search || ''; 
+        const search = req.query.search || '';
 
         let filter = {};
 
@@ -149,7 +149,7 @@ const getAllUsers = async (req, res) => {
         }
 
         if (search) {
-            filter.firstName = { $regex: search, $options: 'i' }; 
+            filter.firstName = { $regex: search, $options: 'i' };
         }
 
         const users = await User.find(filter)
@@ -260,7 +260,7 @@ const getUserAllOrders = async (req, res) => {
         const orders = await Order.find({ [comparingId]: userId })
             .populate('user_id', 'firstName lastName email')
             .populate('restaurant_id', 'storeName brandName phoneNumber')
-            .populate('items.item_id', 'name price customization sizes');
+            .populate('items.item_id', 'name price customization sizes ');
 
         const result = orders.map(order => {
             const cleanItems = (order?.items || []).map(item => {
@@ -326,44 +326,44 @@ const getUserAllOrders = async (req, res) => {
 
 const getUserDetail = async (req, res) => {
     const userId = req.params.id;
-  
+
     try {
-      const user = await User.findById(userId);
-  
-      if (!user) {
-        throw new ApiError("Oops! User Not Found", httpStatus.status.NOT_FOUND);
-      }
-  
-      let query = User.findById(userId);
-  
-      if (user.isRestaurant) {
-        query = query.populate('restaurant');
-      }
-  
-      const populatedUser = await query.exec();
-      const userData = populatedUser.toObject();
-  
-      if (user.isDelivery) {
-        const riderDetails = await Rider.findOne({ user: userId });
-        userData.rider = riderDetails;
-      }
-  
-      return userData;
+        const user = await User.findById(userId);
+
+        if (!user) {
+            throw new ApiError("Oops! User Not Found", httpStatus.status.NOT_FOUND);
+        }
+
+        let query = User.findById(userId);
+
+        if (user.isRestaurant) {
+            query = query.populate('restaurant');
+        }
+
+        const populatedUser = await query.exec();
+        const userData = populatedUser.toObject();
+
+        if (user.isDelivery) {
+            const riderDetails = await Rider.findOne({ user: userId });
+            userData.rider = riderDetails;
+        }
+
+        return userData;
     } catch (error) {
-      if (!(error instanceof ApiError)) {
-        console.error('Unexpected error during user detail fetch:', error);
-      }
-  
-      throw error instanceof ApiError
-        ? error
-        : new ApiError(
-            error.message || 'Internal Server Error',
-            httpStatus.status.INTERNAL_SERVER_ERROR
-          );
+        if (!(error instanceof ApiError)) {
+            console.error('Unexpected error during user detail fetch:', error);
+        }
+
+        throw error instanceof ApiError
+            ? error
+            : new ApiError(
+                error.message || 'Internal Server Error',
+                httpStatus.status.INTERNAL_SERVER_ERROR
+            );
     }
-  };
-  
-  
+};
+
+
 module.exports = {
     getUser,
     addUserAddress,

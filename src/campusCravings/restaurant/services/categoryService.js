@@ -45,16 +45,19 @@ const createItem = async (data) => {
         if (!category) {
             throw new ApiError("Category not found", httpStatus.status.NOT_FOUND);
         }
-        const uploadCloudnary = await cloudinary.uploader.upload(image);
-        const imageUrl = uploadCloudnary.url;
-        itemData.image = imageUrl;
+        const newImageArray = [];
+        for (let i = 0; i < image.length; i++) {
+            const uploadCloudnary = await cloudinary.uploader.upload(image[i]);
+            const imageUrl = uploadCloudnary.url;
+            newImageArray.push(imageUrl);
+        }
+        itemData.image = newImageArray;
         const itemsData = new items(itemData)
         itemsData.category = category._id;
         itemsData.restaurant = category.restaurant;
         await itemsData.save();
         category.items.push(itemsData._id);
         await category.save();
-
         return itemData;
     } catch (error) {
 
