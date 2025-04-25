@@ -8,6 +8,7 @@ const Conversation = require('../../users/models/conversation')
 const { differenceInMinutes } = require('date-fns');
 const haversine = require('haversine-distance');
 const { patchOrder } = require('../../admin/services/order')
+const cloudinary  = require('../../../../utils/cloudinary');
 
 
 exports.registerRider = async (req, res) => {
@@ -18,7 +19,6 @@ exports.registerRider = async (req, res) => {
     if (existing) {
       return res.status(400).json({ message: 'You are already registered as a rider' });
     }
-
     const {
       location,
       batch_year,
@@ -30,6 +30,8 @@ exports.registerRider = async (req, res) => {
       national_id_image_url
     } = req.body;
 
+    const uploadImg = await cloudinary.uploader.upload(national_id_image_url);
+    const imgUrl = uploadImg.url;
     // Ensure required fields are present
     if (!batch_year || !majors || !SSN || !national_id_image_url) {
       throw new ApiError('Missing required fields', httpStatus.status.BAD_REQUEST);
@@ -43,7 +45,7 @@ exports.registerRider = async (req, res) => {
       club_organizations,
       bio,
       SSN,
-      national_id_image_url,
+      national_id_image_url: imgUrl,
       location: {
         type: 'Point',
         coordinates: [location.lng, location.lat]
@@ -52,7 +54,7 @@ exports.registerRider = async (req, res) => {
 
     await newRider.save();
 
-    await User.findByIdAndUpdate(userId, { isRider: true });
+    await User.findByIdAndUpdate(userId, { isDelivery: true });
 
     return newRider;
   } catch (err) {
@@ -77,11 +79,11 @@ exports.getRandomUnassignedOrder = async (req, res) => {
         $geoNear: {
           near: {
             type: 'Point',
-            coordinates: [parseFloat(longitude), parseFloat(latitude)]
+            coordinates: [parseFloat(longitude), parseFloat(latitude)],
           },
           distanceField: 'distance',
           maxDistance: 32186.9,
-          spherical: true
+          spherical: true,
         }
       },
       {
@@ -91,14 +93,14 @@ exports.getRandomUnassignedOrder = async (req, res) => {
 
     const nearbyIds = restaurantIds.map(r => r._id);
 
-    const randomOrder = await Order.aggregate([
+    const orders = await Order.aggregate([
       {
         $match: {
           assigned_to: null,
           restaurant_id: { $in: nearbyIds }
         }
       },
-      { $sample: { size: 1 } },
+      { $sample: { size: 5 } }, 
       {
         $lookup: {
           from: 'restaurants',
@@ -112,16 +114,37 @@ exports.getRandomUnassignedOrder = async (req, res) => {
       }
     ]);
 
-    if (!randomOrder.length) {
+    if (!orders.length) {
       throw new ApiError('No unassigned orders found', httpStatus.status.NOT_FOUND);
     }
 
-    return randomOrder;
+    const nearbyRiders = await Rider.find({
+      location: {
+        $nearSphere: {
+          $geometry: {
+            type: 'Point',
+            coordinates: [parseFloat(longitude), parseFloat(latitude)]
+          },
+          $maxDistance: 32186.9
+        }
+      },
+      order_accepted: false,
+      isAvailable: true,
+      status: 'active'
+    }).select('user');
+
+    const riderUserIds = nearbyRiders.map(rider => rider.user);
+
+    return {
+      orders,
+      nearbyRiderUserIds: riderUserIds
+    }
   } catch (err) {
     console.error(err);
-    throw new ApiError('Failed to retrieve order', httpStatus.status.INTERNAL_SERVER_ERROR);
+    throw new ApiError('Failed to retrieve order and riders', httpStatus.status.INTERNAL_SERVER_ERROR);
   }
 };
+
 
 exports.deliverOrder = async (req, res) => {
   try {
@@ -134,7 +157,9 @@ exports.deliverOrder = async (req, res) => {
     if (!rider) {
       throw new ApiError('Rider not found', httpStatus.status.NOT_FOUND);
     }
-    order = await patchOrder(orderId, { status: 'delivered', image_url: imageUrl });
+    const uploadImg = await cloudinary.uploader.upload(imageUrl);
+    const imgUrl = uploadImg.url;
+    order = await patchOrder(orderId, { status: 'delivered', image_url: imgUrl });
     const progress = order.progress;
     const dispatched = progress.find(p => p.status === 'order_dispatched');
     const delivered = progress.find(p => p.status === 'delivered');
@@ -219,6 +244,7 @@ exports.orderAccept = async (req, res) => {
     order.assigned_to = riderId;
     order.status = "order_dispatched";
     order.estimated_time = estimated_time;
+    order.order_accepted = true
 
     const updatedOrder = await order.save();
 

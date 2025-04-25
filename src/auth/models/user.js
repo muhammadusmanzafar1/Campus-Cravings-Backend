@@ -112,16 +112,16 @@ const entitySchema = new mongoose.Schema({
     stripeCustomerId: String,
     restaurant: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "restaurant",
+        ref: "Restaurant",
     }
 });
 
-entitySchema.statics.newEntity = async function (body, createdByAdmin = true) {
+entitySchema.statics.newEntity = async function (body, imgUrl,createdByAdmin = true) {
     const model = {
         firstName: body.firstName,
         lastName: body.lastName,
         fullName: body.firstName && body.lastName ? `${body.firstName} ${body.lastName}` : null,
-        imgUrl: body.imgUrl,
+        imgUrl: imgUrl,
         authMethod: body.authMethod,
         userName: body.firstName ? `${body.firstName}_${utils.generateRandomAlphaNumeric()}` : utils.generateRandomAlphaNumeric(),
         email: body.email,

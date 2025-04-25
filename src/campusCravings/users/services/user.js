@@ -1,16 +1,18 @@
 const User = require('../../../auth/models/user');
 const Order = require('../../admin/models/order');
 const Restaurant = require('../../restaurant/models/restaurant')
+const Rider = require('../../rider/models/rider')
 const Ticket = require('../../admin/models/ticket')
 const userService = require('../../../auth/services/users');
 const ApiError = require('../../../../utils/ApiError');
 const httpStatus = require('http-status');
+const cloudinary = require('../../../../utils/cloudinary');
 
 // fetch User Info 
 const getUser = async (query) => {
     try {
         const userId = query.user._id;
-        const user = await User.findById(userId).select('-password');
+        const user = await User.findById(userId).select('-password -activationCode');
         if (!user) {
             throw new ApiError('User not found', httpStatus.status.NOT_FOUND);
         }
@@ -20,21 +22,59 @@ const getUser = async (query) => {
     }
 };
 // Update User Info
-const updateUser = async ({ user: { _id }, body }) => {
+const updateUser = async (req) => {
+    const userId = req.user._id;
+    const { imgUrl, ...body } = req.body;
     try {
-        const user = await User.findById(_id);
+        const user = await User.findById(userId);
         if (!user) throw new ApiError('User not found', httpStatus.status.NOT_FOUND);
-
+        const uploadImg = await cloudinary.uploader.upload(imgUrl);
+        const uploadImgUrl = uploadImg.url;
+        body.imgUrl = uploadImgUrl;
         Object.assign(user, body);
         const updatedUser = await user.save();
         if (!updatedUser) {
             throw new ApiError('Failed to update user', httpStatus.status.INTERNAL_SERVER_ERROR);
         }
-        return await User.findById(_id).select('-password');
+        return await User.findById(userId).select('-password');
     } catch (error) {
         throw new ApiError(error.message, httpStatus.status.INTERNAL_SERVER_ERROR);
     }
 };
+
+const updateUserByAdmin = async (req) => {
+    const userId = req.params.id;
+    const { imgUrl, ...body } = req.body;
+  
+    try {
+      const user = await User.findById(userId);
+      if (!user) throw new ApiError('User not found', httpStatus.status.NOT_FOUND);
+  
+      if (imgUrl) {
+        const uploadImg = await cloudinary.uploader.upload(imgUrl);
+        body.imgUrl = uploadImg.url;
+      }
+  
+      if (body.firstName || body.lastName) {
+        const firstName = body.firstName ?? user.firstName;
+        const lastName = body.lastName ?? user.lastName;
+        body.fullName = `${firstName} ${lastName}`.trim();
+      }
+  
+      Object.assign(user, body);
+      const updatedUser = await user.save();
+  
+      if (!updatedUser) {
+        throw new ApiError('Failed to update user', httpStatus.status.INTERNAL_SERVER_ERROR);
+      }
+  
+      return await User.findById(userId).select('-password');
+    } catch (error) {
+      console.log(error);
+      throw new ApiError(error.message, httpStatus.status.INTERNAL_SERVER_ERROR);
+    }
+  };
+  
 
 // Add New Address
 const addUserAddress = async (query) => {
@@ -95,11 +135,11 @@ const getUserTickets = async (req) => {
 
 const getAllUsers = async (req, res) => {
     try {
-        const filterType = req.query.type; // 'all', 'restaurant', 'rider', 'customer'
+        const filterType = req.query.type;
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
         const skip = (page - 1) * limit;
-        const search = req.query.search || ''; // search on firstName
+        const search = req.query.search || '';
 
         let filter = {};
 
@@ -122,9 +162,8 @@ const getAllUsers = async (req, res) => {
                 break;
         }
 
-        // If search is provided, filter only by search (within the given type)
         if (search) {
-            filter.firstName = { $regex: search, $options: 'i' }; // case-insensitive match
+            filter.firstName = { $regex: search, $options: 'i' };
         }
 
         const users = await User.find(filter)
@@ -164,9 +203,11 @@ const newUser = async (req) => {
 
         if (existingUser) throw new ApiError("This user is already Registered", httpStatus.status.FORBIDDEN);
 
-
+        const uploadImg = await cloudinary.uploader.upload(body.imgUrl);
+        const imgUrl = uploadImg.url;
         if (body.isRestaurant === true) {
-            const userModel = await User.newEntity(body, isAdmin);
+
+            const userModel = await User.newEntity(body, imgUrl, isAdmin);
             const restaurantModel = await Restaurant.newEntity(body, isAdmin);
 
             const newUser = new User(userModel);
@@ -183,7 +224,7 @@ const newUser = async (req) => {
             return userResponse;
         }
 
-        const model = await User.newEntity(body, false);
+        const model = await User.newEntity(body, imgUrl, false);
         const newUser = new User(model);
 
         const savedUser = await newUser.save();
@@ -229,12 +270,11 @@ const getUserAllOrders = async (req, res) => {
         const userType = req.query.for || 'customer';
         const userId = req?.user?._id;
         const comparingId = userType === 'rider' ? 'assigned_to' : 'user_id';
-        console.log(comparingId);
 
         const orders = await Order.find({ [comparingId]: userId })
             .populate('user_id', 'firstName lastName email')
             .populate('restaurant_id', 'storeName brandName phoneNumber')
-            .populate('items.item_id', 'name price customization sizes');
+            .populate('items.item_id', 'name price customization sizes ');
 
         const result = orders.map(order => {
             const cleanItems = (order?.items || []).map(item => {
@@ -259,12 +299,14 @@ const getUserAllOrders = async (req, res) => {
                 return {
                     name: itemData?.name || "Unknown Item",
                     quantity,
-                    total_price_per_item: +total.toFixed(2)
+                    total_price_per_item: +total.toFixed(2),
+                    customizationList: matchedCustomizations,
+                    size: itemData?.sizes?.find(s => s?._id?.toString() === sizeId)
                 };
             });
-
             return {
                 _id: order?._id,
+                address: order?.addresses,
                 status: order?.status,
                 payment_method: order?.payment_method,
                 total_price: order?.total_price,
@@ -286,15 +328,54 @@ const getUserAllOrders = async (req, res) => {
 
         return result;
     } catch (error) {
-        console.error("Error fetching orders:", error.message);
-        return res.status(500).json({
-            success: false,
-            message: "Error fetching orders",
-            error: error.message
-        });
+        if (!(error instanceof ApiError)) {
+            console.error('Unexpected error during user registration:', error);
+        }
+
+        throw error instanceof ApiError
+            ? error
+            : new ApiError(error.message || 'Internal Server Error', httpStatus.status.INTERNAL_SERVER_ERROR);
     }
 };
 
+const getUserDetail = async (req, res) => {
+    const userId = req.params.id;
+
+    try {
+        const user = await User.findById(userId);
+
+        if (!user) {
+            throw new ApiError("Oops! User Not Found", httpStatus.status.NOT_FOUND);
+        }
+
+        let query = User.findById(userId);
+
+        if (user.isRestaurant) {
+            query = query.populate('restaurant');
+        }
+
+        const populatedUser = await query.exec();
+        const userData = populatedUser.toObject();
+
+        if (user.isDelivery) {
+            const riderDetails = await Rider.findOne({ user: userId });
+            userData.rider = riderDetails;
+        }
+
+        return userData;
+    } catch (error) {
+        if (!(error instanceof ApiError)) {
+            console.error('Unexpected error during user detail fetch:', error);
+        }
+
+        throw error instanceof ApiError
+            ? error
+            : new ApiError(
+                error.message || 'Internal Server Error',
+                httpStatus.status.INTERNAL_SERVER_ERROR
+            );
+    }
+};
 
 
 module.exports = {
@@ -306,5 +387,7 @@ module.exports = {
     getAllUsers,
     newUser,
     deleteUser,
-    getUserAllOrders
+    getUserAllOrders,
+    getUserDetail,
+    updateUserByAdmin
 };

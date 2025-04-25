@@ -47,3 +47,13 @@ exports.getUserAllOrders = asyncHandler(async (req, res) => {
     const orders = await userService.getUserAllOrders(req);
     return orders;
 });
+
+exports.getUserDetail = async (req, res) => {
+    const data = await userService.getUserDetail(req, res);
+    return data;
+}
+
+exports.updateUserByAdmin = asyncHandler(async (req, res) => {
+    const user = await userService.updateUserByAdmin(req);
+    return user;
+})

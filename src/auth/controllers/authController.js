@@ -69,7 +69,7 @@ exports.resendOTP = asyncHandler(async (req, res) => {
 
 exports.handleForgotPassword = async (req, res) => {
     let user = await authService.forgotPassword(req.body);
-    return res.data(mapper.toModel(user), httpStatus.CREATED);
+    return user;
 };
 
 exports.handleUpdatePassword = async (req, res) => {
@@ -79,5 +79,10 @@ exports.handleUpdatePassword = async (req, res) => {
 
 exports.handleResetPassword = async (userId, reqbody) => {
     const data = await authService.resetPassword(userId, reqbody);
+    return data;
+};
+
+exports.handleLogout = async (req) => {
+    const data = await authService.handleLogout(req);
     return data;
 };

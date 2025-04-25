@@ -2,9 +2,10 @@ const express = require("express");
 const router = express.Router();
 const httpStatus = require("http-status");
 const ApiError = require('../../../utils/ApiError');
-const { registerUser, verifyOTP, login, registerViaPhone, resendOTP, handleForgotPassword, handleResetPassword } = require('../controllers/authController')
+const { registerUser, verifyOTP, login, registerViaPhone, resendOTP, handleForgotPassword, handleResetPassword, handleLogout } = require('../controllers/authController')
 const { registerViaEmail, validateVerifyOTP, loginVerify, registerViaPhone: registerViaPhones,
     resendOtp, forgotPassword, updatePassword, resetPassword } = require("../validators/auth");
+const { validate } = require('../../../middlewares/auth')
 
 // RegisterWithEmail
 router.post("/register/email", async (req, res) => {
@@ -163,6 +164,19 @@ router.post('/resetPassword/:id', async (req, res) => {
     } catch (error) {
         console.error(error);
         if (error instanceof ApiError) { return res.status(error.statusCode).json({ message: error.message }); } return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
+    }
+});
+
+router.post('/logout', validate, async (req, res) => {
+    try {
+        const result = await handleLogout(req);
+        res.status(httpStatus.status.OK).json({ message: "User Logout successfully", result });
+    } catch (error) {
+        console.error(error);
+        if (error instanceof ApiError) {
+            return res.status(error.statusCode).json({ message: error.message });
+        }
+        return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
     }
 });
 

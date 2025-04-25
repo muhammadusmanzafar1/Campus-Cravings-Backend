@@ -2,16 +2,17 @@
 const httpStatus = require('http-status');
 const userService = require('./users');
 const Stripe = require('stripe');
+const sessionService = require('../services/session')
 const ApiError = require("../../../utils/ApiError");
-const crypto  = require('../../../utils/crypto')
+const crypto = require('../../../utils/crypto')
 const userDB = require('../models/user')
 const restaurantDB = require('../../campusCravings/restaurant/models/restaurant')
 const utils = require('../../../utils/utils');
 const email = require('../../../utils/email');
+const cloudinary = require('../../../utils/cloudinary');
 // const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
 const registerWithEmail = async (body) => {
-     const {name, email } = body
      try {
           let existingUser;
 
@@ -37,9 +38,18 @@ const registerWithEmail = async (body) => {
                     throw new ApiError(errorMessage, httpStatus.status.BAD_REQUEST);
                }
           }
+          const uploadImg = await cloudinary.uploader.upload(body.imgUrl);
+          const imgUrl = uploadImg.url;
 
           if (body.isRestaurant === true) {
-               const userModel = await userDB.newEntity(body, false);
+               const { restaurantImages } = body;
+               body.restaurantImages = [];
+               for (const image of restaurantImages) {
+                    const uploadImg = await cloudinary.uploader.upload(image);
+                    const imgUrl = uploadImg.url;
+                    body.restaurantImages.push(imgUrl);
+               }
+               const userModel = await userDB.newEntity(body, imgUrl, false);
                const restaurantModel = await restaurantDB.newEntity(body, false);
 
                const newUser = new userDB(userModel);
@@ -61,13 +71,13 @@ const registerWithEmail = async (body) => {
 
                return userResponse;
           }
-          
+
           // const stripeCustomer = await stripe.customers.create({
           //      name,
           //      email
           //    });
 
-          const model = await userDB.newEntity(body, false);
+          const model = await userDB.newEntity(body, imgUrl, false);
           const newUser = new userDB(model);
 
           if (body.authMethod === 'phone') {
@@ -109,8 +119,9 @@ const registerWithPhone = async (body) => {
                throw new ApiError('Phone number already exists', httpStatus.status.BAD_REQUEST);
           }
      }
-
-     const model = await userDB.newEntity(body, false);
+     const uploadImg = await cloudinary.uploader.upload(body.imgUrl);
+     const imgUrl = uploadImg.url;
+     const model = await userDB.newEntity(body, imgUrl, false);
      const newUser = new userDB(model);
 
      newUser.activationCode = utils.randomPin();
@@ -301,11 +312,29 @@ const resetPassword = async (id, body) => {
      if (!user) {
           throw new ApiError('Oops! User not found', httpStatus.status.UNAUTHORIZED);
      }
+
+     const isMatch = await crypto.comparePassword(body.oldPassword, user.password);
+     if (!isMatch) {
+          throw new ApiError('Incorrect current password', httpStatus.status.BAD_REQUEST);
+     }
+
      user.password = await crypto.setPassword(body.password);
      user.isOtpVerified = false;
+
      return await user.save();
 };
+const handleLogout = async (req) => {
+     let userId = req.user._id;
+     let sessionId = req.sessionId
+     const user = await userService.get(userId);
 
+     if (!user) {
+          throw new ApiError('Oops! User not found', httpStatus.status.UNAUTHORIZED);
+     }
+
+     await sessionService.expireSingleSession(sessionId);
+
+};
 // const createAdminNotification = async (user) => {
 //      try {
 //        const notification = new Notification({
@@ -330,5 +359,6 @@ module.exports = {
      resendOtp,
      forgotPassword,
      updatePassword,
-     resetPassword
+     resetPassword,
+     handleLogout
 }

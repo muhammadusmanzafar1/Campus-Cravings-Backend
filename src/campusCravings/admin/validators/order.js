@@ -42,7 +42,7 @@ const createOrderSchema = Joi.object({
     estimated_time: Joi.string().allow('').default(''),
     order_type: Joi.string().default('').valid('delivery', 'pickup').required(),
     addresses: addressesSchema.required(),
-    image_url: Joi.string().uri().allow('').default(''),
+    image_url: Joi.string().allow('').default(''),
     items: Joi.array().items(orderItemSchema).default([])
 });
 const updateOrderSchema = Joi.object({
@@ -56,7 +56,7 @@ const updateOrderSchema = Joi.object({
     estimated_time: Joi.string().allow(''),
     order_type: Joi.string().allow(''),
     addresses: addressesSchema.allow(''),
-    image_url: Joi.string().uri().allow('')
+    image_url: Joi.string().allow('')
 }).min(1);
 module.exports = {
     createOrderSchema,

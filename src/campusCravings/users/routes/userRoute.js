@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const { addUserAddress, updateUserAddress, getUser, updateUser, getUserTickets, getAllusers,
-    createNewUser, delUser, getUserAllOrders
+    createNewUser, delUser, getUserAllOrders, getUserDetail, updateUserByAdmin
  } = require('../controllers/userController');
 const { validateBody } = require("../../../../middlewares/validate");
 const { registerViaEmail } = require('../../../auth/validators/auth')
-const { addAddressSchema, updateAddressSchema, updateUserSchema } = require("../validators/user");
+const { addAddressSchema, updateAddressSchema, updateUserSchema, updateUserAdmin } = require("../validators/user");
 const httpStatus = require("http-status");
 const ApiError = require('../../../../utils/ApiError');
 
@@ -13,15 +13,15 @@ const ApiError = require('../../../../utils/ApiError');
 router.get('/getAllUsers', async (req, res) => {
     try {
         const users = await getAllusers(req, res);
-        res.status(httpStatus.status.OK).json({ 
+        res.status(httpStatus.status.OK).json({
             isSuccess: true,
             message: "Users fetched successfully",
-            data: users 
+            data: users
         });
-        } catch (error) {
-            return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
-            }
-        });
+    } catch (error) {
+        return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
+    }
+});
 // Get User Info
 router.get("/", async (req, res) => {
     try {
@@ -36,7 +36,7 @@ router.get("/", async (req, res) => {
 });
 
 // Update User Info
-router.patch("/", validateBody(updateUserSchema), async (req, res) => {
+router.patch("/updateUser", validateBody(updateUserSchema), async (req, res) => {
     try {
         const user = await updateUser(req, res);
         res.status(httpStatus.status.OK).json({ message: "User data updated successfully", userInfo: user });
@@ -87,7 +87,7 @@ router.get("/tickets", async (req, res) => {
     }
 });
 
-router.post("/addUser", async (req, res)=> {
+router.post("/addUser", async (req, res) => {
     const { error, value } = registerViaEmail.body.validate(req.body, { abortEarly: false });
 
     if (error) {
@@ -135,6 +135,39 @@ router.get("/orders", async (req, res) => {
     try {
         const allOrders = await getUserAllOrders(req, res);
         res.status(httpStatus.status.OK).json({ message: "Orders fetched successfully", orders: allOrders });
+    } catch (error) {
+        if (error instanceof ApiError) {
+            return res.status(error.statusCode).json({ message: error.message });
+        }
+        return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
+    }
+});
+
+
+router.get('/getuser/:id', async (req, res) => {
+    try {
+        const getUserD = await getUserDetail(req, res);
+        res.status(httpStatus.status.OK).json({
+            isSuccess: true,
+            message: "Detail fetched",
+            data: getUserD
+        });
+    } catch (error) {
+        if (error instanceof ApiError) {
+            return res.status(error.statusCode).json({ message: error.message });
+        }
+        return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
+    }
+})
+
+router.patch("/updateUserByAdmin/:id", async (req, res) => {
+        const { error, value } = updateUserAdmin.body.validate(req.body, { abortEarly: false });
+        if (error) {
+            return res.status(httpStatus.status.BAD_REQUEST).json({ message: "Validation Error", errors: error.details.map(err => err.message), });
+        }
+    try {
+        const user = await updateUserByAdmin(req, res);
+        res.status(httpStatus.status.OK).json({ message: "User data updated successfully", userInfo: user });
     } catch (error) {
         if (error instanceof ApiError) {
             return res.status(error.statusCode).json({ message: error.message });

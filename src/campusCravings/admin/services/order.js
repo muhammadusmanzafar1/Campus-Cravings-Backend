@@ -5,17 +5,145 @@ const mongoose = require('mongoose');
 const APIError = require('../../../../utils/ApiError');
 const httpStatus = require('http-status');
 
-const getAllOrders = async () => {
+const getAllOrders = async (req) => {
     try {
-        const orders = await Order.find()
-            .populate('user_id', 'firstName lastName email')
-            .populate('restaurant_id', 'storeName brandName phoneNumber')
-            .populate('items.item_id', 'name price');
-        return orders;
+        const { page = 1, limit = 10, search = '' } = req.query;
+        const skip = (page - 1) * limit;
+        const regex = new RegExp(search, 'i');
+
+        const pipeline = [
+            // Lookup user
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'user_id',
+                    foreignField: '_id',
+                    as: 'user'
+                }
+            },
+            { $unwind: '$user' },
+
+            // Lookup restaurant
+            {
+                $lookup: {
+                    from: 'restaurants',
+                    localField: 'restaurant_id',
+                    foreignField: '_id',
+                    as: 'restaurant'
+                }
+            },
+            { $unwind: '$restaurant' },
+
+            // Flatten items
+            { $unwind: '$items' },
+            {
+                $lookup: {
+                    from: 'items',
+                    localField: 'items.item_id',
+                    foreignField: '_id',
+                    as: 'itemDetails'
+                }
+            },
+            {
+                $unwind: {
+                    path: '$itemDetails',
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            {
+                $group: {
+                    _id: '$_id',
+                    order: { $first: '$$ROOT' },
+                    items: {
+                        $push: {
+                            item_id: '$items.item_id',
+                            quantity: '$items.quantity',
+                            customizations: '$items.customizations',
+                            name: '$itemDetails.name',
+                            price: '$itemDetails.price'
+                        }
+                    }
+                }
+            },
+            {
+                $addFields: {
+                    'order.items': '$items'
+                }
+            },
+            {
+                $replaceRoot: {
+                    newRoot: '$order'
+                }
+            },
+
+            // Search filter
+            ...(search ? [{
+                $match: {
+                    $or: [
+                        { 'user.fullName': regex },
+                        { 'restaurant.storeName': regex }
+                    ]
+                }
+            }] : []),
+
+            // Projection to only return selected fields
+            {
+                $project: {
+                    user_id: {
+                        _id: '$user._id',
+                        fullName: '$user.fullName',
+                        email: '$user.email'
+                    },
+                    restaurant_id: {
+                        _id: '$restaurant._id',
+                        storeName: '$restaurant.storeName',
+                        brandName: '$restaurant.brandName',
+                        phoneNumber: '$restaurant.phoneNumber'
+                    },
+                    items: 1,
+                    status: 1,
+                    total_price: 1,
+                    payment_method: 1,
+                    tip: 1,
+                    delivery_fee: 1,
+                    estimated_time: 1,
+                    address: 1,
+                    image_url: 1,
+                    order_type: 1,
+                    progress: 1,
+                    created_at: 1,
+                    updated_at: 1,
+                    assigned_to: 1
+                }
+            },
+
+            { $skip: skip },
+            { $limit: Number(limit) }
+        ];
+
+        const orders = await Order.aggregate(pipeline);
+
+        // Total count for pagination (without skip/limit)
+        const countPipeline = pipeline.filter(stage => !('$skip' in stage || '$limit' in stage));
+        countPipeline.push({ $count: 'total' });
+        const countResult = await Order.aggregate(countPipeline);
+        const total = countResult[0]?.total || 0;
+
+        return {
+            data: orders,
+            pagination: {
+                total,
+                page: Number(page),
+                limit: Number(limit),
+                totalPages: Math.ceil(total / limit)
+            }
+        };
     } catch (error) {
-        throw new APIError(`Error fetching orders: ${error.message}`, httpStatus.status.INTERNAL_SERVER_ERROR);
+        throw new APIError(`Error fetching orders: ${error.message}`, httpStatus.INTERNAL_SERVER_ERROR);
     }
 };
+
+
 const createOrder = async (req) => {
     try {
         const { payment_method, items, tip, delivery_fee, addresses, order_type, customizations = [] } = req.body;
@@ -45,8 +173,6 @@ const createOrder = async (req) => {
                 }
             }
             // add on of size
-
-            // console.log("Response Size",response);
             const addSizePrice = response.sizes.find((s) => s._id.toString() === item.size.toString());
             if (addSizePrice) {
                 total_price += (response.price + customizedItemPrice + addSizePrice.price) * quantity;

@@ -29,6 +29,7 @@ const registerViaEmail = {
         storeName: Joi.string().when('isRestaurant', { is: true, then: Joi.required() }),
         brandName: Joi.string().when('isRestaurant', { is: true, then: Joi.required() }),
         floor: Joi.string().when('isRestaurant', { is: true, then: Joi.required() }),
+        restaurantImages: Joi.array().items(Joi.string()),
         addresses: Joi.array()
             .items(
                 Joi.object({
@@ -109,9 +110,7 @@ const forgotPassword = {
         authMethod: Joi.string().required().valid('phone', 'email'),
         email: Joi.string().email().lowercase(),
         phone: Joi.string().custom(phone),
-        deviceId: Joi.string().required(),
-        deviceType: Joi.string().required().valid('web', 'android', 'ios')
-    }).or('phone', 'email').required()
+    })
 };
 
 const updatePassword = {
@@ -124,6 +123,7 @@ const updatePassword = {
 const resetPassword = {
     body: Joi.object().keys({
         password: Joi.string().required().custom(password),
+        oldPassword: Joi.string().required()
     })
 };
 
