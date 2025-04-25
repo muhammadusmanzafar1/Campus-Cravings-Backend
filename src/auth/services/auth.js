@@ -11,7 +11,6 @@ const email = require('../../../utils/email');
 // const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
 const registerWithEmail = async (body) => {
-     const {name, email } = body
      try {
           let existingUser;
 
