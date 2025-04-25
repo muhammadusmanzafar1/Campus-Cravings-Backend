@@ -5,7 +5,7 @@ const { addUserAddress, updateUserAddress, getUser, updateUser, getUserTickets, 
  } = require('../controllers/userController');
 const { validateBody } = require("../../../../middlewares/validate");
 const { registerViaEmail } = require('../../../auth/validators/auth')
-const { addAddressSchema, updateAddressSchema, updateUserSchema } = require("../validators/user");
+const { addAddressSchema, updateAddressSchema, updateUserSchema, updateUserAdmin } = require("../validators/user");
 const httpStatus = require("http-status");
 const ApiError = require('../../../../utils/ApiError');
 
@@ -160,7 +160,11 @@ router.get('/getuser/:id', async (req, res) => {
     }
 })
 
-router.patch("/updateUserByAdmin/:id", validateBody(updateUserSchema), async (req, res) => {
+router.patch("/updateUserByAdmin/:id", async (req, res) => {
+        const { error, value } = updateUserAdmin.body.validate(req.body, { abortEarly: false });
+        if (error) {
+            return res.status(httpStatus.status.BAD_REQUEST).json({ message: "Validation Error", errors: error.details.map(err => err.message), });
+        }
     try {
         const user = await updateUserByAdmin(req, res);
         res.status(httpStatus.status.OK).json({ message: "User data updated successfully", userInfo: user });

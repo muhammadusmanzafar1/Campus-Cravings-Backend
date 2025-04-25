@@ -82,7 +82,7 @@ exports.handleResetPassword = async (userId, reqbody) => {
     return data;
 };
 
-exports.handleLogout = async (userId, reqbody) => {
-    const data = await authService.handleLogout(userId, reqbody);
+exports.handleLogout = async (req) => {
+    const data = await authService.handleLogout(req);
     return data;
 };
