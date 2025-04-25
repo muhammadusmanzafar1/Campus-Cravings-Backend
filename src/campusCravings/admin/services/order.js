@@ -146,7 +146,7 @@ const getAllOrders = async (req) => {
 
 const createOrder = async (req) => {
     try {
-        const { payment_method, items, tip, delivery_fee, addresses, order_type, customizations = [] } = req.body;
+        const { payment_method, items, tip, delivery_fee, addresses, order_note, order_type, customizations = [] } = req.body;
 
         const user_id = req.user._id;
         let total_price = 0;
@@ -192,7 +192,8 @@ const createOrder = async (req) => {
             payment_method,
             items,
             addresses,
-            order_type
+            order_type,
+            order_note
         });
         await newOrder.save();
         newOrder = await patchOrder(newOrder._id, { status: 'pending' });
