@@ -29,6 +29,7 @@ const registerViaEmail = {
         storeName: Joi.string().when('isRestaurant', { is: true, then: Joi.required() }),
         brandName: Joi.string().when('isRestaurant', { is: true, then: Joi.required() }),
         floor: Joi.string().when('isRestaurant', { is: true, then: Joi.required() }),
+        restaurantImages: Joi.array().items(Joi.string()),
         addresses: Joi.array()
             .items(
                 Joi.object({

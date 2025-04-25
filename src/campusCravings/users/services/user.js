@@ -36,7 +36,7 @@ const updateUser = async (req) => {
         if (!updatedUser) {
             throw new ApiError('Failed to update user', httpStatus.status.INTERNAL_SERVER_ERROR);
         }
-        return await User.findById(_id).select('-password');
+        return await User.findById(userId).select('-password');
     } catch (error) {
         throw new ApiError(error.message, httpStatus.status.INTERNAL_SERVER_ERROR);
     }

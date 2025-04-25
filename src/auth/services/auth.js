@@ -42,6 +42,13 @@ const registerWithEmail = async (body) => {
           const imgUrl = uploadImg.url;
 
           if (body.isRestaurant === true) {
+               const { restaurantImages } = body;
+               body.restaurantImages = [];
+               for (const image of restaurantImages) {
+                    const uploadImg = await cloudinary.uploader.upload(image);
+                    const imgUrl = uploadImg.url;
+                    body.restaurantImages.push(imgUrl);
+               }
                const userModel = await userDB.newEntity(body, imgUrl, false);
                const restaurantModel = await restaurantDB.newEntity(body, false);
 
@@ -303,29 +310,29 @@ const updatePassword = async (id, body) => {
 const resetPassword = async (id, body) => {
      const user = await userService.get(id);
      if (!user) {
-         throw new ApiError('Oops! User not found', httpStatus.status.UNAUTHORIZED);
+          throw new ApiError('Oops! User not found', httpStatus.status.UNAUTHORIZED);
      }
- 
+
      const isMatch = await crypto.comparePassword(body.oldPassword, user.password);
      if (!isMatch) {
-         throw new ApiError('Incorrect current password', httpStatus.status.BAD_REQUEST);
+          throw new ApiError('Incorrect current password', httpStatus.status.BAD_REQUEST);
      }
- 
+
      user.password = await crypto.setPassword(body.password);
      user.isOtpVerified = false;
- 
+
      return await user.save();
- };
+};
 const handleLogout = async (req) => {
      const userId = req.user._id
      const user = await userService.get(userId);
      if (!user) {
-         throw new ApiError('Oops! User not found', httpStatus.status.UNAUTHORIZED);
+          throw new ApiError('Oops! User not found', httpStatus.status.UNAUTHORIZED);
      }
 
      await sessionService.expireSingleSession(sessionId);
 
- };
+};
 // const createAdminNotification = async (user) => {
 //      try {
 //        const notification = new Notification({
