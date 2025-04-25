@@ -17,7 +17,6 @@ const updateAddressSchema = Joi.object({
 
 const updateUserAdmin = {
     body: Joi.object().keys({
-        authMethod: Joi.string().required().valid('email', 'google', 'facebook', 'apple', 'github', 'phone'),
         firstName: Joi.string().optional(),
         lastName: Joi.string().optional(),
         fullName: Joi.string(),
@@ -71,7 +70,7 @@ const updateUserAdmin = {
           totalRatings: Joi.number().default(0),
         }).when('isRestaurant', { is: true, then: Joi.required() }),
         paymentMethods: Joi.array().items(Joi.string()).when('isRestaurant', { is: true, then: Joi.required() }),
-    }).xor("email","phone")
+    })
 };
 
 const updateUserSchema = Joi.object({
