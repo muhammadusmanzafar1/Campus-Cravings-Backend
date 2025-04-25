@@ -107,7 +107,7 @@ const getAllOrders = async (req) => {
                     tip: 1,
                     delivery_fee: 1,
                     estimated_time: 1,
-                    address: 1,
+                    addresses: 1,
                     image_url: 1,
                     order_type: 1,
                     progress: 1,
