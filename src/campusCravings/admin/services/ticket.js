@@ -216,7 +216,8 @@ const getNotifications = async ({ page, limit, type }) => {
         ticketId: t._id,
         userFullName: t.userId?.fullName,
         createdAt: t.createdAt,
-        status: t.status
+        status: t.status,
+        read: t.read
     }));
     const total = await Ticket.countDocuments(filter);
     const totalPages = Math.ceil(total / limit);
