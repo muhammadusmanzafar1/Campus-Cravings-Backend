@@ -270,11 +270,11 @@ const getUserAllOrders = async (req, res) => {
         const userType = req.query.for || 'customer';
         const userId = req?.user?._id;
         const comparingId = userType === 'rider' ? 'assigned_to' : 'user_id';
-
+        
         const orders = await Order.find({ [comparingId]: userId })
             .populate('user_id', 'firstName lastName email')
             .populate('restaurant_id', 'storeName brandName phoneNumber')
-            .populate('items.item_id', 'name price customization sizes ');
+            .populate('items.item_id', 'name price customization sizes image'); // added 'image' here
 
         const result = orders.map(order => {
             const cleanItems = (order?.items || []).map(item => {
@@ -284,26 +284,28 @@ const getUserAllOrders = async (req, res) => {
 
                 const selectedCustomizationIds = item?.customizations?.map(c => c?.toString()) || [];
                 const customizationList = itemData?.customization || [];
-
+                
                 const matchedCustomizations = customizationList.filter(c =>
                     c?._id && selectedCustomizationIds.includes(c._id.toString())
                 );
 
                 const customPrice = matchedCustomizations.reduce((sum, c) => sum + (c?.price || 0), 0);
-
+                
                 const sizeId = item?.size?.toString();
                 const sizePrice = itemData?.sizes?.find(s => s?._id?.toString() === sizeId)?.price || 0;
-
+                
                 const total = (basePrice + customPrice + sizePrice);
 
                 return {
                     name: itemData?.name || "Unknown Item",
                     quantity,
+                    image: itemData?.image?.[0] || null,  // 🛠️ Take first image (or use itemData?.image if you want full array)
                     total_price_per_item: +total.toFixed(2),
                     customizationList: matchedCustomizations,
                     size: itemData?.sizes?.find(s => s?._id?.toString() === sizeId)
                 };
             });
+
             return {
                 _id: order?._id,
                 address: order?.addresses,
@@ -331,12 +333,12 @@ const getUserAllOrders = async (req, res) => {
         if (!(error instanceof ApiError)) {
             console.error('Unexpected error during user registration:', error);
         }
-
         throw error instanceof ApiError
             ? error
             : new ApiError(error.message || 'Internal Server Error', httpStatus.status.INTERNAL_SERVER_ERROR);
     }
 };
+
 
 const getUserDetail = async (req, res) => {
     const userId = req.params.id;
