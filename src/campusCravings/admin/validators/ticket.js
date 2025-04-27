@@ -18,6 +18,7 @@ const updateTicketSchema = Joi.object({
     status: Joi.string().valid("pending", "archive", "resolved"),
     priority: Joi.string().valid("low", "medium", "high"),
     imgUrl: Joi.array().items(Joi.string().uri()),
+    read: Joi.boolean(),
 }).min(1);
 const replyTicketSchema = Joi.object({
     text: Joi.string().allow('').optional(),

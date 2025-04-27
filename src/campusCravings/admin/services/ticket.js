@@ -63,6 +63,7 @@ const getAllTickets = async (req) => {
             createdAt: ticket.createdAt,
             updatedAt: ticket.updatedAt,
             imgUrls: ticket.imgUrl,
+            read: ticket.read,
             user: {
                 id: ticket.userId?._id,
                 fullName: ticket.userId?.fullName,
