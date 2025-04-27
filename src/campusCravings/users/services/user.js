@@ -382,11 +382,13 @@ const getUserDetail = async (req, res) => {
 
 const delImage = async (req) => {
     const userId = req.user._id;
-    const { imgUrl } = req.body;
     try {
         const user = await User.findById(userId);
         if (!user) throw new ApiError('User not found', httpStatus.status.NOT_FOUND);
-        const publicId = imgUrl.split('/').pop().split('.')[0];
+        if (!user.imgUrl) throw new ApiError('No image to delete', httpStatus.status.NOT_FOUND);
+
+        const publicId = user.imgUrl.split('/').pop().split('.')[0];
+        
         await cloudinary.uploader.destroy(publicId);
         user.imgUrl = null;
         const updatedUser = await user.save();  
