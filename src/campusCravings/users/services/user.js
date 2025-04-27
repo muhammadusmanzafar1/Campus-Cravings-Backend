@@ -380,6 +380,26 @@ const getUserDetail = async (req, res) => {
     }
 };
 
+const delImage = async (req) => {
+    const userId = req.user._id;
+    const { imgUrl } = req.body;
+    try {
+        const user = await User.findById(userId);
+        if (!user) throw new ApiError('User not found', httpStatus.status.NOT_FOUND);
+        const publicId = imgUrl.split('/').pop().split('.')[0];
+        await cloudinary.uploader.destroy(publicId);
+        user.imgUrl = null;
+        const updatedUser = await user.save();  
+        if (!updatedUser) {
+            throw new ApiError('Failed to update user', httpStatus.status.INTERNAL_SERVER_ERROR);
+        }
+        return updatedUser;
+    }
+    catch (error) {
+        throw new ApiError(error.message, httpStatus.status.INTERNAL_SERVER_ERROR);
+    }
+}
+
 
 module.exports = {
     getUser,
@@ -392,5 +412,6 @@ module.exports = {
     deleteUser,
     getUserAllOrders,
     getUserDetail,
-    updateUserByAdmin
+    updateUserByAdmin,
+    delImage
 };
