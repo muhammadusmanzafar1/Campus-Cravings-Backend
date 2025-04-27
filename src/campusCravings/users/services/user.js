@@ -272,7 +272,7 @@ const getUserAllOrders = async (req, res) => {
         const comparingId = userType === 'rider' ? 'assigned_to' : 'user_id';
         
         const orders = await Order.find({ [comparingId]: userId })
-            .populate('user_id', 'firstName lastName email')
+            .populate('user_id', 'firstName lastName email imgUrl')
             .populate('restaurant_id', 'storeName brandName phoneNumber')
             .populate('items.item_id', 'name price customization sizes image'); // added 'image' here
 
@@ -318,7 +318,8 @@ const getUserAllOrders = async (req, res) => {
                 created_at: order?.created_at,
                 user: order?.user_id ? {
                     name: `${order.user_id?.firstName || ''} ${order.user_id?.lastName || ''}`.trim(),
-                    email: order.user_id?.email
+                    email: order.user_id?.email,
+                    image: order.user_id?.imgUrl || null,
                 } : null,
                 restaurant: order?.restaurant_id ? {
                     name: order.restaurant_id?.storeName || order.restaurant_id?.brandName,
