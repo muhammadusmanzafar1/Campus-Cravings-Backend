@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { addUserAddress, updateUserAddress, getUser, updateUser, getUserTickets, getAllusers,
-    createNewUser, delUser, getUserAllOrders, getUserDetail, updateUserByAdmin
+    createNewUser, delUser, getUserAllOrders, getUserDetail, updateUserByAdmin, delImage
  } = require('../controllers/userController');
 const { validateBody } = require("../../../../middlewares/validate");
 const { registerViaEmail } = require('../../../auth/validators/auth')
@@ -175,5 +175,23 @@ router.patch("/updateUserByAdmin/:id", async (req, res) => {
         return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
     }
 });
+
+router.delete('/removeImage', async (req, res) => {
+    try {
+        const user = await delImage(req, res);
+        res.status(httpStatus.status.CREATED).json({
+            isSuccess: true,
+            message: "User Image Deleted Successfully",
+            data: user
+        });
+    } catch (error) {
+        console.error(error)
+        if (error instanceof ApiError) {
+            return res.status(error.statusCode).json({ message: error.message });
+        }
+        return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
+    }
+}
+)
 
 module.exports = router;
