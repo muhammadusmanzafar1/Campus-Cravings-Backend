@@ -10,19 +10,19 @@ const createTicketSchema = Joi.object({
     description: Joi.string().required(),
     status: Joi.string().valid("pending", "archive", "resolved"),
     priority: Joi.string().valid("low", "medium", "high"),
-    imgUrl: Joi.array().items(Joi.string().uri()),
+    imgUrl: Joi.array().items(Joi.string()),
 }).min(2);
 const updateTicketSchema = Joi.object({
     subject: Joi.string(),
     description: Joi.string(),
     status: Joi.string().valid("pending", "archive", "resolved"),
     priority: Joi.string().valid("low", "medium", "high"),
-    imgUrl: Joi.array().items(Joi.string().uri()),
+    imgUrl: Joi.array().items(Joi.string()),
     read: Joi.boolean(),
 }).min(1);
 const replyTicketSchema = Joi.object({
     text: Joi.string().allow('').optional(),
-    imageUrl: Joi.array().items(Joi.string().uri()).optional()
+    imageUrl: Joi.array().items(Joi.string()).optional()
 }).custom((value, helpers) => {
     if (!value.text && (!value.imageUrl || value.imageUrl.length === 0)) {
         return helpers.error("any.invalid");
