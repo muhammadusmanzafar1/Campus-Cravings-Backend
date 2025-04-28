@@ -251,10 +251,15 @@ const patchOrder = async (id, body) => {
             path: 'user_id',
             select: 'firstName lastName imgUrl phoneNumber'
         })
-            .populate({
-                path: 'items.item_id',
-                select: 'name price customizations sizes'
-            });
+        .populate({
+            path: 'items.item_id',
+            select: 'name price customizations sizes'
+        }).populate(
+            {
+                path: 'restaurant_id',
+                select: 'storeName brandName phoneNumber'
+            }
+        );
 
         const io = getIO();
 
