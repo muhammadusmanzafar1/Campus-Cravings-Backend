@@ -12,5 +12,6 @@ module.exports = (io, socket) => {
 //Emission mock logic for my reference
 //   io.to(`order-${orderId}`).emit('order-status-updated', {
 //     orderId,
-//     status
+//     status,
+//     progress: order.progress
 //   });
