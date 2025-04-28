@@ -51,7 +51,7 @@ const registerWithEmail = async (body) => {
                body.restaurantImages = [];
                for (const image of restaurantImages) {
                     const uploadImg = await cloudinary.uploader.upload(image);
-                    const imgUrl = uploadImg.url;
+                    const imgUrl = uploadImg.url || imgUrl;
                     body.restaurantImages.push(imgUrl);
                }
                const userModel = await userDB.newEntity(body, imgUrl, false);
