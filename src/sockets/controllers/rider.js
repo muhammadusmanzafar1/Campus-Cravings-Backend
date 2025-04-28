@@ -18,6 +18,8 @@ const isRider = async ({ data, socket }) => {
                 throw new Error('Rider not found');
             }
 
+            riderSockets.set(rider._id, socket.id);
+
             console.log("Socket is Rider.")
         }
 

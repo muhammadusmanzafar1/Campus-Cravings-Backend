@@ -20,6 +20,7 @@ const isRestaurant = async ({ data, socket }) => {
                 throw new Error('Restaurant not found');
             }
 
+            restaurantSockets.set(user._id, socket.id);
             console.log("Socket is Restaurant.")
         }
 
@@ -44,7 +45,7 @@ const sendOrderToRestaurant = async (restaurantId, order) =>
         console.log("Restaurant's UserId: " + restaurantUserId._id);
 
         const io = getIO();
-        console.log("Restaurant Socket Map: " + restaurantSockets);
+        console.log("Restaurant Socket Map: " + JSON.stringify(Object.fromEntries(restaurantSockets)));
         const socketId = restaurantSockets.get(restaurantUserId._id); // Get the socketId from the map
 
         console.log("Socket Id: " + socketId);
