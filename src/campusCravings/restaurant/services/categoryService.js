@@ -10,11 +10,11 @@ const cloudinary = require('../../../../utils/cloudinary');
 const createCategory = async (req) => {
 
     const restaurantId = req.user.restaurant;
-
+    console.log(req.user);
     try {
         const restaurant = await Restaurant.findById(restaurantId);
         if (!restaurant) {
-            return null;
+            throw new ApiError("Restaurant not found", httpStatus.status.NOT_FOUND);
         }
         const category = new Category(req.body);
         category.restaurant = restaurantId;
@@ -31,10 +31,10 @@ const createCategory = async (req) => {
         }
 
         if (error.name === "MongoError" && error.code === 11000) {
-            throw new ApiError("Duplicate category entry", httpStatus.status.BAD_REQUEST);
+            throw new ApiError(`Duplicate category entry ${error.message}`, httpStatus.status.BAD_REQUEST);
         }
 
-        throw new ApiError("An error occurred while creating the category", httpStatus.status.INTERNAL_SERVER_ERROR);
+        throw new ApiError(`An error occurred while creating the category: ${error.message}`, httpStatus.status.INTERNAL_SERVER_ERROR);
     }
 };
 

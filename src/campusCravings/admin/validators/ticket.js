@@ -2,7 +2,7 @@ const Joi = require("joi");
 const messageSchema = Joi.object({
     sender: Joi.string().required(),
     text: Joi.string().allow(''),
-    imageUrl: Joi.string().uri().allow(''),
+    imageUrl: Joi.string().allow(''),
     time: Joi.date(),
 });
 const createTicketSchema = Joi.object({

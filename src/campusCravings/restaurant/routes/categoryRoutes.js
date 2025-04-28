@@ -8,7 +8,7 @@ router.post("/addcategory", async (req, res) => {
 
     try {
         const category = await createCategory(req, res);
-        res.status(httpStatus.status.CREATED).json({ message: "User registered successfully", category: category });
+        res.status(httpStatus.status.CREATED).json({ message: "Category created successfully", category: category });
     } catch (error) {
         console.error("Error in /addcategory route:", error);
         if (error instanceof ApiError) {

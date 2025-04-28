@@ -7,6 +7,7 @@ const mongoose = require("mongoose");
 const Item = require("../../restaurant/models/items");
 const { getGrowthPercentage } = require('../../admin/helpers/AnalyticHelper');
 const { getIO } = require('../../../sockets/service/socketService');
+const cloudinary = require('../../../../utils/cloudinary');
 
 exports.getRestaurantAnalytics = async (req, res, next) => {
 
@@ -387,7 +388,7 @@ exports.OrderAccept = async (req, res) => {
         //Socket here
 
         const io = getIO();
-        
+
         io.to(`order-${orderId}`).emit('order-status-updated', {
             orderId,
             status
@@ -397,5 +398,40 @@ exports.OrderAccept = async (req, res) => {
     } catch (error) {
         console.error(error.message)
         throw new ApiError('Error fetching analytics: ', httpStatus.status.INTERNAL_SERVER_ERROR);
+    }
+};
+
+exports.updateRestaurantDetail = async (req, res) => {
+    try {
+        const restaurantId = req.user.restaurant;
+        if (!restaurantId) {
+            throw new ApiError('Restaurant not found for the user', httpStatus.status.NOT_FOUND);
+        }
+        const restImages = req.body.restaurantImages;
+        if (restImages) {
+            for (let i = 0; i < restImages.length; i++) {
+                if (restImages[i] === '') continue;
+                const uploadImg = await cloudinary.uploader.upload(restImages[i]);
+                restImages[i] = uploadImg.url;
+            }
+        }
+        req.body.restaurantImages = restImages;
+        const updatedRestaurant = await Restaurant.findByIdAndUpdate(
+            restaurantId,
+            { $set: req.body },
+            { new: true, runValidators: true }
+        );
+        if (!updatedRestaurant) {
+            throw ApiError('Restaurant not found', httpStatus.status.NOT_FOUND);
+        }
+        return {
+            message: "Restaurant details updated successfully",
+            restaurant: updatedRestaurant
+        };
+    } catch (error) {
+        if (error instanceof ApiError) {
+            throw ApiError('Error Updating Restaurant: ', httpStatus.status.INTERNAL_SERVER_ERROR);
+        }
+        console.error(error.message)
     }
 };
