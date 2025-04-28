@@ -6,6 +6,9 @@ const orderSchema = new mongoose.Schema({
         ref: 'User',
         required: true
     },
+    order_note: {
+        type: String
+    },
     restaurant_id: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Restaurant',

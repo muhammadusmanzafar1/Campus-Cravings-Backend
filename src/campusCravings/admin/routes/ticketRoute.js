@@ -2,11 +2,11 @@ const express = require('express');
 const router = express.Router();
 const httpStatus = require("http-status");
 const ApiError = require('../../../../utils/ApiError');
-const { getAllTickets, createTicket, updateTicket, deleteTicket, patchTicket, getTicket, replyticket } = require('../controllers/ticketController');
+const { getAllTickets, createTicket, updateTicket, deleteTicket, patchTicket, getTicket, replyticket, getNotifications } = require('../controllers/ticketController');
 const { validateBody } = require("../../../../middlewares/validate");
-const { updateTicketSchema, createTicketSchema, replyTicketSchema } = require("../validators/ticket");
+const { updateTicketSchema, createTicketSchema, replyTicketSchema, notificationController } = require("../validators/ticket");
 // Get All Tickets
-router.get("/:period", async (req, res) => {
+router.get("/result/:period", async (req, res) => {
     try {
         const allTickets = await getAllTickets(req, res);
         res.status(httpStatus.status.OK).json({ message: "Tickets Fetch Successfully", tickets: allTickets });
@@ -102,6 +102,13 @@ router.patch("/reply/:id", validateBody(replyTicketSchema), async (req, res) => 
         return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
     }
 });
-
-
+router.get("/notifications", async (req, res) => {
+    try {
+        const data = await getNotifications(req);
+        res.status(200).json(data);
+    } catch (error) {
+        res.status(error.statusCode || 500).json({ message: error.message || "Server Error" });
+    }
+});
+// fetch all ticket Notification 
 module.exports = router;

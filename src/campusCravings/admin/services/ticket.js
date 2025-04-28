@@ -63,6 +63,7 @@ const getAllTickets = async (req) => {
             createdAt: ticket.createdAt,
             updatedAt: ticket.updatedAt,
             imgUrls: ticket.imgUrl,
+            read: ticket.read,
             user: {
                 id: ticket.userId?._id,
                 fullName: ticket.userId?.fullName,
@@ -100,10 +101,13 @@ const getAllTickets = async (req) => {
 
 
 const createTicket = async (req) => {
-    const { subject, description, status, priority, imgUrl, messages } = req.body;
+    const { subject, description, status, priority, imgUrl, messages, read } = req.body;
     const userId = req.user?._id;
-    const uploadImg = await cloudinary.uploader.upload(imgUrl);
-    const uploadImgUrl = uploadImg.url;
+    for (let i = 0; i < imgUrl.length; i++) {
+        const uploadImg = await cloudinary.uploader.upload(imgUrl[i]);
+        imgUrl[i] = uploadImg.url;
+    }
+    const uploadImgUrl = imgUrl;
     const newTicket = await Ticket.create({
         subject,
         description,
@@ -112,6 +116,7 @@ const createTicket = async (req) => {
         imgUrl: uploadImgUrl,
         messages,
         userId,
+        read
     });
     return newTicket;
 };
@@ -196,6 +201,34 @@ const replyticket = async (req) => {
     return ticket;
 };
 
+const getNotifications = async ({ page, limit, type }) => {
+    const filter = {};
+    if (type === "read") filter.read = true;
+    else if (type === "unread") filter.read = false;
+    const skip = (page - 1) * limit;
+    const tickets = await Ticket.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(Number(limit))
+        .populate("userId", "fullName");
+
+    const formatted = tickets.map(t => ({
+        ticketId: t._id,
+        userFullName: t.userId?.fullName,
+        createdAt: t.createdAt,
+        status: t.status,
+        read: t.read
+    }));
+    const total = await Ticket.countDocuments(filter);
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+        currentPage: Number(page),
+        totalPages,
+        totalNotifications: total,
+        notifications: formatted
+    };
+};
 module.exports = {
     getAllTickets,
     createTicket,
@@ -203,5 +236,6 @@ module.exports = {
     patchTicket,
     deleteTicket,
     getTicket,
-    replyticket
+    replyticket,
+    getNotifications
 };

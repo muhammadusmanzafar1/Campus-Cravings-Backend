@@ -57,3 +57,8 @@ exports.updateUserByAdmin = asyncHandler(async (req, res) => {
     const user = await userService.updateUserByAdmin(req);
     return user;
 })
+
+exports.delImage = asyncHandler(async (req, res) => {
+    const user = await userService.delImage(req);
+    return user;
+})

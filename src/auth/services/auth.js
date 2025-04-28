@@ -1,7 +1,8 @@
 'use strict'
 const httpStatus = require('http-status');
 const userService = require('./users');
-const Stripe = require('stripe');
+// const Stripe = require('stripe');
+// const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const sessionService = require('../services/session')
 const ApiError = require("../../../utils/ApiError");
 const crypto = require('../../../utils/crypto')
@@ -10,7 +11,6 @@ const restaurantDB = require('../../campusCravings/restaurant/models/restaurant'
 const utils = require('../../../utils/utils');
 const email = require('../../../utils/email');
 const cloudinary = require('../../../utils/cloudinary');
-// const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
 const registerWithEmail = async (body) => {
      try {
@@ -38,15 +38,20 @@ const registerWithEmail = async (body) => {
                     throw new ApiError(errorMessage, httpStatus.status.BAD_REQUEST);
                }
           }
+          let imgUrl = '';
+          if (body.imgUrl) {
+
+
           const uploadImg = await cloudinary.uploader.upload(body.imgUrl);
-          const imgUrl = uploadImg.url;
+          imgUrl = uploadImg.url;
+          }
 
           if (body.isRestaurant === true) {
                const { restaurantImages } = body;
                body.restaurantImages = [];
                for (const image of restaurantImages) {
                     const uploadImg = await cloudinary.uploader.upload(image);
-                    const imgUrl = uploadImg.url;
+                    const imgUrl = uploadImg.url || imgUrl;
                     body.restaurantImages.push(imgUrl);
                }
                const userModel = await userDB.newEntity(body, imgUrl, false);
@@ -73,7 +78,7 @@ const registerWithEmail = async (body) => {
           }
 
           // const stripeCustomer = await stripe.customers.create({
-          //      name,
+          //      name: body.firstName + ' ' + body.lastName,
           //      email
           //    });
 
