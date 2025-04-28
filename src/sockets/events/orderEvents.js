@@ -1,11 +1,11 @@
 const { handleSocketEvent } = require('../utils/socketHandler');
 
 module.exports = (io, socket) => {
-  socket.on('join-order-room', handleSocketEvent(async (orderId) => {
-    const roomName = `order-${orderId}`;
+  socket.on('join-order-room', handleSocketEvent(async (data) => {
+    const roomName = `order-${data.orderId}`;
     await socket.join(roomName);
     console.log(`Socket ${socket.id} joined room ${roomName}`);
-    return { orderId, message: 'Joined successfully' };
+    return { orderId: data.orderId, message: 'Joined successfully' };
   }));
 };
 
