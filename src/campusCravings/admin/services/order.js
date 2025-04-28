@@ -147,8 +147,9 @@ const getAllOrders = async (req) => {
 
 
 const createOrder = async (req) => {
+    console.log("lolo popo");
     try {
-        const { payment_method, items, tip, delivery_fee, addresses, order_note, order_type, customizations = [] } = req.body;
+        const { payment_method, items, tip, delivery_fee, addresses, order_note, order_type } = req.body;
 
         const user_id = req.user._id;
         let total_price = 0;
@@ -161,21 +162,21 @@ const createOrder = async (req) => {
             }
             if (!restaurant_id) {
                 restaurant_id = response.restaurant?.toString();
-            } else if (response.restaurant.toString() !== restaurant_id) {
+            } else if (response.restaurant?.toString() !== restaurant_id) {
                 throw new APIError('All items must be from the same restaurant', httpStatus.status.BAD_REQUEST);
             }
             let customizedItemPrice = 0;
             const itemCustomizations = item.customizations || [];
             for (const customizationId of itemCustomizations) {
                 const matchedCustomization = response.customization.find(
-                    (c) => c._id.toString() === customizationId.toString()
+                    (c) => c._id?.toString() === customizationId?.toString()
                 );
                 if (matchedCustomization) {
                     customizedItemPrice += matchedCustomization.price;
                 }
             }
             // add on of size
-            const addSizePrice = response.sizes.find((s) => s._id.toString() === item.size.toString());
+            const addSizePrice = response.sizes.find((s) => s._id?.toString() === item.size?.toString());
             if (addSizePrice) {
                 total_price += (response.price + customizedItemPrice + addSizePrice.price) * quantity;
             } else {
@@ -189,7 +190,6 @@ const createOrder = async (req) => {
             restaurant_id,
             tip,
             delivery_fee,
-            customizations,
             total_price,
             payment_method,
             items,
@@ -255,7 +255,7 @@ const patchOrder = async (id, body) => {
             orderId: order._id,
             status: body.status
         });
-        
+
         return updatedOrder;
     } catch (error) {
         throw new APIError(`Error updating order: ${error.message}`, error.statusCode || httpStatus.status.INTERNAL_SERVER_ERROR);

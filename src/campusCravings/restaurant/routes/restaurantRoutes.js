@@ -4,7 +4,7 @@ const httpStatus = require("http-status");
 const ApiError = require('../../../../utils/ApiError');
 const restaurant = require('../controllers/restaurantController')
 const { validateBody } = require("../../../../middlewares/validate");
-const { nearbyRestaurantSchema, searchSchema } = require("../validators/restaurant");
+const { nearbyRestaurantSchema, searchSchema, updateRestaurantSchema } = require("../validators/restaurant");
 const Restaurant = require("../models/restaurant");
 
 
@@ -177,6 +177,17 @@ router.put('/orderAcceptByRestaurant', async (req, res) => {
     try {
         const orderAccept = await restaurant.OrderAccept(req, res);
         res.status(httpStatus.status.OK).json({ message: "Nearby Restaurants fetched successfully", data: orderAccept });
+    } catch (error) {
+        if (error instanceof ApiError) {
+            return res.status(error.statusCode).json({ message: error.message });
+        }
+        return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
+    }
+})
+router.patch('/', validateBody(updateRestaurantSchema), async (req, res) => {
+    try {
+        const updatedRestaurant = await restaurant.updateRestaurantDetail(req, res);
+        res.status(httpStatus.status.OK).json({ message: "Restaurant Details Updated Successfully", data: updatedRestaurant });
     } catch (error) {
         if (error instanceof ApiError) {
             return res.status(error.statusCode).json({ message: error.message });
