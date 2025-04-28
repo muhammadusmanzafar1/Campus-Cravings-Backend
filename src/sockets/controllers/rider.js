@@ -18,7 +18,7 @@ const isRider = async ({ data, socket }) => {
                 throw new Error('Rider not found');
             }
 
-            riderSockets.set(rider._id, socket.id);
+            riderSockets.set(rider._id.toString(), socket.id);
 
             console.log("Socket is Rider.")
         }
@@ -37,13 +37,13 @@ const sendOrderToSpecificRiders = async (riderIds, orders) =>
     {
         const io = getIO();
         riderIds.forEach((riderId) => {
-            const socketId = riderSockets.get(riderId); // Get the socketId from the map
+            const socketId = riderSockets.get(riderId.toString()); // Get the socketId from the map
     
             if (socketId) {
                 io.to(socketId).emit('new-rider-order', orders);
-                console.log(`Orders sent to rider ${riderId} with socketId ${socketId}`);
+                console.log(`Orders sent to rider ${riderId.toString()} with socketId ${socketId}`);
             } else {
-                console.log(`Rider ${riderId} is not connected.`);
+                console.log(`Rider ${riderId.toString()} is not connected.`);
             }
         });
     }
