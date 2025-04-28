@@ -264,6 +264,7 @@ exports.orderAccept = async (req, res) => {
     io.to(`order-${order._id}`).emit('order-status-updated', {
       orderId: updatedOrder._id,
       status: updatedOrder.status,
+      progress: updatedOrder.progress
     });
 
     return updatedOrder
