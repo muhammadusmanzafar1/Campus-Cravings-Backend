@@ -423,7 +423,7 @@ exports.updateRestaurantDetail = async (req, res) => {
             { new: true, runValidators: true }
         );
         if (!updatedRestaurant) {
-            throw ApiError('Restaurant not found', httpStatus.status.NOT_FOUND);
+            throw new ApiError('Restaurant not found', httpStatus.status.NOT_FOUND);
         }
         return {
             message: "Restaurant details updated successfully",
@@ -431,7 +431,7 @@ exports.updateRestaurantDetail = async (req, res) => {
         };
     } catch (error) {
         if (error instanceof ApiError) {
-            throw ApiError('Error Updating Restaurant: ', httpStatus.status.INTERNAL_SERVER_ERROR);
+            throw new ApiError(`Error Updating Restaurant: ${error.message}`, httpStatus.status.INTERNAL_SERVER_ERROR);
         }
         console.error(error.message)
     }
