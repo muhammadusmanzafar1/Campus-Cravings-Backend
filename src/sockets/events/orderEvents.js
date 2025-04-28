@@ -1,17 +1,12 @@
+const { handleSocketEvent } = require('../utils/socketHandler');
+
 module.exports = (io, socket) => {
-    socket.on('join-order-room', (orderId) => {
-      try
-      {
-        socket.join(`order-${orderId}`);
-        console.log(`Socket ${socket.id} Joined room order-${orderId}`);
-        socket.emit('order-room-joined', { orderId, message: 'Joined successfully' });
-      }
-      catch (error)
-      {
-        console.log(error.message);
-        socket.emit('order-joining-error', { error: `Failed to join order room. ${error.message}` });
-      }
-    });
+  socket.on('join-order-room', handleSocketEvent(async (orderId) => {
+    const roomName = `order-${orderId}`;
+    await socket.join(roomName);
+    console.log(`Socket ${socket.id} joined room ${roomName}`);
+    return { orderId, message: 'Joined successfully' };
+  }));
 };
 
 //Emission mock logic for my reference
