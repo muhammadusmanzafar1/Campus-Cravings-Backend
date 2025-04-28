@@ -247,7 +247,14 @@ const patchOrder = async (id, body) => {
         const updatedOrder = await Order.findByIdAndUpdate(id, update, {
             new: true,
             runValidators: true
-        });
+        }).populate({
+            path: 'user_id',
+            select: 'firstName lastName imgUrl phoneNumber'
+        })
+            .populate({
+                path: 'items.item_id',
+                select: 'name price customizations sizes'
+            });
 
         const io = getIO();
 
