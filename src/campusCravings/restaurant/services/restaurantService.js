@@ -189,10 +189,31 @@ exports.getpoplarFoodItems = async (req, res, next) => {
                 }
             },
             {
+                $lookup: {
+                    from: "restaurants",
+                    localField: "itemDetails.restaurant",
+                    foreignField: "_id",
+                    as: "restaurantDetails"
+                }
+            },
+            {
                 $project: {
                     item_id: "$_id",
                     totalOrdered: 1,
-                    itemDetails: { $arrayElemAt: ["$itemDetails", 0] }
+                    itemDetails: { $arrayElemAt: ["$itemDetails", 0] },
+                    restaurant: {
+                        $let: {
+                            vars: { rest: { $arrayElemAt: ["$restaurantDetails", 0] } },
+                            in: {
+                                storeName: "$$rest.storeName",
+                                brandName: "$$rest.brandName",
+                                cuisine: "$$rest.cuisine",
+                                ratings: "$$rest.ratings",
+                                restaurantImages: "$$rest.restaurantImages",
+                                addresses: "$$rest.addresses"
+                            }
+                        }
+                    }
                 }
             }
         ]);

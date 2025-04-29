@@ -147,7 +147,6 @@ const getAllOrders = async (req) => {
 
 
 const createOrder = async (req) => {
-    console.log("lolo popo");
     try {
         const { payment_method, items, tip, delivery_fee, addresses, order_note, order_type } = req.body;
 
@@ -201,6 +200,7 @@ const createOrder = async (req) => {
         newOrder = await patchOrder(newOrder._id, { status: 'pending' });
 
         //Socket here to send order to restaurant in real-time
+        console.log(restaurant_id);
         await sendOrderToRestaurant(restaurant_id, newOrder);
         return newOrder;
 
