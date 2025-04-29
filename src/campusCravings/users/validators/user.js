@@ -78,7 +78,7 @@ const updateUserSchema = Joi.object({
     lastName: Joi.string().optional(),
     fullName: Joi.string().optional(),
     userName: Joi.string().optional(),
-    imgUrl: Joi.string().uri().optional(),
+    imgUrl: Joi.string().allow(""),
 
     countryCode: Joi.string().optional(),
     ISOCode: Joi.string().optional(),
