@@ -8,9 +8,11 @@ const Conversation = require('../../users/models/conversation')
 const { differenceInMinutes } = require('date-fns');
 const haversine = require('haversine-distance');
 const { patchOrder } = require('../../admin/services/order')
-const cloudinary  = require('../../../../utils/cloudinary');
+const cloudinary = require('../../../../utils/cloudinary');
 const { getIO } = require('../../../sockets/service/socketService');
 const { sendOrderToSpecificRiders } = require('../../../sockets/controllers/rider');
+const order = require('../../admin/models/order');
+const { default: mongoose } = require('mongoose');
 
 
 exports.registerRider = async (req, res) => {
@@ -67,67 +69,48 @@ exports.registerRider = async (req, res) => {
 };
 
 
-
 exports.getRandomUnassignedOrder = async (req, res) => {
-  const { latitude, longitude } = req.query;
-
-  if (!latitude || !longitude) {
-    throw new ApiError('Latitude and longitude are required', httpStatus.status.BAD_REQUEST);
-  }
+  const restaurantId = req.user.restaurant;
 
   try {
-    const restaurantIds = await Restaurant.aggregate([
-      {
-        $geoNear: {
-          near: {
-            type: 'Point',
-            coordinates: [parseFloat(longitude), parseFloat(latitude)],
-          },
-          distanceField: 'distance',
-          maxDistance: 32186.9,
-          spherical: true,
-        }
-      },
-      {
-        $project: { _id: 1 }
-      }
-    ]);
+    // Find the restaurant
+    const restaurant = await Restaurant.findById(restaurantId);
+    if (!restaurant) {
+      throw new ApiError('Restaurant not found', httpStatus.NOT_FOUND);
+    }
 
-    const nearbyIds = restaurantIds.map(r => r._id);
+    const coordinates = restaurant.addresses?.coordinates?.coordinates;
+    if (!coordinates || coordinates.length !== 2) {
+      throw new ApiError('Restaurant coordinates not found or invalid', httpStatus.BAD_REQUEST);
+    }
 
+    const [longitude, latitude] = coordinates;
+    console.log('Restaurant coordinates:', { longitude, latitude });
+
+    // Fetch up to 5 random unassigned orders for this restaurant
     const orders = await Order.aggregate([
       {
         $match: {
           assigned_to: null,
-          restaurant_id: { $in: nearbyIds }
+          restaurant_id: new mongoose.Types.ObjectId(restaurantId),
         }
       },
-      { $sample: { size: 5 } }, 
-      {
-        $lookup: {
-          from: 'restaurants',
-          localField: 'restaurant_id',
-          foreignField: '_id',
-          as: 'restaurant'
-        }
-      },
-      {
-        $unwind: '$restaurant'
-      }
+      { $sample: { size: 5 } }
     ]);
 
     if (!orders.length) {
-      throw new ApiError('No unassigned orders found', httpStatus.status.NOT_FOUND);
+      throw new ApiError('No unassigned orders found', httpStatus.NOT_FOUND);
     }
 
+    // Find nearby riders within 20 miles (32.1 km)
     const nearbyRiders = await Rider.find({
       location: {
         $nearSphere: {
           $geometry: {
             type: 'Point',
-            coordinates: [parseFloat(longitude), parseFloat(latitude)]
+            coordinates: [longitude, latitude]
           },
-          $maxDistance: 32186.9
+          $maxDistance: 32186.9 // ~20 miles
         }
       },
       order_accepted: false,
@@ -135,20 +118,32 @@ exports.getRandomUnassignedOrder = async (req, res) => {
       status: 'active'
     }).select('user');
 
-    const riderUserIds = nearbyRiders.map(rider => rider.user);
+    console.log('Nearby riders found:', nearbyRiders.length);
 
-    // Send the orders and riderUserIds to the client
-    await sendOrderToSpecificRiders(riderUserIds, orders);
+    const riderUserIds = nearbyRiders.map(r => r.user);
+    const OrderDetails = {
+      orders,
+      restaurant: {
+        name: restaurant.storeName,
+        restaurantCoords: coordinates
+      }
+    }
+
+    // Send the orders to those riders
+    await sendOrderToSpecificRiders(riderUserIds, OrderDetails);
 
     return {
-      orders,
+      OrderDetails,
       nearbyRiderUserIds: riderUserIds
     }
+
   } catch (err) {
-    console.error(err);
-    throw new ApiError('Failed to retrieve order and riders', httpStatus.status.INTERNAL_SERVER_ERROR);
+    console.error('Error in getRandomUnassignedOrder:', err);
+    throw new ApiError('Failed to retrieve orders and riders', httpStatus.INTERNAL_SERVER_ERROR);
   }
 };
+
+
 
 
 exports.deliverOrder = async (req, res) => {
@@ -192,6 +187,7 @@ exports.deliverOrder = async (req, res) => {
     rider.totalHours = (rider.totalHours || 0) + deliveryDurationHours;
     rider.totalDistance = (rider.totalDistance || 0) + distanceMiles;
     rider.deliveriesCompleted = (rider.deliveriesCompleted || 0) + 1;
+    rider.order_accepted = false;
     await order.save();
     await rider.save();
     return {
@@ -225,53 +221,78 @@ exports.updateLocation = async (req, res) => {
 };
 
 exports.orderAccept = async (req, res) => {
-  const { riderId, orderId, estimated_time } = req.body;
-
+  const { orderId, estimated_time } = req.body;
+  const userId = req.user._id;
   try {
-    if (!orderId || !riderId) {
-      throw new ApiError("Order ID and Rider ID are required", httpStatus.status.BAD_REQUEST);
+    if (!orderId) {
+      throw new ApiError("Order ID is required", httpStatus.status.BAD_REQUEST);
     }
-
-    const rider = await Rider.findById(riderId);
+    const rider = await Rider.findOne({ "user": userId });
     if (!rider) {
       throw new ApiError("No Rider Found", httpStatus.status.NOT_FOUND);
     }
-
     const order = await Order.findById(orderId);
     if (!order) {
       throw new ApiError("No Order Found", httpStatus.status.NOT_FOUND);
     }
-
     if (order.status !== "order_prepared") {
       throw new ApiError("Order is not in a prepared state to be accepted", httpStatus.status.FORBIDDEN)
     }
-
-    order.assigned_to = riderId;
-    order.status = "order_dispatched";
+    order.assigned_to = rider._id;
+    order.status = "accepted_by_rider";
     order.estimated_time = estimated_time;
     order.order_accepted = true
 
     const updatedOrder = await order.save();
-
     await Conversation.create({
       order: updatedOrder._id,
-      customer: updatedOrder.customer,
+      customer: updatedOrder.user_id,
       rider: updatedOrder.assigned_to,
     });
-
     const io = getIO();
-
     io.to(`order-${order._id}`).emit('order-status-updated', {
       orderId: updatedOrder._id,
       status: updatedOrder.status,
       progress: updatedOrder.progress
     });
+    let responseOrder = await Order.findById(updatedOrder._id)
+      .populate({
+        path: 'user_id',
+        select: 'firstName lastName imgUrl phoneNumber'
+      })
+      .populate({
+        path: 'restaurant_id',
+        select: 'storeName brandName phoneNumber'
+      })
+      .populate({
+        path: 'items.item_id',
+        select: 'name price customization sizes'
+      });
+    responseOrder.items = responseOrder.items.map((item, index) => {
+      const originalItem = item.item_id;
+      const selectedItem = updatedOrder.items[index];
+      const selectedCustomizationIds = selectedItem.customizations.map(id => id.toString());
+      const filteredCustomizations = originalItem.customization.filter(cust =>
+        selectedCustomizationIds.includes(cust._id.toString())
+      );
+      const filteredSizes = originalItem.sizes.filter(size =>
+        size._id.toString() === selectedItem.size.toString()
+      );
 
-    return updatedOrder
-
+      return {
+        ...item,
+        item_id: {
+          ...originalItem,
+          customization: filteredCustomizations,
+          sizes: filteredSizes
+        }
+      };
+    });
+    rider.order_accepted = true;
+    await rider.save();
+    return responseOrder;
   } catch (err) {
     console.error(err);
-    throw new ApiError('Failed to update location', httpStatus.status.INTERNAL_SERVER_ERROR);
-
+    throw new ApiError(`Error in Order Accept: ${err.message}`, httpStatus.status.INTERNAL_SERVER_ERROR);
   }
 };
