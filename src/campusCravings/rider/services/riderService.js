@@ -255,7 +255,7 @@ exports.orderAccept = async (req, res) => {
 
     await Conversation.create({
       order: updatedOrder._id,
-      customer: updatedOrder.customer,
+      customer: updatedOrder.user_id,
       rider: updatedOrder.assigned_to,
     });
 

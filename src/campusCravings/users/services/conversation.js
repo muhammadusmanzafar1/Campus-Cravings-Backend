@@ -7,10 +7,12 @@ const httpStatus = require('http-status');
 const { getIO } = require('../../../sockets/service/socketService');
 
 // fetch Conversation Details
-const getConversationDetails = async (req) => {
+const getConversationDetails = async (req, { isCustomer, orderId }) => {
     try {
 
-        const { isCustomer, orderId } = req.body;
+        console.log("isCustomer: " +  typeof isCustomer);
+        console.log("orderId: " + typeof orderId);
+
         let { _id } = req.user;
         const io = getIO();
 
@@ -34,7 +36,7 @@ const getConversationDetails = async (req) => {
         }
     
         const populateOptions = isCustomer
-            ? { path: 'customer' }
+            ? { path: 'customer', model: 'User' }
             : {
                 path: 'rider',
                 populate: {
@@ -50,8 +52,9 @@ const getConversationDetails = async (req) => {
         if (!conversation) {
             throw new ApiError('Conversation not found', httpStatus.status.NOT_FOUND);
         }
+        console.log(conversation);
 
-        if (_id.toString() != conversation.customer.user._id.toString() && _id.toString() != conversation.rider.user._id.toString()) {
+        if (_id.toString() != conversation.customer.toString() && _id.toString() != conversation.rider.user._id.toString()) {
             throw new ApiError('Unauthorized access (User not found in conversation)', httpStatus.status.UNAUTHORIZED);
         }
 
