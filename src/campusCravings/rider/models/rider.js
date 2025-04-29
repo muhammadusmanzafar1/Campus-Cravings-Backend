@@ -46,10 +46,6 @@ const riderSchema = new Schema({
     type: Number,
     default: 0
   },
-  isAvailable: {
-    type: Boolean,
-    default: true
-  },
   location: {
     type: {
       type: String,

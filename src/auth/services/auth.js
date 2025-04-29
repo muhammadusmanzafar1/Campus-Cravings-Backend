@@ -1,8 +1,6 @@
 'use strict'
 const httpStatus = require('http-status');
 const userService = require('./users');
-// const Stripe = require('stripe');
-// const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const sessionService = require('../services/session')
 const ApiError = require("../../../utils/ApiError");
 const crypto = require('../../../utils/crypto')
@@ -46,7 +44,7 @@ const registerWithEmail = async (body) => {
           imgUrl = uploadImg.url;
           }
 
-          if (body.isRestaurant === true) {
+          if (body.isRestaurant === true || body.isAdmin === true) {
                const { restaurantImages } = body;
                body.restaurantImages = [];
                for (const image of restaurantImages) {
@@ -77,11 +75,6 @@ const registerWithEmail = async (body) => {
                return userResponse;
           }
 
-          // const stripeCustomer = await stripe.customers.create({
-          //      name: body.firstName + ' ' + body.lastName,
-          //      email
-          //    });
-
           const model = await userDB.newEntity(body, imgUrl, false);
           const newUser = new userDB(model);
 
@@ -91,7 +84,6 @@ const registerWithEmail = async (body) => {
                await email.sendOTPonEmail(body.email, model.activationCode);
           }
 
-          // newUser.stripeCustomerId = stripeCustomer.id;
           const savedUser = await newUser.save();
           const userResponse = savedUser.toObject();
           delete userResponse.activationCode;

@@ -148,10 +148,10 @@ const getAllOrders = async (req) => {
 
 const createOrder = async (req) => {
     try {
-        const { payment_method, items, tip, delivery_fee, addresses, order_note, order_type, customizations = [] } = req.body;
+        const { payment_method, items, tip, delivery_fee, addresses, order_note, order_type } = req.body;
 
         const user_id = req.user._id;
-        let total_price = 0;
+        let order_price = 0;
         let restaurant_id = null;
         for (const item of items) {
             const { item_id, quantity } = item;
@@ -161,27 +161,28 @@ const createOrder = async (req) => {
             }
             if (!restaurant_id) {
                 restaurant_id = response.restaurant?.toString();
-            } else if (response.restaurant.toString() !== restaurant_id) {
+            } else if (response.restaurant?.toString() !== restaurant_id) {
                 throw new APIError('All items must be from the same restaurant', httpStatus.status.BAD_REQUEST);
             }
             let customizedItemPrice = 0;
             const itemCustomizations = item.customizations || [];
             for (const customizationId of itemCustomizations) {
                 const matchedCustomization = response.customization.find(
-                    (c) => c._id.toString() === customizationId.toString()
+                    (c) => c._id?.toString() === customizationId?.toString()
                 );
                 if (matchedCustomization) {
                     customizedItemPrice += matchedCustomization.price;
                 }
             }
             // add on of size
-            const addSizePrice = response.sizes.find((s) => s._id.toString() === item.size.toString());
+            const addSizePrice = response.sizes.find((s) => s._id?.toString() === item.size?.toString());
             if (addSizePrice) {
-                total_price += (response.price + customizedItemPrice + addSizePrice.price) * quantity;
+                order_price += (response.price + customizedItemPrice + addSizePrice.price) * quantity;
             } else {
-                total_price += (response.price + customizedItemPrice) * quantity;
+                order_price += (response.price + customizedItemPrice) * quantity;
             }
         }
+        let total_price = order_price * 1.1;
         total_price += tip;
         total_price += delivery_fee;
         let newOrder = new Order({
@@ -189,8 +190,8 @@ const createOrder = async (req) => {
             restaurant_id,
             tip,
             delivery_fee,
-            customizations,
-            total_price,
+            total_price: parseFloat(total_price).toFixed(2),
+            order_price,
             payment_method,
             items,
             addresses,
@@ -201,6 +202,7 @@ const createOrder = async (req) => {
         newOrder = await patchOrder(newOrder._id, { status: 'pending' });
 
         //Socket here to send order to restaurant in real-time
+        console.log(restaurant_id);
         await sendOrderToRestaurant(restaurant_id, newOrder);
         return newOrder;
 
@@ -244,22 +246,55 @@ const patchOrder = async (id, body) => {
                 };
             }
         }
-        const updatedOrder = await Order.findByIdAndUpdate(id, update, {
+        let updatedOrder = await Order.findByIdAndUpdate(id, update, {
             new: true,
             runValidators: true
+        })
+            .populate({
+                path: 'user_id',
+                select: 'firstName lastName imgUrl phoneNumber'
+            })
+            .populate({
+                path: 'restaurant_id',
+                select: 'storeName brandName phoneNumber'
+            })
+            .populate({
+                path: 'items.item_id',
+                select: 'name price customization sizes'
+            });
+        updatedOrder.items = updatedOrder.items.map((orderItem) => {
+            const { item_id, customizations, size } = orderItem;
+            if (!item_id) return orderItem;
+            const selectedCustomizations = item_id.customization?.filter((cust) =>
+                customizations?.some(
+                    (selectedId) => selectedId.toString() === cust._id.toString()
+                )
+            );
+            const selectedSize = item_id.sizes?.find(
+                (s) => s._id.toString() === size?.toString()
+            );
+            return {
+                ...orderItem.toObject(),
+                item_id: {
+                    ...item_id.toObject(),
+                    customization: selectedCustomizations,
+                    sizes: selectedSize ? [selectedSize] : []
+                }
+            };
         });
-
         const io = getIO();
-
         io.to(`order-${order._id}`).emit('order-status-updated', {
             orderId: order._id,
             status: body.status,
             progress: updatedOrder.progress
         });
-        
+
         return updatedOrder;
     } catch (error) {
-        throw new APIError(`Error updating order: ${error.message}`, error.statusCode || httpStatus.status.INTERNAL_SERVER_ERROR);
+        throw new APIError(
+            `Error updating order: ${error.message}`,
+            error.statusCode || httpStatus.status.INTERNAL_SERVER_ERROR
+        );
     }
 };
 const getOrder = async (id) => {

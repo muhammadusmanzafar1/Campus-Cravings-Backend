@@ -25,6 +25,7 @@ const orderSchema = new mongoose.Schema({
             'pending',
             'order_accepted',
             'order_prepared',
+            'accepted_by_rider',
             'order_dispatched',
             'delivered',
             'cancelled',
@@ -42,6 +43,7 @@ const orderSchema = new mongoose.Schema({
                         'pending',
                         'order_accepted',
                         'order_prepared',
+                        'accepted_by_rider',
                         'order_dispatched',
                         'delivered',
                         'cancelled',
@@ -60,6 +62,10 @@ const orderSchema = new mongoose.Schema({
     total_price: {
         type: Number,
         required: true
+    },
+    order_price: {
+        type: Number
+        // , required: true
     },
     payment_method: {
         type: String,

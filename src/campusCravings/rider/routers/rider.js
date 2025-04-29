@@ -87,7 +87,7 @@ router.patch('/location', async (req, res, next) => {
     }
 });
 
-router.put('/acceptOrder', async (req, res) => {
+router.put('/acceptOrder', async (req, res, next) => {
     try {
         const location = await rider.orderAccept(req, res, next);
         if (!location) {

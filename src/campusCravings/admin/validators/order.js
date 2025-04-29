@@ -16,6 +16,7 @@ const statusEnum = [
     'pending',
     'order_accepted',
     'order_prepared',
+    'accepted_by_rider',
     'order_dispatched',
     'delivered',
     'cancelled',
@@ -26,7 +27,7 @@ const orderItemSchema = Joi.object({
     quantity: Joi.number().min(1).required(),
     customizations: Joi.array().items(Joi.string()).default([]),
     size: objectId.optional()
-    
+
 });
 const progressSchema = Joi.array().items(
     Joi.object({
@@ -44,13 +45,14 @@ const createOrderSchema = Joi.object({
     addresses: addressesSchema.required(),
     image_url: Joi.string().allow('').default(''),
     items: Joi.array().items(orderItemSchema).default([]),
-    order_note : Joi.string().allow(''),
+    order_note: Joi.string().allow(''),
 });
 const updateOrderSchema = Joi.object({
     assigned_to: Joi.alternatives().try(objectId, Joi.valid(null)),
     status: Joi.string().valid(...statusEnum),
     progress: progressSchema,
     total_price: Joi.number(),
+    order_price: Joi.number(),
     payment_method: Joi.string().valid('cash', 'card', 'wallet', 'upi'),
     tip: Joi.number().min(0),
     delivery_fee: Joi.number().min(0),

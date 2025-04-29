@@ -175,7 +175,7 @@ exports.validateTokenOptional = (req, res, next) => {
     let token =
         req.body.token ||
         req.query.token ||
-        req.headers['x-access-token'];
+        req.headers['x-access-token'] || req.cookies.accessToken;
     if (token) return this.validate(req, res, next);
 
     req.sessionId = null;
