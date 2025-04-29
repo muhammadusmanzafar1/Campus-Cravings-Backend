@@ -28,9 +28,10 @@ const updateUser = async (req) => {
     try {
         const user = await User.findById(userId);
         if (!user) throw new ApiError('User not found', httpStatus.status.NOT_FOUND);
-        const uploadImg = await cloudinary.uploader.upload(imgUrl);
-        const uploadImgUrl = uploadImg.url;
-        body.imgUrl = uploadImgUrl;
+        if (imgUrl) {
+            const uploadImg = await cloudinary.uploader.upload(imgUrl);
+            body.imgUrl = uploadImg.url;
+          }
         Object.assign(user, body);
         const updatedUser = await user.save();
         if (!updatedUser) {
