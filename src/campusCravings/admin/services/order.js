@@ -244,25 +244,43 @@ const patchOrder = async (id, body) => {
                 };
             }
         }
-        const updatedOrder = await Order.findByIdAndUpdate(id, update, {
+        let updatedOrder = await Order.findByIdAndUpdate(id, update, {
             new: true,
             runValidators: true
-        }).populate({
-            path: 'user_id',
-            select: 'firstName lastName imgUrl phoneNumber'
         })
-        .populate({
-            path: 'items.item_id',
-            select: 'name price customizations sizes'
-        }).populate(
-            {
+            .populate({
+                path: 'user_id',
+                select: 'firstName lastName imgUrl phoneNumber'
+            })
+            .populate({
                 path: 'restaurant_id',
                 select: 'storeName brandName phoneNumber'
-            }
-        );
-
+            })
+            .populate({
+                path: 'items.item_id',
+                select: 'name price customization sizes'
+            });
+        updatedOrder.items = updatedOrder.items.map((orderItem) => {
+            const { item_id, customizations, size } = orderItem;
+            if (!item_id) return orderItem;
+            const selectedCustomizations = item_id.customization?.filter((cust) =>
+                customizations?.some(
+                    (selectedId) => selectedId.toString() === cust._id.toString()
+                )
+            );
+            const selectedSize = item_id.sizes?.find(
+                (s) => s._id.toString() === size?.toString()
+            );
+            return {
+                ...orderItem.toObject(), 
+                item_id: {
+                    ...item_id.toObject(),
+                    customization: selectedCustomizations,
+                    sizes: selectedSize ? [selectedSize] : []
+                }
+            };
+        });
         const io = getIO();
-
         io.to(`order-${order._id}`).emit('order-status-updated', {
             orderId: order._id,
             status: body.status,
@@ -271,7 +289,10 @@ const patchOrder = async (id, body) => {
 
         return updatedOrder;
     } catch (error) {
-        throw new APIError(`Error updating order: ${error.message}`, error.statusCode || httpStatus.status.INTERNAL_SERVER_ERROR);
+        throw new APIError(
+            `Error updating order: ${error.message}`,
+            error.statusCode || httpStatus.status.INTERNAL_SERVER_ERROR
+        );
     }
 };
 const getOrder = async (id) => {
