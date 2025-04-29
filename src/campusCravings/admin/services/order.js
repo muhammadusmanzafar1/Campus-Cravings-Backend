@@ -151,7 +151,7 @@ const createOrder = async (req) => {
         const { payment_method, items, tip, delivery_fee, addresses, order_note, order_type } = req.body;
 
         const user_id = req.user._id;
-        let total_price = 0;
+        let order_price = 0;
         let restaurant_id = null;
         for (const item of items) {
             const { item_id, quantity } = item;
@@ -177,11 +177,12 @@ const createOrder = async (req) => {
             // add on of size
             const addSizePrice = response.sizes.find((s) => s._id?.toString() === item.size?.toString());
             if (addSizePrice) {
-                total_price += (response.price + customizedItemPrice + addSizePrice.price) * quantity;
+                order_price += (response.price + customizedItemPrice + addSizePrice.price) * quantity;
             } else {
-                total_price += (response.price + customizedItemPrice) * quantity;
+                order_price += (response.price + customizedItemPrice) * quantity;
             }
         }
+        let total_price = order_price * 1.1;
         total_price += tip;
         total_price += delivery_fee;
         let newOrder = new Order({
@@ -189,7 +190,8 @@ const createOrder = async (req) => {
             restaurant_id,
             tip,
             delivery_fee,
-            total_price,
+            total_price: parseFloat(total_price).toFixed(2),
+            order_price,
             payment_method,
             items,
             addresses,
@@ -272,7 +274,7 @@ const patchOrder = async (id, body) => {
                 (s) => s._id.toString() === size?.toString()
             );
             return {
-                ...orderItem.toObject(), 
+                ...orderItem.toObject(),
                 item_id: {
                     ...item_id.toObject(),
                     customization: selectedCustomizations,
