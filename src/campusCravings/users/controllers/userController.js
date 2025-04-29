@@ -62,3 +62,8 @@ exports.delImage = asyncHandler(async (req, res) => {
     const user = await userService.delImage(req);
     return user;
 })
+
+exports.getDemandMul = asyncHandler(async (req, res) => {
+    const data = await userService.getDemandMul(req, res);
+    return data;
+})
