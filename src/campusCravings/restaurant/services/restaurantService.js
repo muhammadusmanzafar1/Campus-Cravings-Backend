@@ -189,10 +189,19 @@ exports.getpoplarFoodItems = async (req, res, next) => {
                 }
             },
             {
+                $lookup: {
+                    from: "restaurants",
+                    localField: "itemDetails.restaurant",
+                    foreignField: "_id",
+                    as: "restaurantDetails"
+                }
+            },
+            {
                 $project: {
                     item_id: "$_id",
                     totalOrdered: 1,
-                    itemDetails: { $arrayElemAt: ["$itemDetails", 0] }
+                    itemDetails: { $arrayElemAt: ["$itemDetails", 0] },
+                    restaurantAddress: { $arrayElemAt: ["$restaurantDetails.addresses", 0] }
                 }
             }
         ]);
