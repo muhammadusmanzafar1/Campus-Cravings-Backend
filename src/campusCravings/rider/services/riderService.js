@@ -93,6 +93,7 @@ exports.getRandomUnassignedOrder = async (req, res) => {
         $match: {
           assigned_to: null,
           restaurant_id: new mongoose.Types.ObjectId(restaurantId),
+          status: 'order_prepared',
         }
       },
       { $sample: { size: 5 } }
