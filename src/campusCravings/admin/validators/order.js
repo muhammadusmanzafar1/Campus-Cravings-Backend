@@ -16,6 +16,7 @@ const statusEnum = [
     'pending',
     'order_accepted',
     'order_prepared',
+    'accepted_by_rider',
     'order_dispatched',
     'delivered',
     'cancelled',
