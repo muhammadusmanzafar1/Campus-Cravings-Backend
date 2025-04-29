@@ -18,7 +18,7 @@ const isRider = async ({ data, socket }) => {
                 throw new Error('Rider not found');
             }
 
-            riderSockets.set(rider._id.toString(), socket.id);
+            riderSockets.set(user._id.toString(), socket.id);
 
             console.log("Socket is Rider.")
         }
