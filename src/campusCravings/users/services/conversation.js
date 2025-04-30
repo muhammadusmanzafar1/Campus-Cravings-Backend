@@ -38,16 +38,20 @@ const getConversationDetails = async (req, { isCustomer, orderId }) => {
         }
     
         const conversation = await Conversation.findOne({ order: order._id })
-            .populate('rider').populate('customer')
-            .lean();
+        .populate({
+            path: 'rider',
+            populate: { path: 'user' }
+        })
+        .populate('customer')
+        .lean();
     
         if (!conversation) {
             throw new ApiError('Conversation not found', httpStatus.status.NOT_FOUND);
         }
         // console.log(conversation);
-        // console.log("_id: " + _id.toString() + " conversation.customer: " + conversation.customer.toString() + " conversation.rider.user: " + conversation.rider.user.toString());
+        console.log("_id: " + _id.toString() + " conversation.customer: " + conversation.customer._id.toString() + " conversation.rider.user: " + conversation.rider.user._id.toString());
 
-        if (_id.toString() != conversation.customer.toString() && _id.toString() != conversation.rider.user.toString()) {
+        if (_id.toString() != conversation.customer._id.toString() && _id.toString() != conversation.rider.user._id.toString()) {
             throw new ApiError('Unauthorized access (User not found in conversation)', httpStatus.status.UNAUTHORIZED);
         }
 
@@ -66,12 +70,14 @@ const getConversationDetails = async (req, { isCustomer, orderId }) => {
             { _id: { $in: unreadMessageIds } },
             { $set: { status: 'read' } });
 
-            io.to(conversation._id).emit('messages-read', { messageIds: unreadMessageIds, readerId: _id.toString(), readerType: isCustomer ? 'customer' : 'rider' });
+            io.to(conversation._id.toString()).emit('messages-read', { messageIds: unreadMessageIds, readerId: _id.toString(), readerType: isCustomer ? 'customer' : 'rider' });
         }
+
+        const name = getOtherParticipantName(isCustomer, conversation);
 
         return {
             conversationId: conversation._id,
-            name: req.user.fullName,
+            name: name,
             messages,
         };
   
@@ -79,7 +85,11 @@ const getConversationDetails = async (req, { isCustomer, orderId }) => {
       console.error('Error in getConversationDetails:', error);
       throw new ApiError(error.message, httpStatus.status.INTERNAL_SERVER_ERROR);
     }
-  };
+};
+
+const getOtherParticipantName = (isCustomer, conversation) => {
+    return isCustomer ? conversation.rider.user.fullName : conversation.customer.fullName;
+};
 
 
 module.exports = {
