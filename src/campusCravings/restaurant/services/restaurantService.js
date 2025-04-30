@@ -316,16 +316,16 @@ exports.getResturantAnalytics = async (req) => {
             currentOrders,
             previousOrders
         ] = await Promise.all([
-            Order.countDocuments({ ...orderStatusFilter, restaurant_id: restaurantId, created_at: { $gte: currentStart } }),
-            Order.countDocuments({ ...orderStatusFilter, restaurant_id: restaurantId, created_at: { $gte: previousStart, $lt: currentStart } }),
+            Order.countDocuments({  restaurant_id: restaurantId, created_at: { $gte: currentStart } }),
+            Order.countDocuments({  restaurant_id: restaurantId, created_at: { $gte: previousStart, $lt: currentStart } }),
         ]);
         const [currentRevenueAgg, previousRevenueAgg] = await Promise.all([
             Order.aggregate([
-                { $match: { ...orderStatusFilter, restaurant_id: restaurantId, created_at: { $gte: currentStart } } },
+                { $match: {  restaurant_id: restaurantId, created_at: { $gte: currentStart } } },
                 { $group: { _id: null, total: { $sum: '$total_price' } } }
             ]),
             Order.aggregate([
-                { $match: { ...orderStatusFilter, restaurant_id: restaurantId, created_at: { $gte: previousStart, $lt: currentStart } } },
+                { $match: { restaurant_id: restaurantId, created_at: { $gte: previousStart, $lt: currentStart } } },
                 { $group: { _id: null, total: { $sum: '$total_price' } } }
             ])
         ]);
