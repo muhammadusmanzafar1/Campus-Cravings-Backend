@@ -7,7 +7,7 @@ const mongoose = require("mongoose");
 const Item = require("../../restaurant/models/items");
 const { getGrowthPercentage } = require('../../admin/helpers/AnalyticHelper');
 const { getIO } = require('../../../sockets/service/socketService');
-const cloudinary = require('../../../../utils/cloudinary');
+const cloudinary = require('../../../../utils/Cloudinary');
 
 exports.getRestaurantAnalytics = async (req, res, next) => {
 
