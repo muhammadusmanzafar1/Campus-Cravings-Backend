@@ -274,10 +274,10 @@ exports.orderAccept = async (req, res) => {
       const selectedItem = updatedOrder.items[index];
       const selectedCustomizationIds = selectedItem.customizations.map(id => id.toString());
       const filteredCustomizations = originalItem.customization.filter(cust =>
-        selectedCustomizationIds.includes(cust._id.toString())
+        selectedCustomizationIds.includes(cust?._id?.toString())
       );
       const filteredSizes = originalItem.sizes.filter(size =>
-        size._id.toString() === selectedItem.size.toString()
+        size?._id?.toString() === selectedItem?.size?.toString()
       );
 
       return {
