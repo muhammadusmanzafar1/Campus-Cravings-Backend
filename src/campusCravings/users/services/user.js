@@ -6,7 +6,7 @@ const Ticket = require('../../admin/models/ticket')
 const userService = require('../../../auth/services/users');
 const ApiError = require('../../../../utils/ApiError');
 const httpStatus = require('http-status');
-const cloudinary = require('../../../../utils/cloudinary');
+const cloudinary = require('../../../../utils/Cloudinary');
 
 // fetch User Info 
 const getUser = async (query) => {

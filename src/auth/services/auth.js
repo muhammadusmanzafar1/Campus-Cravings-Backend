@@ -8,7 +8,7 @@ const userDB = require('../models/user')
 const restaurantDB = require('../../campusCravings/restaurant/models/restaurant')
 const utils = require('../../../utils/utils');
 const email = require('../../../utils/email');
-const cloudinary = require('../../../utils/cloudinary');
+const cloudinary = require('../../../utils/Cloudinary');
 
 const registerWithEmail = async (body) => {
      try {
