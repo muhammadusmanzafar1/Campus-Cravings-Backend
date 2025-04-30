@@ -28,3 +28,7 @@ exports.orderAccept = asyncHandler(async (req, res) => {
     const data = await riderService.orderAccept(req, res);
     return data;
 })
+exports.riderLocation = asyncHandler(async (req, res) => {
+    const data = await riderService.riderLocation(req, res);
+    return data;
+})
