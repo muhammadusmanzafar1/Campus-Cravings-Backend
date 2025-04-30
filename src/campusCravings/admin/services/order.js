@@ -256,7 +256,7 @@ const patchOrder = async (id, body) => {
             })
             .populate({
                 path: 'restaurant_id',
-                select: 'storeName brandName phoneNumber'
+                select: 'storeName brandName phoneNumber addresses'
             })
             .populate({
                 path: 'items.item_id',
