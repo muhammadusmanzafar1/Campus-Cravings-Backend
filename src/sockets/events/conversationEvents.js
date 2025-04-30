@@ -15,7 +15,21 @@ socket.on('join-conversation', handleSocketEvent(async (data) => {
 
   await socket.join(conversationId);
   console.log(`Socket ${socket.id} joined conversation room: ${conversationId}`);
-  return { conversationId, message: 'Joined successfully' };
+  return { conversationId, message: 'Conversation joined successfully' };
+}));
+
+// LEAVE CONVERSATION
+socket.on('leave-conversation', handleSocketEvent(async (data) => {
+  const conversationId = data?.conversationId;
+  
+  if (!conversationId || typeof conversationId !== 'string') {
+    console.warn(`Invalid or missing conversationId in 'leave-conversation':`, data);
+    return { error: 'Invalid conversationId' };
+  }
+
+  await socket.leave(conversationId);
+  console.log(`Socket ${socket.id} left conversation room: ${conversationId}`);
+  return { conversationId, message: 'Conversation left successfully' };
 }));
 
 // SEND MESSAGE
