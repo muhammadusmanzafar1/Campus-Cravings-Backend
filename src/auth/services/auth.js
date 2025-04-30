@@ -274,7 +274,10 @@ const forgotPassword = async (body) => {
      body.authMethod === 'email'
           ? email.sendForgotOTP(user.email, user.activationCode)
           : email.PhoneForgotOTP(user.phone, user.activationCode);
-     return await user.save();
+          const savedUser = await user.save();
+     const userResponse = savedUser.toObject();
+     delete userResponse.activationCode;
+     return userResponse;
 };
 
 const updatePassword = async (id, body) => {
