@@ -26,7 +26,7 @@ exports.getRestaurantAnalytics = async (req, res, next) => {
                 $group: {
                     _id: "$restaurant_id",
                     orderCount: { $sum: 1 },
-                    totalRevenue: { $sum: "$total_price" },
+                    totalRevenue: { $sum: "$order_price" },
                 }
             }
         ]);
@@ -322,11 +322,11 @@ exports.getResturantAnalytics = async (req) => {
         const [currentRevenueAgg, previousRevenueAgg] = await Promise.all([
             Order.aggregate([
                 { $match: { ...orderStatusFilter, restaurant_id: restaurantId, created_at: { $gte: currentStart } } },
-                { $group: { _id: null, total: { $sum: '$total_price' } } }
+                { $group: { _id: null, total: { $sum: '$order_price' } } }
             ]),
             Order.aggregate([
                 { $match: { ...orderStatusFilter, restaurant_id: restaurantId, created_at: { $gte: previousStart, $lt: currentStart } } },
-                { $group: { _id: null, total: { $sum: '$total_price' } } }
+                { $group: { _id: null, total: { $sum: '$order_price' } } }
             ])
         ]);
         const [restaurant] = await Restaurant.aggregate([
