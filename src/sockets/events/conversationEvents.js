@@ -51,14 +51,7 @@ socket.on('send-chat-message', handleSocketEvent(async (data) => {
   const newMessage = await messageSending({ data: { conversationId, senderId, isCustomer, text } });
 
   io.to(conversationId).emit('receive-chat-message', {
-    message: {
-      _id: newMessage._id,
-      senderId: newMessage.sender,
-      senderModel: newMessage.senderModel,
-      text: newMessage.text,
-      status: newMessage.status,
-      createdAt: newMessage.createdAt,
-    },
+    newMessage: newMessage,
   });
 
   console.log(`Message stored and emitted to ${conversationId}: ${text}`);
@@ -85,9 +78,9 @@ socket.on('mark-message-read', handleSocketEvent(async (data) => {
 
   if (response === 'SUCCESS') {
     io.to(message.conversation.toString()).emit('messages-read', {
-      messageIds: message._id,
+      messageIds: [message._id],
       readerId,
-      readerType: message.senderModel === 'User' ? 'rider' : 'customer',
+      readerType: message.senderModel,
     });
 
     console.log(`Message ${messageId} marked as read by ${readerId}`);

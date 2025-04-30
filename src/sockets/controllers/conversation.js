@@ -14,10 +14,16 @@ const messageSending = async ({ data }) => {
                 throw new Error('Rider not found');
             }
 
-            senderId = rider._id;
+            senderId = rider.user;
         }
 
-        const conversation = await Conversation.findById(conversationId).populate('rider').lean();
+        const conversation = await Conversation.findById(conversationId)
+        .populate({
+            path: 'rider',
+            populate: { path: 'user' }
+        })
+        .lean();
+
         if (!conversation) {
             throw new Error('Conversation not found');
         }
@@ -57,14 +63,15 @@ const markMessageAsRead = async ({ data }) => {
                 throw new Error('Rider not found');
             }
 
-            readerId = rider._id;
+            readerId = rider.user;
         }
 
         const message = await Message.findById(messageId)
         .populate({
             path: 'conversation',
             populate: {
-                path: 'rider'
+                path: 'rider',
+                populate: { path: 'user' }
             }
         })
         .lean();

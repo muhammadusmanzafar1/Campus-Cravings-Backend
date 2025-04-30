@@ -29,7 +29,7 @@ const getConversationDetails = async (req, { isCustomer, orderId }) => {
                 throw new ApiError('Rider not found', httpStatus.status.NOT_FOUND);
             }
 
-            _id = rider._id;
+            _id = rider.user;
         }
     
         const order = await Order.findById(orderId);
@@ -70,7 +70,7 @@ const getConversationDetails = async (req, { isCustomer, orderId }) => {
             { _id: { $in: unreadMessageIds } },
             { $set: { status: 'read' } });
 
-            io.to(conversation._id.toString()).emit('messages-read', { messageIds: unreadMessageIds, readerId: _id.toString(), readerType: isCustomer ? 'customer' : 'rider' });
+            io.to(conversation._id.toString()).emit('messages-read', { messageIds: unreadMessageIds, readerId: _id.toString(), readerType: isCustomer ? 'User' : 'Rider' });
         }
 
         const name = getOtherParticipantName(isCustomer, conversation);
