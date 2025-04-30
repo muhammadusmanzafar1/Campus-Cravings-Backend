@@ -77,7 +77,7 @@ socket.on('mark-message-read', handleSocketEvent(async (data) => {
   const { response, message } = await markMessageAsRead({ data: { messageId, readerId, isCustomer } });
 
   if (response === 'SUCCESS') {
-    io.to(message.conversation.toString()).emit('messages-read', {
+    io.to(message.conversation._id.toString()).emit('messages-read', {
       messageIds: [message._id],
       readerId,
       readerType: message.senderModel,
