@@ -115,7 +115,6 @@ exports.getRandomUnassignedOrder = async (req, res) => {
         }
       },
       order_accepted: false,
-      isAvailable: true,
       status: 'active'
     }).select('user');
 
