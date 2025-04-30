@@ -4,7 +4,7 @@ const ApiError = require("../../../../utils/ApiError");
 const Category = require('../models/category');
 const Restaurant = require('../models/restaurant');
 const items = require('../models/items')
-const cloudinary = require('../../../../utils/cloudinary');
+const cloudinary = require('../../../../utils/cloudinary'); //
 
 // Create a new category with items
 const createCategory = async (req) => {
