@@ -17,12 +17,12 @@ const messageSending = async ({ data }) => {
             senderId = rider._id;
         }
 
-        const conversation = await Conversation.findById(conversationId).lean();
+        const conversation = await Conversation.findById(conversationId).populate('rider').lean();
         if (!conversation) {
             throw new Error('Conversation not found');
         }
 
-        if ((isCustomer == true && conversation.customer.toString() != senderId.toString()) || (isCustomer == false && conversation.rider.toString() != senderId.toString())) {
+        if ((isCustomer == true && conversation.customer.toString() != senderId.toString()) || (isCustomer == false && conversation.rider.user.toString() != senderId.toString())) {
             throw new Error('Unauthorized Sender');
         } 
 
@@ -60,12 +60,20 @@ const markMessageAsRead = async ({ data }) => {
             readerId = rider._id;
         }
 
-        const message = await Message.findById(messageId).populate('conversation').lean();
+        const message = await Message.findById(messageId)
+        .populate({
+            path: 'conversation',
+            populate: {
+                path: 'rider'
+            }
+        })
+        .lean();
+
         if (!message) {
             throw new Error('Message not found');
         }
 
-        if (readerId.toString() != message.conversation.customer.toString() && readerId.toString() != message.conversation.rider.toString()) {
+        if (readerId.toString() != message.conversation.customer.toString() && readerId.toString() != message.conversation.rider.user.toString()) {
             throw new Error('Unauthorized Reader');
         }
 

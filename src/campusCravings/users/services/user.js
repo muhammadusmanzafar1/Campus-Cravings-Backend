@@ -31,6 +31,8 @@ const updateUser = async (req) => {
         if (imgUrl) {
             const uploadImg = await cloudinary.uploader.upload(imgUrl);
             body.imgUrl = uploadImg.url;
+          }else {
+            body.imgUrl = "";
           }
         Object.assign(user, body);
         const updatedUser = await user.save();
@@ -402,6 +404,22 @@ const delImage = async (req) => {
         throw new ApiError(error.message, httpStatus.status.INTERNAL_SERVER_ERROR);
     }
 }
+const getDemandMul = async (req, res) => {
+    try {
+        const unassignedOrders = await Order.find({ assigned_to: null }).countDocuments();
+        const availableRiders = await Rider.find({ order_accepted: false }).countDocuments();
+
+        const getDemandMultiple = unassignedOrders / availableRiders;
+
+        return {
+            unassignedOrders,
+            availableRiders,
+            getDemandMultiple
+        };
+    } catch (error) {
+        throw new ApiError(error.message, httpStatus.status.INTERNAL_SERVER_ERROR);
+    }
+};
 
 
 module.exports = {
@@ -416,5 +434,6 @@ module.exports = {
     getUserAllOrders,
     getUserDetail,
     updateUserByAdmin,
-    delImage
+    delImage,
+    getDemandMul
 };

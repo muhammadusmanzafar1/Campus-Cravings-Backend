@@ -7,10 +7,13 @@ const httpStatus = require('http-status');
 const { getIO } = require('../../../sockets/service/socketService');
 
 // fetch Conversation Details
-const getConversationDetails = async (req) => {
+const getConversationDetails = async (req, { isCustomer, orderId }) => {
     try {
 
-        const { isCustomer, orderId } = req.body;
+        // console.log("isCustomer: " + isCustomer  + typeof isCustomer);
+        // console.log("orderId: " + orderId + typeof orderId);
+        // console.log("req.user: " + req.user);
+
         let { _id } = req.user;
         const io = getIO();
 
@@ -20,6 +23,7 @@ const getConversationDetails = async (req) => {
 
         if (isCustomer == false)
         {
+            console.log("isCustomer is false");
             const rider = await Rider.findOne({ user: _id });
             if (!rider) {
                 throw new ApiError('Rider not found', httpStatus.status.NOT_FOUND);
@@ -33,25 +37,17 @@ const getConversationDetails = async (req) => {
             throw new ApiError('Order not found', httpStatus.status.NOT_FOUND);
         }
     
-        const populateOptions = isCustomer
-            ? { path: 'customer' }
-            : {
-                path: 'rider',
-                populate: {
-                path: 'user',
-                model: 'User',
-                },
-            };
-    
         const conversation = await Conversation.findOne({ order: order._id })
-            .populate(populateOptions)
+            .populate('rider').populate('customer')
             .lean();
     
         if (!conversation) {
             throw new ApiError('Conversation not found', httpStatus.status.NOT_FOUND);
         }
+        // console.log(conversation);
+        // console.log("_id: " + _id.toString() + " conversation.customer: " + conversation.customer.toString() + " conversation.rider.user: " + conversation.rider.user.toString());
 
-        if (_id.toString() != conversation.customer.user._id.toString() && _id.toString() != conversation.rider.user._id.toString()) {
+        if (_id.toString() != conversation.customer.toString() && _id.toString() != conversation.rider.user.toString()) {
             throw new ApiError('Unauthorized access (User not found in conversation)', httpStatus.status.UNAUTHORIZED);
         }
 
@@ -73,12 +69,9 @@ const getConversationDetails = async (req) => {
             io.to(conversation._id).emit('messages-read', { messageIds: unreadMessageIds, readerId: _id.toString(), readerType: isCustomer ? 'customer' : 'rider' });
         }
 
-    
-        const name = getParticipantName(conversation, isCustomer);
-
         return {
             conversationId: conversation._id,
-            name,
+            name: req.user.fullName,
             messages,
         };
   
@@ -87,12 +80,6 @@ const getConversationDetails = async (req) => {
       throw new ApiError(error.message, httpStatus.status.INTERNAL_SERVER_ERROR);
     }
   };
-
-function getParticipantName(conversation, isCustomer) {
-    return isCustomer
-      ? conversation.customer?.name || ''
-      : conversation.rider?.user?.name || '';
-}
 
 
 module.exports = {
