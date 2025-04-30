@@ -84,7 +84,10 @@ exports.getAllCategoryByRestaurantId = async (req, res, next) => {
             .populate('items');
 
         if (!categories || categories.length === 0) {
-            throw new ApiError("No categories found for this restaurant", httpStatus.status.NOT_FOUND);
+           return {
+                "categories": [],
+                "restaurant": null
+            };
         }
         const restaurant = await Restaurant.findById(restaurantId);
 
