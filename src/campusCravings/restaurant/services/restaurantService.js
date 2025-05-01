@@ -181,15 +181,35 @@ exports.getpoplarFoodItems = async (req, res, next) => {
                     spherical: true
                 }
             },
-            { $project: { _id: 1 } }
+            { $project: { _id: 1, openingHours: 1 } }
         ]);
 
 
         if (!nearbyRestaurants.length) {
             throw new ApiError('No nearby restaurants found', httpStatus.status.NOT_FOUND)
         }
+        const now = moment().tz('America/New_York');
+        const currentDay = now.format('dddd').toLowerCase();
+        const openRestaurants = nearbyRestaurants.filter(r => {
+            const timeRange = r.openingHours?.[currentDay];
+            if (!timeRange || !timeRange.includes(' - ')) return false;
 
-        const restaurantIds = nearbyRestaurants.map(r => r._id);
+            const [openStr, closeStr] = timeRange.split(' - ');
+            const open = moment.tz(openStr, 'hh:mm A', 'America/New_York').set({
+                year: now.year(),
+                month: now.month(),
+                date: now.date()
+            });
+            const close = moment.tz(closeStr, 'hh:mm A', 'America/New_York').set({
+                year: now.year(),
+                month: now.month(),
+                date: now.date()
+            });
+
+            if (close.isBefore(open)) close.add(1, 'day');
+            return now.isBetween(open, close);
+        });
+        const restaurantIds = openRestaurants.map(r => r._id);
 
         const orders = await Order.aggregate([
             { $match: { restaurant_id: { $in: restaurantIds } } },
