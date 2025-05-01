@@ -40,8 +40,8 @@ const registerWithEmail = async (body) => {
           if (body.imgUrl) {
 
 
-          const uploadImg = await cloudinary.uploader.upload(body.imgUrl);
-          imgUrl = uploadImg.url;
+               const uploadImg = await cloudinary.uploader.upload(body.imgUrl);
+               imgUrl = uploadImg.url;
           }
 
           if (body.isRestaurant === true || body.isAdmin === true) {
@@ -142,6 +142,10 @@ const verifyOTP = async (body) => {
           throw new ApiError('Invalid OTP', httpStatus.status.UNAUTHORIZED);
      }
 
+     if (user.isRestaurant === true || user.isRider === true) {
+          user.activationCode = null;
+          user.status = 'Email-verified';
+     }
      user.activationCode = null;
      user.status = 'active';
 
@@ -274,7 +278,7 @@ const forgotPassword = async (body) => {
      body.authMethod === 'email'
           ? email.sendForgotOTP(user.email, user.activationCode)
           : email.PhoneForgotOTP(user.phone, user.activationCode);
-          const savedUser = await user.save();
+     const savedUser = await user.save();
      const userResponse = savedUser.toObject();
      delete userResponse.activationCode;
      return userResponse;
@@ -322,19 +326,19 @@ const resetPassword = async (id, body) => {
      user.isOtpVerified = false;
 
      return await user.save();
- };
+};
 
- const resetPasswordOTP = async (id, body) => {
+const resetPasswordOTP = async (id, body) => {
      const user = await userService.get(id);
      if (!user) {
-         throw new ApiError('Oops! User not found', httpStatus.status.UNAUTHORIZED);
+          throw new ApiError('Oops! User not found', httpStatus.status.UNAUTHORIZED);
      }
- 
+
      user.password = await crypto.setPassword(body.password);
      user.isOtpVerified = false;
- 
+
      return await user.save();
- };
+};
 
 const handleLogout = async (req) => {
      let userId = req.user._id;

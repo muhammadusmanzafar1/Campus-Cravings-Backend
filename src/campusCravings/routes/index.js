@@ -10,6 +10,7 @@ const rider = require('../rider/routers/rider')
 const user = require("../users/routes/userRoute");
 const admin = require("../admin/routes/adminRoute");
 const conversation = require("../users/routes/conversationRoute");
+const paymentRoutes = require("../../payment/routes/paymentRoutes");
 
 router.use("/auth", auth);
 router.use("/categories", validate, category);
@@ -18,5 +19,6 @@ router.use("/rider", validate, rider);
 router.use("/user", validate, user);
 router.use("/admin", validate, admin);
 router.use("/conversation", validate, conversation);
+router.use('/payments', validate, paymentRoutes);
 
 module.exports = router;

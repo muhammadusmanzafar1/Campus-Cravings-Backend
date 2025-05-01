@@ -206,8 +206,12 @@ const newUser = async (req) => {
 
         if (existingUser) throw new ApiError("This user is already Registered", httpStatus.status.FORBIDDEN);
 
+        let imgUrl ="";
+        if (body.imgUrl) {
         const uploadImg = await cloudinary.uploader.upload(body.imgUrl);
-        const imgUrl = uploadImg.url;
+        imgUrl = uploadImg.url;
+        }
+        
         if (body.isRestaurant === true) {
 
             const userModel = await User.newEntity(body, imgUrl, isAdmin);
@@ -254,8 +258,9 @@ const deleteUser = async (req, res) => {
 
         if (!existing) throw new ApiError("No User Found", httpStatus.status.NOT_FOUND);
 
-        const data = await User.findByIdAndDelete(userId);
-        return data
+        existing.status = 'deleted';
+        
+        return await existing.save();
     } catch (error) {
         if (!(error instanceof ApiError)) {
             console.error('Unexpected error during user registration:', error);
