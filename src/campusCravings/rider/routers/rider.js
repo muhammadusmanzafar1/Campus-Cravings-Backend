@@ -133,4 +133,19 @@ router.get("/getRiderDetails/:orderId", async (req, res, next) => {
         return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
     }
 })
+router.get("/getRiderDetailsById/:riderId", async (req, res, next) => {
+    try {
+        const riderDetatils = await rider.getRiderDetailsById(req, res, next);
+        if (!rider) {
+            return next(new ApiError("Invalid request", httpStatus.status.BAD_REQUEST));
+        }
+        res.status(httpStatus.status.OK).json({ message: "Rider details retrieved successfully", data: riderDetatils });
+    } catch (error) {
+        console.error("Error in /getRiderDetails route:", error);
+        if (error instanceof ApiError) {
+            return res.status(error.statusCode).json({ message: error.message });
+        }
+        return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
+    }
+})
 module.exports = router;

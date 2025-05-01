@@ -36,3 +36,7 @@ exports.getRiderDetails = asyncHandler(async (req, res) => {
     const data = await riderService.getRiderDetails(req, res);
     return data;
 })
+exports.getRiderDetailsById = asyncHandler(async (req, res) => {
+    const data = await riderService.getRiderDetailsById(req, res);
+    return data;
+})
