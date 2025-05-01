@@ -286,7 +286,8 @@ const patchOrder = async (id, body) => {
         io.to(`order-${order._id}`).emit('order-status-updated', {
             orderId: order._id,
             status: body.status,
-            progress: updatedOrder.progress
+            progress: updatedOrder.progress,
+            estimated_time: updatedOrder.estimated_time
         });
 
         return updatedOrder;

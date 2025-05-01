@@ -455,7 +455,8 @@ exports.OrderAccept = async (req, res) => {
         io.to(`order-${orderId}`).emit('order-status-updated', {
             orderId,
             status,
-            progress: order.progress
+            progress: order.progress,
+            estimated_time: order.estimated_time
         });
 
         return order;

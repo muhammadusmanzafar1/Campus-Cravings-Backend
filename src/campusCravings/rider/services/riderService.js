@@ -253,7 +253,8 @@ exports.orderAccept = async (req, res) => {
     io.to(`order-${order._id}`).emit('order-status-updated', {
       orderId: updatedOrder._id,
       status: updatedOrder.status,
-      progress: updatedOrder.progress
+      progress: updatedOrder.progress,
+      estimated_time: updatedOrder.estimated_time
     });
     let responseOrder = await Order.findById(updatedOrder._id)
       .populate({
