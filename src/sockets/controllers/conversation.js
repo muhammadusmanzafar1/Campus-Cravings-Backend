@@ -73,8 +73,7 @@ const markMessageAsRead = async ({ data }) => {
                 path: 'rider',
                 populate: { path: 'user' }
             }
-        })
-        .lean();
+        });
 
         if (!message) {
             throw new Error('Message not found');
