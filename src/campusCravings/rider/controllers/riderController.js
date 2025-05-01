@@ -32,3 +32,7 @@ exports.riderLocation = asyncHandler(async (req, res) => {
     const data = await riderService.riderLocation(req, res);
     return data;
 })
+exports.getRiderDetails = asyncHandler(async (req, res) => {
+    const data = await riderService.getRiderDetails(req, res);
+    return data;
+})

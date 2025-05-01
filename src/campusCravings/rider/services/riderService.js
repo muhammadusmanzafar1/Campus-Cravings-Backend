@@ -310,3 +310,21 @@ exports.riderLocation = async (req, res) => {
     throw new ApiError(`Error in Order Accept: ${err.message}`, httpStatus.status.INTERNAL_SERVER_ERROR);
   }
 }
+
+exports.getRiderDetails = async (req, res) => {
+  try {
+    const orderId = req.params.orderId;
+    const order = await Order.findOne({ "_id": orderId });
+    if (!order) {
+      throw new ApiError("No Order Found", httpStatus.status.NOT_FOUND);
+    }
+    const rider = await Rider.findOne({ "_id": order.assigned_to }).populate('user');
+    if (!rider) {
+      throw new ApiError("No Rider Found", httpStatus.status.NOT_FOUND);
+    }
+    return rider;
+  } catch (err) {
+    console.error(err);
+    throw new ApiError(`Error in Order Accept: ${err.message}`, httpStatus.status.INTERNAL_SERVER_ERROR);
+  }
+}
