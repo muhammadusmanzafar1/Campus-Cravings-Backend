@@ -8,6 +8,7 @@ const Item = require("../../restaurant/models/items");
 const { getGrowthPercentage } = require('../../admin/helpers/AnalyticHelper');
 const { getIO } = require('../../../sockets/service/socketService');
 const cloudinary = require('../../../../utils/cloudinary');
+const moment = require('moment-timezone');
 
 exports.getRestaurantAnalytics = async (req, res, next) => {
 
@@ -84,7 +85,7 @@ exports.getAllCategoryByRestaurantId = async (req, res, next) => {
             .populate('items');
 
         if (!categories || categories.length === 0) {
-           return {
+            return {
                 "categories": [],
                 "restaurant": null
             };
@@ -120,12 +121,13 @@ exports.getAllRestaurant = async (req, res, next) => {
         next(error);
     }
 };
+
 exports.getNearbyRestaurantsWithCategories = async (req, res, next) => {
     try {
         const { latitude, longitude } = req.query;
-
         const distanceInMeters = 20 * 1609.34;
-
+        const now = moment().tz('America/New_York');
+        const currentDay = now.format('dddd').toLowerCase();
         const restaurants = await Restaurant.find({
             "addresses.coordinates": {
                 $nearSphere: {
@@ -137,10 +139,27 @@ exports.getNearbyRestaurantsWithCategories = async (req, res, next) => {
                 }
             },
         }).populate('categories');
+        const openRestaurants = restaurants.filter(r => {
+            const timeRange = r.openingHours?.[currentDay];
+            if (!timeRange || !timeRange.includes(' - ')) return false;
 
-        return restaurants;
+            const [openStr, closeStr] = timeRange.split(' - ');
+            const open = moment.tz(openStr, 'hh:mm A', 'America/New_York').set({
+                year: now.year(),
+                month: now.month(),
+                date: now.date()
+            });
+            const close = moment.tz(closeStr, 'hh:mm A', 'America/New_York').set({
+                year: now.year(),
+                month: now.month(),
+                date: now.date()
+            });
+
+            if (close.isBefore(open)) close.add(1, 'day');
+            return now.isBetween(open, close);
+        });
+        return openRestaurants;
     } catch (error) {
-        console.error('Error occurred while fetching categories:', error);
         next(error);
     }
 };
