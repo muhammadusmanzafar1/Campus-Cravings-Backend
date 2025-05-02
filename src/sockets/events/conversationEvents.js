@@ -15,7 +15,21 @@ socket.on('join-conversation', handleSocketEvent(async (data) => {
 
   await socket.join(conversationId);
   console.log(`Socket ${socket.id} joined conversation room: ${conversationId}`);
-  return { conversationId, message: 'Joined successfully' };
+  return { conversationId, message: 'Conversation joined successfully' };
+}));
+
+// LEAVE CONVERSATION
+socket.on('leave-conversation', handleSocketEvent(async (data) => {
+  const conversationId = data?.conversationId;
+  
+  if (!conversationId || typeof conversationId !== 'string') {
+    console.warn(`Invalid or missing conversationId in 'leave-conversation':`, data);
+    return { error: 'Invalid conversationId' };
+  }
+
+  await socket.leave(conversationId);
+  console.log(`Socket ${socket.id} left conversation room: ${conversationId}`);
+  return { conversationId, message: 'Conversation left successfully' };
 }));
 
 // SEND MESSAGE
@@ -37,14 +51,7 @@ socket.on('send-chat-message', handleSocketEvent(async (data) => {
   const newMessage = await messageSending({ data: { conversationId, senderId, isCustomer, text } });
 
   io.to(conversationId).emit('receive-chat-message', {
-    message: {
-      _id: newMessage._id,
-      senderId: newMessage.sender,
-      senderModel: newMessage.senderModel,
-      text: newMessage.text,
-      status: newMessage.status,
-      createdAt: newMessage.createdAt,
-    },
+    newMessage: newMessage,
   });
 
   console.log(`Message stored and emitted to ${conversationId}: ${text}`);
@@ -70,10 +77,10 @@ socket.on('mark-message-read', handleSocketEvent(async (data) => {
   const { response, message } = await markMessageAsRead({ data: { messageId, readerId, isCustomer } });
 
   if (response === 'SUCCESS') {
-    io.to(message.conversation.toString()).emit('messages-read', {
-      messageIds: message._id,
+    io.to(message.conversation._id.toString()).emit('messages-read', {
+      messageIds: [message._id],
       readerId,
-      readerType: message.senderModel === 'User' ? 'rider' : 'customer',
+      readerType: message.senderModel,
     });
 
     console.log(`Message ${messageId} marked as read by ${readerId}`);

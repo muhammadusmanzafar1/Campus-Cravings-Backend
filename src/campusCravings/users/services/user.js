@@ -31,9 +31,10 @@ const updateUser = async (req) => {
         if (imgUrl) {
             const uploadImg = await cloudinary.uploader.upload(imgUrl);
             body.imgUrl = uploadImg.url;
-          }else {
+        } else {
             body.imgUrl = "";
-          }
+        }
+        body.fullName = `${body.firstName} ${body.lastName}`.trim();
         Object.assign(user, body);
         const updatedUser = await user.save();
         if (!updatedUser) {
@@ -48,36 +49,36 @@ const updateUser = async (req) => {
 const updateUserByAdmin = async (req) => {
     const userId = req.params.id;
     const { imgUrl, ...body } = req.body;
-  
+
     try {
-      const user = await User.findById(userId);
-      if (!user) throw new ApiError('User not found', httpStatus.status.NOT_FOUND);
-  
-      if (imgUrl) {
-        const uploadImg = await cloudinary.uploader.upload(imgUrl);
-        body.imgUrl = uploadImg.url;
-      }
-  
-      if (body.firstName || body.lastName) {
-        const firstName = body.firstName ?? user.firstName;
-        const lastName = body.lastName ?? user.lastName;
-        body.fullName = `${firstName} ${lastName}`.trim();
-      }
-  
-      Object.assign(user, body);
-      const updatedUser = await user.save();
-  
-      if (!updatedUser) {
-        throw new ApiError('Failed to update user', httpStatus.status.INTERNAL_SERVER_ERROR);
-      }
-  
-      return await User.findById(userId).select('-password');
+        const user = await User.findById(userId);
+        if (!user) throw new ApiError('User not found', httpStatus.status.NOT_FOUND);
+
+        if (imgUrl) {
+            const uploadImg = await cloudinary.uploader.upload(imgUrl);
+            body.imgUrl = uploadImg.url;
+        }
+
+        if (body.firstName || body.lastName) {
+            const firstName = body.firstName ?? user.firstName;
+            const lastName = body.lastName ?? user.lastName;
+            body.fullName = `${firstName} ${lastName}`.trim();
+        }
+
+        Object.assign(user, body);
+        const updatedUser = await user.save();
+
+        if (!updatedUser) {
+            throw new ApiError('Failed to update user', httpStatus.status.INTERNAL_SERVER_ERROR);
+        }
+
+        return await User.findById(userId).select('-password');
     } catch (error) {
-      console.log(error);
-      throw new ApiError(error.message, httpStatus.status.INTERNAL_SERVER_ERROR);
+        console.log(error);
+        throw new ApiError(error.message, httpStatus.status.INTERNAL_SERVER_ERROR);
     }
-  };
-  
+};
+
 
 // Add New Address
 const addUserAddress = async (query) => {
@@ -278,10 +279,10 @@ const getUserAllOrders = async (req, res) => {
         const userType = req.query.for || 'customer';
         const userId = req?.user?._id;
         const comparingId = userType === 'rider' ? 'assigned_to' : 'user_id';
-        
+
         const orders = await Order.find({ [comparingId]: userId })
             .populate('user_id', 'firstName lastName email imgUrl')
-            .populate('restaurant_id', 'storeName brandName phoneNumber')
+            .populate('restaurant_id', 'storeName brandName phoneNumber restaurantImages')
             .populate('items.item_id', 'name price customization sizes image'); // added 'image' here
 
         const result = orders.map(order => {
@@ -292,16 +293,16 @@ const getUserAllOrders = async (req, res) => {
 
                 const selectedCustomizationIds = item?.customizations?.map(c => c?.toString()) || [];
                 const customizationList = itemData?.customization || [];
-                
+
                 const matchedCustomizations = customizationList.filter(c =>
                     c?._id && selectedCustomizationIds.includes(c._id.toString())
                 );
 
                 const customPrice = matchedCustomizations.reduce((sum, c) => sum + (c?.price || 0), 0);
-                
+
                 const sizeId = item?.size?.toString();
                 const sizePrice = itemData?.sizes?.find(s => s?._id?.toString() === sizeId)?.price || 0;
-                
+
                 const total = (basePrice + customPrice + sizePrice);
 
                 return {
@@ -313,7 +314,6 @@ const getUserAllOrders = async (req, res) => {
                     size: itemData?.sizes?.find(s => s?._id?.toString() === sizeId)
                 };
             });
-
             return {
                 _id: order?._id,
                 address: order?.addresses,
@@ -331,7 +331,8 @@ const getUserAllOrders = async (req, res) => {
                 } : null,
                 restaurant: order?.restaurant_id ? {
                     name: order.restaurant_id?.storeName || order.restaurant_id?.brandName,
-                    phone: order.restaurant_id?.phoneNumber
+                    phone: order.restaurant_id?.phoneNumber,
+                    image: order.restaurant_id?.restaurantImages || "null"
                 } : null,
                 items: cleanItems
             };
@@ -396,10 +397,10 @@ const delImage = async (req) => {
         if (!user.imgUrl) throw new ApiError('No image to delete', httpStatus.status.NOT_FOUND);
 
         const publicId = user.imgUrl.split('/').pop().split('.')[0];
-        
+
         await cloudinary.uploader.destroy(publicId);
         user.imgUrl = null;
-        const updatedUser = await user.save();  
+        const updatedUser = await user.save();
         if (!updatedUser) {
             throw new ApiError('Failed to update user', httpStatus.status.INTERNAL_SERVER_ERROR);
         }

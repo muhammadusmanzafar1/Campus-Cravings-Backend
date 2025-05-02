@@ -3,7 +3,7 @@ const addAddressSchema = Joi.object({
     address: Joi.string().required(),
     coordinates: Joi.object({
         type: Joi.string().valid('Point').required(),
-        coordinates: Joi.array().items(Joi.number()).length(2).required() 
+        coordinates: Joi.array().items(Joi.number()).length(2).required()
     }).required()
 });
 const updateAddressSchema = Joi.object({
@@ -11,7 +11,7 @@ const updateAddressSchema = Joi.object({
     address: Joi.string().required(),
     coordinates: Joi.object({
         type: Joi.string().valid('Point').required(),
-        coordinates: Joi.array().items(Joi.number()).length(2).required() 
+        coordinates: Joi.array().items(Joi.number()).length(2).required()
     }).required()
 }).min(3);
 
@@ -53,21 +53,21 @@ const updateUserAdmin = {
                     }).required()
                 })
             )
-         .when('isRestaurant', { is: true, then: Joi.required() }),
+            .when('isRestaurant', { is: true, then: Joi.required() }),
         openingHours: Joi.object({
-          monday: Joi.string().optional(),
-          tuesday: Joi.string().optional(),
-          wednesday: Joi.string().optional(),
-          thursday: Joi.string().optional(),
-          friday: Joi.string().optional(),
-          saturday: Joi.string().optional(),
-          sunday: Joi.string().optional(),
+            monday: Joi.string().optional(),
+            tuesday: Joi.string().optional(),
+            wednesday: Joi.string().optional(),
+            thursday: Joi.string().optional(),
+            friday: Joi.string().optional(),
+            saturday: Joi.string().optional(),
+            sunday: Joi.string().optional(),
         }),
         cuisine: Joi.string().when('isRestaurant', { is: true, then: Joi.required() }),
         deliveryMethods: Joi.array().items(Joi.string()).when('isRestaurant', { is: true, then: Joi.required() }),
         ratings: Joi.object({
-          averageRating: Joi.number().default(0),
-          totalRatings: Joi.number().default(0),
+            averageRating: Joi.number().default(0),
+            totalRatings: Joi.number().default(0),
         }).when('isRestaurant', { is: true, then: Joi.required() }),
         paymentMethods: Joi.array().items(Joi.string()).when('isRestaurant', { is: true, then: Joi.required() }),
     })
@@ -76,7 +76,6 @@ const updateUserAdmin = {
 const updateUserSchema = Joi.object({
     firstName: Joi.string().optional(),
     lastName: Joi.string().optional(),
-    fullName: Joi.string().optional(),
     userName: Joi.string().optional(),
     imgUrl: Joi.string().allow(""),
 

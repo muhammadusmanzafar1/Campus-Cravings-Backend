@@ -100,7 +100,7 @@ exports.getRandomUnassignedOrder = async (req, res) => {
     ]);
 
     if (!orders.length) {
-      throw new ApiError('No unassigned orders found', httpStatus.NOT_FOUND);
+      return 'No unassigned orders found';
     }
 
     // Find nearby riders within 20 miles (32.1 km)
@@ -115,7 +115,6 @@ exports.getRandomUnassignedOrder = async (req, res) => {
         }
       },
       order_accepted: false,
-      isAvailable: true,
       status: 'active'
     }).select('user');
 
@@ -140,7 +139,7 @@ exports.getRandomUnassignedOrder = async (req, res) => {
 
   } catch (err) {
     console.error('Error in getRandomUnassignedOrder:', err);
-    throw new ApiError('Failed to retrieve orders and riders', httpStatus.INTERNAL_SERVER_ERROR);
+    throw new ApiError(`Failed to retrieve orders and riders: Issue: ${err.message}`, httpStatus.status.INTERNAL_SERVER_ERROR);
   }
 };
 
@@ -254,7 +253,8 @@ exports.orderAccept = async (req, res) => {
     io.to(`order-${order._id}`).emit('order-status-updated', {
       orderId: updatedOrder._id,
       status: updatedOrder.status,
-      progress: updatedOrder.progress
+      progress: updatedOrder.progress,
+      estimated_time: updatedOrder.estimated_time
     });
     let responseOrder = await Order.findById(updatedOrder._id)
       .populate({
@@ -274,10 +274,10 @@ exports.orderAccept = async (req, res) => {
       const selectedItem = updatedOrder.items[index];
       const selectedCustomizationIds = selectedItem.customizations.map(id => id.toString());
       const filteredCustomizations = originalItem.customization.filter(cust =>
-        selectedCustomizationIds.includes(cust._id.toString())
+        selectedCustomizationIds.includes(cust?._id?.toString())
       );
       const filteredSizes = originalItem.sizes.filter(size =>
-        size._id.toString() === selectedItem.size.toString()
+        size?._id?.toString() === selectedItem?.size?.toString()
       );
 
       return {
@@ -297,3 +297,48 @@ exports.orderAccept = async (req, res) => {
     throw new ApiError(`Error in Order Accept: ${err.message}`, httpStatus.status.INTERNAL_SERVER_ERROR);
   }
 };
+// send rider current location riderLocation
+exports.riderLocation = async (req, res) => {
+  try {
+    const riderId = req.params.riderId;
+    const rider = await Rider.findOne({ "_id": riderId });
+    if (!rider) {
+      throw new ApiError("No Rider Found", httpStatus.status.NOT_FOUND);
+    }
+    return rider.location;
+  } catch (err) {
+    console.error(err);
+    throw new ApiError(`Error in Order Accept: ${err.message}`, httpStatus.status.INTERNAL_SERVER_ERROR);
+  }
+}
+
+exports.getRiderDetails = async (req, res) => {
+  try {
+    const orderId = req.params.orderId;
+    const order = await Order.findOne({ "_id": orderId });
+    if (!order) {
+      throw new ApiError("No Order Found", httpStatus.status.NOT_FOUND);
+    }
+    const rider = await Rider.findOne({ "_id": order.assigned_to }).populate('user');
+    if (!rider) {
+      throw new ApiError("No Rider Found", httpStatus.status.NOT_FOUND);
+    }
+    return rider;
+  } catch (err) {
+    console.error(err);
+    throw new ApiError(`Error in Order Accept: ${err.message}`, httpStatus.status.INTERNAL_SERVER_ERROR);
+  }
+}
+exports.getRiderDetailsById = async (req, res) => {
+  try {
+    const riderId = req.params.riderId;
+    const rider = await Rider.findOne({ "_id": riderId }).populate('user');
+    if (!rider) {
+      throw new ApiError("No Rider Found", httpStatus.status.NOT_FOUND);
+    }
+    return rider;
+  } catch (err) {
+    console.error(err);
+    throw new ApiError(`Error in Order Accept: ${err.message}`, httpStatus.status.INTERNAL_SERVER_ERROR);
+  }
+}

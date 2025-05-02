@@ -28,3 +28,15 @@ exports.orderAccept = asyncHandler(async (req, res) => {
     const data = await riderService.orderAccept(req, res);
     return data;
 })
+exports.riderLocation = asyncHandler(async (req, res) => {
+    const data = await riderService.riderLocation(req, res);
+    return data;
+})
+exports.getRiderDetails = asyncHandler(async (req, res) => {
+    const data = await riderService.getRiderDetails(req, res);
+    return data;
+})
+exports.getRiderDetailsById = asyncHandler(async (req, res) => {
+    const data = await riderService.getRiderDetailsById(req, res);
+    return data;
+})
