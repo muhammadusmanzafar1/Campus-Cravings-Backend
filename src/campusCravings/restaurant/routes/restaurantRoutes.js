@@ -192,4 +192,17 @@ router.patch('/', validateBody(updateRestaurantSchema), async (req, res) => {
         return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
     }
 })
+
+router.get('/changeRestaurantStatus/:id', async (req, res) => {
+    try {
+        const restaurantStatus = await restaurant.changeRestaurantStatus(req, res);
+        res.status(httpStatus.status.OK).json({ message: "Restaurant Status Changed Successfully", data: restaurantStatus });
+    } catch (error) {
+        if (error instanceof ApiError) {
+            return res.status(error.statusCode).json({ message: error.message });
+        }
+        return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
+    }
+}
+)
 module.exports = router;

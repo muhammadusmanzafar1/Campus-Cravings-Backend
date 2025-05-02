@@ -1,6 +1,7 @@
 const httpStatus = require("http-status");
 const ApiError = require("../../../../utils/ApiError");
 const Order = require("../../admin/models/order");
+const User = require("../../../auth/models/user");
 const Restaurant = require("../models/restaurant");
 const Category = require("../models/category");
 const mongoose = require("mongoose");
@@ -457,3 +458,22 @@ exports.updateRestaurantDetail = async (req, res) => {
         console.error(error.message)
     }
 };
+
+exports.changeRestaurantStatus = async (req, res) => {
+    try {
+        const userId = req.params.id;
+
+        const user = await User.findById(userId);
+        if (!user) {
+            throw new ApiError('User not found', httpStatus.status.NOT_FOUND);
+        }
+        user.status = 'active';
+        return await user.save();
+
+    } catch (error) {
+        if (error instanceof ApiError) {
+            throw new ApiError(`Error Updating Restaurant: ${error.message}`, httpStatus.status.INTERNAL_SERVER_ERROR);
+        }
+        console.error(error.message)
+    }
+}
