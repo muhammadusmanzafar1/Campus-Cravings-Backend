@@ -19,6 +19,6 @@ router.use("/rider", validate, rider);
 router.use("/user", validate, user);
 router.use("/admin", validate, admin);
 router.use("/conversation", validate, conversation);
-router.use('/payments', validate, paymentRoutes);
+router.use('/payments', paymentRoutes);
 
 module.exports = router;
