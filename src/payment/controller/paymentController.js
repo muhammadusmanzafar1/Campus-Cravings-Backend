@@ -17,14 +17,14 @@ const startStripeOnboarding = async (req, res) => {
 
     const onboardingUrl = await generateOnboardingLink(
         user.stripeAccountId,
-        'http://localhost:5173',
+        `http://localhost:5173/${userId}?verified=true`,
         'http://localhost:5173'
     );
 
-    if (user.isRestaurant || user.isRider) {
-        user.status = 'active';
-        await user.save();
-    }
+    // if (user.isRestaurant || user.isRider) {
+    //     user.status = 'active';
+    //     await user.save();
+    // }
 
     return { url: onboardingUrl };
 };

@@ -145,9 +145,11 @@ const verifyOTP = async (body) => {
      if (user.isRestaurant === true || user.isRider === true) {
           user.activationCode = null;
           user.status = 'Email-verified';
-     }
-     user.activationCode = null;
+     } else {
+          user.activationCode = null;
      user.status = 'active';
+     }
+     
 
      if (user.authMethod == 'phone') {
           user.isPhoneVerified = true;
