@@ -76,3 +76,8 @@ exports.OrderAccept = asyncHandler(async (req, res) => {
     const orders = await restaurantService.OrderAccept(req);
     return orders;
 })
+
+exports.changeRestaurantStatus = asyncHandler(async (req, res) => {
+    const restaurant = await restaurantService.changeRestaurantStatus(req);
+    return restaurant;
+});
