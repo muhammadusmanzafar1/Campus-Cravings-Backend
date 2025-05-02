@@ -44,9 +44,6 @@ router.get("/getAllRestaurant/:id", async (req, res, next) => {
     try {
         const getItem = await restaurant.getAllRestaurant(req, res, next);
 
-        if (!getItem || getItem.length === 0) {
-            throw new ApiError("No categories found for this restaurant", httpStatus.NOT_FOUND);
-        }
 
         return res.status(httpStatus.OK).json({
             isSuccess: true,
