@@ -2,7 +2,7 @@
 const Ticket = require('../models/ticket');
 const ApiError = require('../../../../utils/ApiError');
 const httpStatus = require('http-status');
-const cloudinary = require('../../../../utils/cloudinary');
+const cloudinary = require('../../../../utils/Cloudinary');
 const getAllTickets = async (req) => {
     try {
         const isAdmin = req.user?.isAdmin;

@@ -46,7 +46,7 @@ const entitySchema = new mongoose.Schema({
     }],
     status: {
         type: String,
-        enum: ['pending', 'active', 'deleted', 'blocked'],
+        enum: ['pending', "Email-verified", 'active', 'deleted', 'blocked'],
         default: 'pending',
     },
     isRestaurant: {
@@ -109,7 +109,7 @@ const entitySchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
-    stripeCustomerId: String,
+    stripeAccountId: String,
     restaurant: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Restaurant",

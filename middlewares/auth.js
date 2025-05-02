@@ -144,7 +144,7 @@ const userValidator = async (userId) => {
 exports.validate = async (req, res, next) => {
     try {
         let token =
-            req.headers['x-access-token'];
+            req.headers['x-access-token'] || req.cookies.accessToken;
         if (!token) throw new ApiError("Token not found", 401);
 
         let claims = await tokenValidator(token);
