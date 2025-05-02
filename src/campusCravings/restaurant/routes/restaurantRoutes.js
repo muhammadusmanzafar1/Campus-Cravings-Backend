@@ -24,9 +24,6 @@ router.get("/getrestaurantAllCategory/:id", async (req, res, next) => {
     try {
         const getItem = await restaurant.getAllCategoryByRestaurantId(req, res, next);
 
-        if (!getItem || getItem.length === 0) {
-            throw new ApiError("No categories found for this restaurant", httpStatus.status.NOT_FOUND);
-        }
 
         res.status(httpStatus.status.OK).json({
             isSuccess: true,
@@ -195,4 +192,17 @@ router.patch('/', validateBody(updateRestaurantSchema), async (req, res) => {
         return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
     }
 })
+
+router.get('/changeRestaurantStatus/:id', async (req, res) => {
+    try {
+        const restaurantStatus = await restaurant.changeRestaurantStatus(req, res);
+        res.status(httpStatus.status.OK).json({ message: "Restaurant Status Changed Successfully", data: restaurantStatus });
+    } catch (error) {
+        if (error instanceof ApiError) {
+            return res.status(error.statusCode).json({ message: error.message });
+        }
+        return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
+    }
+}
+)
 module.exports = router;
