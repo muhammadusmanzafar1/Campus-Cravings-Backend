@@ -21,13 +21,7 @@ const app = express();
 // app.use(mongoSanitize());
 
 // enable cors
-const corsOptions = {
-  origin: '*', // allow all origins
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-};
-
-app.use(cors(corsOptions));
+app.use(cors({ origin: true, credentials: true }));
 
 // ✅ Handle preflight requests safely
 app.use((req, res, next) => {
