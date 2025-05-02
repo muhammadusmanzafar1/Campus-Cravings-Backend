@@ -282,7 +282,7 @@ const getUserAllOrders = async (req, res) => {
 
         const orders = await Order.find({ [comparingId]: userId })
             .populate('user_id', 'firstName lastName email imgUrl')
-            .populate('restaurant_id', 'storeName brandName phoneNumber')
+            .populate('restaurant_id', 'storeName brandName phoneNumber restaurantImages')
             .populate('items.item_id', 'name price customization sizes image'); // added 'image' here
 
         const result = orders.map(order => {
@@ -314,7 +314,6 @@ const getUserAllOrders = async (req, res) => {
                     size: itemData?.sizes?.find(s => s?._id?.toString() === sizeId)
                 };
             });
-
             return {
                 _id: order?._id,
                 address: order?.addresses,
@@ -332,7 +331,8 @@ const getUserAllOrders = async (req, res) => {
                 } : null,
                 restaurant: order?.restaurant_id ? {
                     name: order.restaurant_id?.storeName || order.restaurant_id?.brandName,
-                    phone: order.restaurant_id?.phoneNumber
+                    phone: order.restaurant_id?.phoneNumber,
+                    image: order.restaurant_id?.restaurantImages || "null"
                 } : null,
                 items: cleanItems
             };
