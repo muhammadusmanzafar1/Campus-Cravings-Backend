@@ -10,6 +10,7 @@ const { getGrowthPercentage } = require('../../admin/helpers/AnalyticHelper');
 const { getIO } = require('../../../sockets/service/socketService');
 const cloudinary = require('../../../../utils/Cloudinary');
 const moment = require('moment-timezone');
+const cloudinary = require('../../../../utils/Cloudinary');
 
 exports.getRestaurantAnalytics = async (req, res, next) => {
 
