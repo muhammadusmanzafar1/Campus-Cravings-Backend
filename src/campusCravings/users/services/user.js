@@ -173,7 +173,7 @@ const getAllUsers = async (req, res) => {
         const users = await User.find(filter)
             .skip(skip)
             .limit(limit)
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: -1 }); // Ensure latest users are on top
 
         const total = await User.countDocuments(filter);
 
@@ -209,7 +209,9 @@ const newUser = async (req) => {
 
         let imgUrl ="";
         if (body.imgUrl) {
-        const uploadImg = await cloudinary.uploader.upload(body.imgUrl);
+        const uploadImg = await cloudinary.uploader.upload(body.imgUrl, {
+            transformation: [{ width: 1024, height: 1024, crop: "limit" }] // Resize image to a maximum of 1024x1024
+        });
         imgUrl = uploadImg.url;
         }
         

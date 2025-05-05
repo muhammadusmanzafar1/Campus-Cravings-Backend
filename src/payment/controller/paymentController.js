@@ -1,5 +1,6 @@
 const Order = require('../../campusCravings/admin/models/order');
 const User = require('../../auth/models/user');
+const Rider = require('../../campusCravings/rider/models/rider');
 
 
 const { sendPayoutsOnOrderDelivered, createStripeAccount, generateOnboardingLink } = require('../services/stripeService');
@@ -7,6 +8,8 @@ const { sendPayoutsOnOrderDelivered, createStripeAccount, generateOnboardingLink
 const startStripeOnboarding = async (req, res) => {
     const { userId } = req.params;
     const user = await User.findById(userId);
+
+    const rider = await Rider.findOne({'user':userId});
 
     if (!user) return res.status(404).json({ message: 'User not found' });
 
@@ -21,10 +24,13 @@ const startStripeOnboarding = async (req, res) => {
         `http://restaurantmanager.campuscravings.co/${userId}?verified=true`
     );
 
-    // if (user.isRestaurant || user.isRider) {
-    //     user.status = 'active';
-    //     await user.save();
-    // }
+    if (user.isRestaurant) {
+        user.status = 'active';
+        await user.save();
+    } else if (rider) {
+        user.isRider = true;
+        await rider.save();
+    }
 
     return { url: onboardingUrl };
 };

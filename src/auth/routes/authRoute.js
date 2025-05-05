@@ -2,7 +2,8 @@ const express = require("express");
 const router = express.Router();
 const httpStatus = require("http-status");
 const ApiError = require('../../../utils/ApiError');
-const { registerUser, verifyOTP, login, registerViaPhone, resendOTP, handleForgotPassword, handleResetPassword, handleResetPasswordOTP, handleLogout } = require('../controllers/authController')
+const authorizeUser = require("../../../utils/authorized");
+const { registerUser, verifyOTP, login, registerViaPhone, resendOTP, handleForgotPassword, handleResetPassword, handleResetPasswordOTP, handleLogout, adminLogin } = require('../controllers/authController')
 const { registerViaEmail, validateVerifyOTP, loginVerify, registerViaPhone: registerViaPhones,
     resendOtp, forgotPassword, updatePassword, resetPassword, resetPasswordOTP } = require("../validators/auth");
 const { validate } = require('../../../middlewares/auth')
@@ -73,6 +74,33 @@ router.post("/verifyOTP", async (req, res) => {
 
         return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
     }
+});
+
+router.post("/admin/login",  async (req, res) => {
+
+    authorizeUser(req.user, { requireAdmin: true });
+
+    const { error, value } = loginVerify.body.validate(req.body, { abortEarly: false });
+
+    if (error) {
+        return res.status(httpStatus.status.BAD_REQUEST).json({
+            message: "Validation Error",
+            errors: error.details.map(err => err.message),
+        });
+    }
+
+    try {
+        const registeredUser = await adminLogin(req, res);
+        res.status(httpStatus.status.CREATED).json({ message: "User Login successfully", user: registeredUser });
+    } catch (error) {
+        console.error(error)
+        if (error instanceof ApiError) {
+            return res.status(error.statusCode).json({ message: error.message });
+        }
+
+        return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
+    }
+
 });
 
 //Login
