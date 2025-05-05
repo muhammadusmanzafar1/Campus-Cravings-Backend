@@ -28,6 +28,10 @@ function setupSocket(server) {
       socket.session = session;
       next();
     } catch (err) {
+      console.error(err);
+      console.log(err);
+      
+      
       next(err); // passes error to client via `on("connect_error", ...)`
     }
   });
