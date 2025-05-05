@@ -57,11 +57,13 @@ exports.login = asyncHandler(async (req, res) => {
     res
   .cookie('refreshToken', session.refreshToken, {
     secure: true,
-    sameSite: 'none'
+    sameSite: 'none',
+    domain: '.campuscravings.co',
   })
   .cookie('accessToken', session.accessToken, {
     secure: true,
-    sameSite: 'none'
+    sameSite: 'none',
+    domain: '.campuscravings.co',
   });
     return responseData;
 });
