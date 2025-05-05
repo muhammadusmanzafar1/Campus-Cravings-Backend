@@ -11,7 +11,7 @@ const allowedOrigins = [
 function setupSocket(server) {
   const io = new Server(server, {
     cors: {
-      origin: true,             // Reflect the request's origin, just like your API CORS setup
+      origin: allowedOrigins,   // Explicitly define allowed origins
       credentials: true,
     },
   });
