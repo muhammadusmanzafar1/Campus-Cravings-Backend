@@ -5,19 +5,20 @@ const socketService = require('./service/socketService');
 
 const allowedOrigins = [
   'https://restaurantmanager.campuscravings.co',
-  'http://localhost:5173' // React dev (optional)
-  // DO NOT include mobile — no origin will be sent
+  'http://localhost:5173'
 ];
-
+ 
 function setupSocket(server) {
   const io = new Server(server, {
     cors: {
       origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin)) {
-          callback(null, true);
-        } else {
-          callback(new Error('Not allowed by CORS'));
+        if (!origin) return callback(null, true);
+ 
+        if (allowedOrigins.includes(origin)) {
+          return callback(null, origin);
         }
+
+        return callback(new Error('Not allowed by CORS'));
       },
       methods: ['GET', 'POST'],
       credentials: true
