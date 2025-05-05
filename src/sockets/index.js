@@ -3,12 +3,24 @@ const connectionHandler = require('./connectionHandler');
 const { validateSocketAuth } = require('./middlewares/socketAuth');
 const socketService = require('./service/socketService');
 
+const allowedOrigins = [
+  'https://restaurantmanager.campuscravings.co',
+  'http://localhost:5173' // React dev (optional)
+  // DO NOT include mobile — no origin will be sent
+];
+
 function setupSocket(server) {
   const io = new Server(server, {
     cors: {
-      origin: '*',
+      origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+          callback(null, true);
+        } else {
+          callback(new Error('Not allowed by CORS'));
+        }
+      },
       methods: ['GET', 'POST'],
-      allowedHeaders: ['Content-Type', 'Authorization']
+      credentials: true
     }
   });
 
