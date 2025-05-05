@@ -11,18 +11,9 @@ const allowedOrigins = [
 function setupSocket(server) {
   const io = new Server(server, {
     cors: {
-      origin: (origin, callback) => {
-        if (!origin) return callback(null, true);
- 
-        if (allowedOrigins.includes(origin)) {
-          return callback(null, origin);
-        }
-
-        return callback(new Error('Not allowed by CORS'));
-      },
-      methods: ['GET', 'POST'],
-      credentials: true
-    }
+      origin: true,             // Reflect the request's origin, just like your API CORS setup
+      credentials: true,
+    },
   });
 
   // Initialize socket io instance
