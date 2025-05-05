@@ -54,7 +54,7 @@ app.use(compression());
 app.use((req, res, next) => {
   const originalSend = res.send;
   res.send = function (body) {
-    console.log(`Response for ${req.method} ${req.originalUrl}:`, body);
+    console.log(`Response for ${req.method} ${req.originalUrl} [Status: ${res.statusCode}]:`, body);
     originalSend.call(this, body);
   };
   next();
