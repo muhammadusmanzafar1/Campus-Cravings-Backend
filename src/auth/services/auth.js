@@ -38,8 +38,6 @@ const registerWithEmail = async (body) => {
           }
           let imgUrl = '';
           if (body.imgUrl) {
-
-
                const uploadImg = await cloudinary.uploader.upload(body.imgUrl);
                imgUrl = uploadImg.url;
           }
@@ -47,10 +45,12 @@ const registerWithEmail = async (body) => {
           if (body.isRestaurant === true || body.isAdmin === true) {
                const { restaurantImages } = body;
                body.restaurantImages = [];
+               if (restaurantImages && restaurantImages.length > 0) {
                for (const image of restaurantImages) {
                     const uploadImg = await cloudinary.uploader.upload(image);
                     const imgUrl = uploadImg.url || imgUrl;
                     body.restaurantImages.push(imgUrl);
+                    }
                }
                const userModel = await userDB.newEntity(body, imgUrl, false);
                const restaurantModel = await restaurantDB.newEntity(body, false);
