@@ -14,7 +14,6 @@ const getAllOrders = async (req) => {
         const regex = new RegExp(search, 'i');
 
         const pipeline = [
-            // Lookup user
             {
                 $lookup: {
                     from: 'users',
@@ -25,7 +24,6 @@ const getAllOrders = async (req) => {
             },
             { $unwind: '$user' },
 
-            // Lookup restaurant
             {
                 $lookup: {
                     from: 'restaurants',
@@ -36,7 +34,6 @@ const getAllOrders = async (req) => {
             },
             { $unwind: '$restaurant' },
 
-            // Flatten items
             { $unwind: '$items' },
             {
                 $lookup: {
@@ -78,7 +75,6 @@ const getAllOrders = async (req) => {
                 }
             },
 
-            // Search filter
             ...(search ? [{
                 $match: {
                     $or: [
@@ -87,8 +83,6 @@ const getAllOrders = async (req) => {
                     ]
                 }
             }] : []),
-
-            // Projection to only return selected fields
             {
                 $project: {
                     user_id: {
@@ -125,7 +119,6 @@ const getAllOrders = async (req) => {
 
         const orders = await Order.aggregate(pipeline);
 
-        // Total count for pagination (without skip/limit)
         const countPipeline = pipeline.filter(stage => !('$skip' in stage || '$limit' in stage));
         countPipeline.push({ $count: 'total' });
         const countResult = await Order.aggregate(countPipeline);
@@ -309,12 +302,28 @@ const getOrder = async (id) => {
 // Resturant orders 
 const getResturantAllOrders = async (req) => {
     try {
+        const { page = 1, limit = 10 } = req.query;
+        const skip = (page - 1) * limit;
+
         const restaurantId = mongoose.Types.ObjectId.createFromHexString(req.params.restaurantId);
         const orders = await Order.find({ restaurant_id: restaurantId })
             .populate('user_id', 'firstName lastName email')
             .populate('restaurant_id', 'storeName brandName phoneNumber')
-            .populate('items.item_id', 'name price');
-        return orders;
+            .populate('items.item_id', 'name price')
+            .skip(skip)
+            .limit(Number(limit));
+
+        const total = await Order.countDocuments({ restaurant_id: restaurantId });
+
+        return {
+            data: orders,
+            pagination: {
+                total,
+                page: Number(page),
+                limit: Number(limit),
+                totalPages: Math.ceil(total / limit)
+            }
+        };
     } catch (error) {
         throw new APIError(`Error fetching orders: ${error.message}`, error.statusCode || httpStatus.status.INTERNAL_SERVER_ERROR);
     }
