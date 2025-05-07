@@ -7,6 +7,7 @@ const { sendPayoutsOnOrderDelivered, createStripeAccount, generateOnboardingLink
 
 const startStripeOnboarding = async (req, res) => {
     const { userId } = req.params;
+    const { successUrl, failerUrl } = req.body;
     const user = await User.findById(userId);
 
     const rider = await Rider.findOne({'user':userId});
@@ -20,8 +21,8 @@ const startStripeOnboarding = async (req, res) => {
 
     const onboardingUrl = await generateOnboardingLink(
         user.stripeAccountId,
-        'http://restaurantmanager.campuscravings.co',
-        `http://restaurantmanager.campuscravings.co/${userId}?verified=true`
+        failerUrl,
+        successUrl
     );
 
     if (user.isRestaurant) {
