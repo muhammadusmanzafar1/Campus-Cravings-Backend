@@ -1,12 +1,19 @@
 const Order = require('../../campusCravings/admin/models/order');
 const User = require('../../auth/models/user');
 const Rider = require('../../campusCravings/rider/models/rider');
+const ApiError = require('../../../utils/ApiError');
 
 
 const { sendPayoutsOnOrderDelivered, createStripeAccount, generateOnboardingLink } = require('../services/stripeService');
 
 const startStripeOnboarding = async (req, res) => {
-    const { userId, successUrl, failureUrl } = req.params;
+    const { userId } = req.params;
+    const { failureUrl, successUrl } = req.query;
+
+    if (!failureUrl || !successUrl) {
+        throw new ApiError('Missing required query parameters: failureUrl or successUrl');
+    }
+
     const user = await User.findById(userId);
 
     const rider = await Rider.findOne({'user':userId});
