@@ -307,6 +307,7 @@ const getResturantAllOrders = async (req) => {
 
         const restaurantId = mongoose.Types.ObjectId.createFromHexString(req.params.restaurantId);
         const orders = await Order.find({ restaurant_id: restaurantId })
+            .sort({ created_at: -1 })
             .populate('user_id', 'firstName lastName email')
             .populate('restaurant_id', 'storeName brandName phoneNumber')
             .populate('items.item_id', 'name price')
