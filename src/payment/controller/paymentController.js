@@ -6,8 +6,7 @@ const Rider = require('../../campusCravings/rider/models/rider');
 const { sendPayoutsOnOrderDelivered, createStripeAccount, generateOnboardingLink } = require('../services/stripeService');
 
 const startStripeOnboarding = async (req, res) => {
-    const { userId } = req.params;
-    const { successUrl, failerUrl } = req.body;
+    const { userId, successUrl, failureUrl } = req.params;
     const user = await User.findById(userId);
 
     const rider = await Rider.findOne({'user':userId});
@@ -21,7 +20,7 @@ const startStripeOnboarding = async (req, res) => {
 
     const onboardingUrl = await generateOnboardingLink(
         user.stripeAccountId,
-        failerUrl,
+        failureUrl,
         successUrl
     );
 
