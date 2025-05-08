@@ -11,7 +11,7 @@ router.get('/onboard/:userId', async (req, res) => {
     } catch (error) {
         console.error(error);
         if (error instanceof ApiError) {
-            return res.status(error.statusCode).json({ message: error.message });
+            return res.status(500).json({ message: error.message });
         }
         return res.status(500).json({ message: error.message || "Server Error" });
     }

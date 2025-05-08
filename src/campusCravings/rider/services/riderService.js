@@ -58,7 +58,7 @@ exports.registerRider = async (req, res) => {
 
     await newRider.save();
 
-    await User.findByIdAndUpdate(userId, { isDelivery: true });
+    // await User.findByIdAndUpdate(userId, { isDelivery: true });
 
     return newRider;
   } catch (err) {

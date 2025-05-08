@@ -51,14 +51,14 @@ app.use(cookieParser());
 app.use(compression());
 
 // Middleware to log responses
-// app.use((req, res, next) => {
-//   const originalSend = res.send;
-//   res.send = function (body) {
-//     console.log(`Response for ${req.method} ${req.originalUrl} [Status: ${res.statusCode}]:`, body);
-//     originalSend.call(this, body);
-//   };
-//   next();
-// });
+app.use((req, res, next) => {
+  const originalSend = res.send;
+  res.send = function (body) {
+    console.log(`Response for ${req.method} ${req.originalUrl} [Status: ${res.statusCode}]:`, body);
+    originalSend.call(this, body);
+  };
+  next();
+});
 
 // Routes 
 app.use("/api", apiRoutes);

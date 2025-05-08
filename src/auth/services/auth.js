@@ -124,7 +124,11 @@ const registerWithPhone = async (body) => {
      newUser.activationCode = utils.randomPin();
      await email.PhoneVerificationOTP(body.phone, newUser.activationCode);
 
-     return await newUser.save();
+     const savedUser = await newUser.save();
+          const userResponse = savedUser.toObject();
+          delete userResponse.activationCode;
+
+          return userResponse;
 };
 
 const verifyOTP = async (body) => {
