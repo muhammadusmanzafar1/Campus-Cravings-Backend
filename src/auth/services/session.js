@@ -6,11 +6,11 @@ let sessionType = process.env.SESSION_TYPE || 'single';
 const createSession = async (user, body) => {
     let model = {
         user: user._id,
-        fcmToken: body.deviceId,
+        // fcmToken: body.deviceId,
         deviceType: body.deviceType
     };
     if (sessionType == 'single') {
-        await expireSessions(user.id);
+        await expireSessions(user._id);
     }
     let entity = new SessionDB(model);
     

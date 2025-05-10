@@ -1,19 +1,25 @@
 const userDb = require('../models/user');
 const mongoose = require('mongoose');
 
-const populate = [{ path: "profile" },{path:"userPlan"}];
 
 const getById = async (id) => {
-    // return await userDb.findById(id).populate(populate);
     return await userDb.findById(id);
 };
 
 const getByCondition = async (condition) => {
-    // return await userDb.findOne(condition).populate(populate);
     return await userDb.findOne(condition)
 };
 
 const get = async (query) => {
+    if (Buffer.isBuffer(query)) {
+        query = query.toString('hex');
+        console.log("🔧 Converted Buffer to hex string:", query);
+    }
+
+    if (typeof query === 'object' && query._id) {
+        query = query._id.toString(); // Normalize ObjectId to string
+    }
+
     if (typeof query === 'string') {
         if (mongoose.Types.ObjectId.isValid(query)) {
             return getById(query);

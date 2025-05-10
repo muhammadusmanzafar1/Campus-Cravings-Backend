@@ -9,24 +9,11 @@ const upload = multer({ storage: multer.memoryStorage() });
 const helmet = require("helmet");
 const compression = require("compression");
 
+const categoryRoutes = require("./src/campusCravings/restaurant/routes/categoryRoutes")
+const restaurantRoute = require("./src/campusCravings/restaurant/routes/restaurantRoutes")
+const apiRoutes = require('./src/campusCravings/routes/index')
+
 const app = express();
-
-app.use(function (err, req, res, next) {
-    if (err) {
-        (res.log).error(err.stack);
-        if (req.xhr) {
-            res.send(500, { error: 'Something went wrong!' });
-        } else {
-            next(err);
-        }
-
-        return;
-    }
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
-    next();
-});
 
 // Middleware
 
@@ -34,8 +21,18 @@ app.use(function (err, req, res, next) {
 // app.use(mongoSanitize());
 
 // enable cors
-app.use(cors('*'));
-// app.options('*', cors());
+app.use(cors({ origin: true, credentials: true }));
+
+// ✅ Handle preflight requests safely
+app.use((req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    return res.sendStatus(200);
+  }
+  next();
+});
 
 //media Uploads
 app.use(upload.any());
@@ -53,18 +50,27 @@ app.use(cookieParser());
 
 app.use(compression());
 
-// Routes
-// app.use("/api/users", require("./routes/userRoutes"));
-app.use("/api/auth", require("./src/auth/routes/authRoute"));
+// Middleware to log responses
+app.use((req, res, next) => {
+  const originalSend = res.send;
+  res.send = function (body) {
+    console.log(`Response for ${req.method} ${req.originalUrl} [Status: ${res.statusCode}]:`, body);
+    originalSend.call(this, body);
+  };
+  next();
+});
 
-// convert error to CustomError, if needed
-app.use(errorConverter);
-
-// handle error
-app.use(errorHandler);
+// Routes 
+app.use("/api", apiRoutes);
 
 app.get("/", (req, res) => {
-    res.send("Welcome to SocialHype!");
+    res.send("Welcome to Campus Cravings!");
 });
+
+// Convert error to ApiError
+app.use(errorConverter);
+
+// Handle error
+app.use(errorHandler);
 
 module.exports = app;

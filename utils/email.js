@@ -34,7 +34,7 @@ exports.sendForgotOTP = async (email, code) => {
 
 exports.PhoneVerificationOTP = async (phone, code) => {
     // const subject = "Account Registration OTP "
-    const message = `Your OTP for Account Registration in Novlt App is: ${code}. Do not share the Credentials for security reasons.`
+    const message = `Your OTP for Account Registration in Campus Cravings App is: ${code}. Do not share the Credentials for security reasons.`
     return twilioOTP.sendSms(phone, message);
 };
 
@@ -45,6 +45,6 @@ exports.PhoneVerificationOTP = async (phone, code) => {
  * @returns 
  */
 exports.PhoneForgotOTP = async (phone, code) => {
-    const message = `Your OTP for Forgot Password in Novlt App is: ${code}. Do not share the Credentials for security reasons.`;
+    const message = `Your OTP for Forgot Password in Campus Cravings App is: ${code}. Do not share the Credentials for security reasons.`;
     return twilioOTP.sendSms(phone, message);
 };

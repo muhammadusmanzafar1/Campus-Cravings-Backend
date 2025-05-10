@@ -1,0 +1,445 @@
+const User = require('../../../auth/models/user');
+const Order = require('../../admin/models/order');
+const Restaurant = require('../../restaurant/models/restaurant')
+const Rider = require('../../rider/models/rider')
+const Ticket = require('../../admin/models/ticket')
+const userService = require('../../../auth/services/users');
+const ApiError = require('../../../../utils/ApiError');
+const httpStatus = require('http-status');
+const cloudinary = require('../../../../utils/Cloudinary');
+
+// fetch User Info 
+const getUser = async (query) => {
+    try {
+        const userId = query.user._id;
+        const user = await User.findById(userId).select('-password -activationCode');
+        if (!user) {
+            throw new ApiError('User not found', httpStatus.status.NOT_FOUND);
+        }
+        return user;
+    } catch (error) {
+        throw new ApiError(error.message, httpStatus.status.INTERNAL_SERVER_ERROR);
+    }
+};
+// Update User Info
+const updateUser = async (req) => {
+    const userId = req.user._id;
+    const { imgUrl, ...body } = req.body;
+    try {
+        const user = await User.findById(userId);
+        if (!user) throw new ApiError('User not found', httpStatus.status.NOT_FOUND);
+        if (imgUrl) {
+            const uploadImg = await cloudinary.uploader.upload(imgUrl);
+            body.imgUrl = uploadImg.url;
+        } else {
+            body.imgUrl = "";
+        }
+        body.fullName = `${body.firstName} ${body.lastName}`.trim();
+        Object.assign(user, body);
+        const updatedUser = await user.save();
+        if (!updatedUser) {
+            throw new ApiError('Failed to update user', httpStatus.status.INTERNAL_SERVER_ERROR);
+        }
+        return await User.findById(userId).select('-password');
+    } catch (error) {
+        throw new ApiError(error.message, httpStatus.status.INTERNAL_SERVER_ERROR);
+    }
+};
+
+const updateUserByAdmin = async (req) => {
+    const userId = req.params.id;
+    const { imgUrl, ...body } = req.body;
+
+    try {
+        const user = await User.findById(userId);
+        if (!user) throw new ApiError('User not found', httpStatus.status.NOT_FOUND);
+
+        if (imgUrl) {
+            const uploadImg = await cloudinary.uploader.upload(imgUrl);
+            body.imgUrl = uploadImg.url;
+        }
+
+        if (body.firstName || body.lastName) {
+            const firstName = body.firstName ?? user.firstName;
+            const lastName = body.lastName ?? user.lastName;
+            body.fullName = `${firstName} ${lastName}`.trim();
+        }
+
+        Object.assign(user, body);
+        const updatedUser = await user.save();
+
+        if (!updatedUser) {
+            throw new ApiError('Failed to update user', httpStatus.status.INTERNAL_SERVER_ERROR);
+        }
+
+        return await User.findById(userId).select('-password');
+    } catch (error) {
+        console.log(error);
+        throw new ApiError(error.message, httpStatus.status.INTERNAL_SERVER_ERROR);
+    }
+};
+
+
+// Add New Address
+const addUserAddress = async (query) => {
+    try {
+        const userId = query.user._id;
+        const user = await User.findById(userId);
+        if (!user) {
+            throw new ApiError('User not found', httpStatus.status.NOT_FOUND);
+        }
+        if (user.addresses.length >= 5) {
+            throw new ApiError('User address limit reached', httpStatus.status.BAD_REQUEST);
+        }
+        const address = {
+            address: query.body.address,
+            coordinates: query.body.coordinates
+        };
+        user.addresses.push(address);
+        console.log(address);
+        const updatedUser = await user.save();
+        if (!updatedUser) {
+            throw new ApiError('Failed to update user', httpStatus.status.INTERNAL_SERVER_ERROR);
+        }
+        return user;
+    } catch (error) {
+        throw new ApiError(error.message, httpStatus.status.INTERNAL_SERVER_ERROR);
+    }
+};
+
+// Update Address
+const updateUserAddress = async ({ user, body }) => {
+    try {
+        const foundUser = await User.findById(user._id);
+        if (!foundUser) {
+            throw new ApiError('User not found', httpStatus.status.NOT_FOUND);
+        }
+        const { addressId, address, coordinates } = body;
+        const targetAddress = foundUser.addresses.id(addressId);
+        if (!targetAddress) {
+            throw new ApiError('Address not found', httpStatus.status.NOT_FOUND);
+        }
+        Object.assign(targetAddress, {
+            address,
+            coordinates
+        });
+        const updatedUser = await foundUser.save();
+        if (!updatedUser) {
+            throw new ApiError('Failed to update address', httpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return updatedUser;
+    } catch (error) {
+        throw new ApiError(error.message, httpStatus.status.INTERNAL_SERVER_ERROR);
+    }
+};
+const getUserTickets = async (req) => {
+    const tickets = await Ticket.find({ userId: req.user._id });
+    return tickets;
+};
+
+const getAllUsers = async (req, res) => {
+    try {
+        const filterType = req.query.type;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+        const search = req.query.search || '';
+
+        let filter = {};
+
+        // Apply user type filter
+        switch (filterType) {
+            case 'restaurant':
+                filter.isRestaurant = true;
+                break;
+            case 'rider':
+                filter.isDelivery = true;
+                break;
+            case 'customer':
+                filter.isCustomer = true;
+                break;
+            case 'admin':
+                filter.isAdmin = true;
+                break;
+            case 'all':
+            default:
+                break;
+        }
+
+        if (search) {
+            filter.firstName = { $regex: search, $options: 'i' };
+        }
+
+        const users = await User.find(filter)
+            .skip(skip)
+            .limit(limit)
+            .sort({ createdAt: -1 });
+
+        const total = await User.countDocuments(filter);
+
+        return {
+            users,
+            pagination: {
+                total,
+                page,
+                pages: Math.ceil(total / limit),
+            }
+        }
+    } catch (error) {
+        throw new ApiError(error.message, httpStatus.status.INTERNAL_SERVER_ERROR);
+    }
+};
+
+
+
+
+const newUser = async (req) => {
+    const body = req.body;
+    const isAdmin = req.user?.isAdmin;
+    try {
+        let existingUser;
+
+        if (body.email) {
+            existingUser = await userService.get({ email: body.email });
+        } else if (body.phone) {
+            existingUser = await userService.get({ phone: body.phone });
+        }
+
+        if (existingUser) throw new ApiError("This user is already Registered", httpStatus.status.FORBIDDEN);
+
+        let imgUrl ="";
+        if (body.imgUrl) {
+        const uploadImg = await cloudinary.uploader.upload(body.imgUrl);
+        imgUrl = uploadImg.url;
+        }
+        
+        if (body.isRestaurant === true) {
+
+            const userModel = await User.newEntity(body, imgUrl, isAdmin);
+            const restaurantModel = await Restaurant.newEntity(body, isAdmin);
+
+            const newUser = new User(userModel);
+            const newRestaurant = new Restaurant(restaurantModel);
+
+            await newRestaurant.save();
+
+            newUser.restaurant = newRestaurant._id;
+
+            const savedUser = await newUser.save();
+            const userResponse = savedUser.toObject();
+            delete userResponse.activationCode;
+
+            return userResponse;
+        }
+
+        const model = await User.newEntity(body, imgUrl, false);
+        const newUser = new User(model);
+
+        const savedUser = await newUser.save();
+        const userResponse = savedUser.toObject();
+        delete userResponse.activationCode;
+
+        return userResponse;
+
+    } catch (error) {
+        if (!(error instanceof ApiError)) {
+            console.error('Unexpected error during user registration:', error);
+        }
+
+        throw error instanceof ApiError
+            ? error
+            : new ApiError(error.message || 'Internal Server Error', httpStatus.status.INTERNAL_SERVER_ERROR);
+    }
+};
+
+const deleteUser = async (req, res) => {
+    const userId = req.params.id
+    try {
+        const existing = await User.findById(userId);
+
+        if (!existing) throw new ApiError("No User Found", httpStatus.status.NOT_FOUND);
+
+        existing.status = 'deleted';
+        
+        return await existing.save();
+    } catch (error) {
+        if (!(error instanceof ApiError)) {
+            console.error('Unexpected error during user registration:', error);
+        }
+
+        throw error instanceof ApiError
+            ? error
+            : new ApiError(error.message || 'Internal Server Error', httpStatus.status.INTERNAL_SERVER_ERROR);
+    }
+}
+
+// User orders 
+const getUserAllOrders = async (req, res) => {
+    try {
+        const userType = req.query.for || 'customer';
+        const userId = req?.user?._id;
+        const comparingId = userType === 'rider' ? 'assigned_to' : 'user_id';
+
+        const orders = await Order.find({ [comparingId]: userId })
+            .populate('user_id', 'firstName lastName email imgUrl')
+            .populate('restaurant_id', 'storeName brandName phoneNumber restaurantImages')
+            .populate('items.item_id', 'name price customization sizes image'); // added 'image' here
+
+        const result = orders.map(order => {
+            const cleanItems = (order?.items || []).map(item => {
+                const itemData = item?.item_id;
+                const quantity = item?.quantity || 0;
+                const basePrice = itemData?.price || 0;
+
+                const selectedCustomizationIds = item?.customizations?.map(c => c?.toString()) || [];
+                const customizationList = itemData?.customization || [];
+
+                const matchedCustomizations = customizationList.filter(c =>
+                    c?._id && selectedCustomizationIds.includes(c._id.toString())
+                );
+
+                const customPrice = matchedCustomizations.reduce((sum, c) => sum + (c?.price || 0), 0);
+
+                const sizeId = item?.size?.toString();
+                const sizePrice = itemData?.sizes?.find(s => s?._id?.toString() === sizeId)?.price || 0;
+
+                const total = (basePrice + customPrice + sizePrice);
+
+                return {
+                    name: itemData?.name || "Unknown Item",
+                    quantity,
+                    image: itemData?.image?.[0] || null,  // 🛠️ Take first image (or use itemData?.image if you want full array)
+                    total_price_per_item: +total.toFixed(2),
+                    customizationList: matchedCustomizations,
+                    size: itemData?.sizes?.find(s => s?._id?.toString() === sizeId)
+                };
+            });
+            return {
+                _id: order?._id,
+                address: order?.addresses,
+                status: order?.status,
+                payment_method: order?.payment_method,
+                total_price: order?.total_price,
+                tip: order?.tip,
+                delivery_fee: order?.delivery_fee,
+                order_type: order?.order_type,
+                created_at: order?.created_at,
+                user: order?.user_id ? {
+                    name: `${order.user_id?.firstName || ''} ${order.user_id?.lastName || ''}`.trim(),
+                    email: order.user_id?.email,
+                    image: order.user_id?.imgUrl || null,
+                } : null,
+                restaurant: order?.restaurant_id ? {
+                    name: order.restaurant_id?.storeName || order.restaurant_id?.brandName,
+                    phone: order.restaurant_id?.phoneNumber,
+                    image: order.restaurant_id?.restaurantImages || "null"
+                } : null,
+                items: cleanItems
+            };
+        });
+
+        return result;
+    } catch (error) {
+        if (!(error instanceof ApiError)) {
+            console.error('Unexpected error during user registration:', error);
+        }
+        throw error instanceof ApiError
+            ? error
+            : new ApiError(error.message || 'Internal Server Error', httpStatus.status.INTERNAL_SERVER_ERROR);
+    }
+};
+
+
+const getUserDetail = async (req, res) => {
+    const userId = req.params.id;
+
+    try {
+        const user = await User.findById(userId);
+
+        if (!user) {
+            throw new ApiError("Oops! User Not Found", httpStatus.status.NOT_FOUND);
+        }
+
+        let query = User.findById(userId);
+
+        if (user.isRestaurant) {
+            query = query.populate('restaurant');
+        }
+
+        const populatedUser = await query.exec();
+        const userData = populatedUser.toObject();
+
+        if (user.isDelivery) {
+            const riderDetails = await Rider.findOne({ user: userId });
+            userData.rider = riderDetails;
+        }
+
+        return userData;
+    } catch (error) {
+        if (!(error instanceof ApiError)) {
+            console.error('Unexpected error during user detail fetch:', error);
+        }
+
+        throw error instanceof ApiError
+            ? error
+            : new ApiError(
+                error.message || 'Internal Server Error',
+                httpStatus.status.INTERNAL_SERVER_ERROR
+            );
+    }
+};
+
+const delImage = async (req) => {
+    const userId = req.user._id;
+    try {
+        const user = await User.findById(userId);
+        if (!user) throw new ApiError('User not found', httpStatus.status.NOT_FOUND);
+        if (!user.imgUrl) throw new ApiError('No image to delete', httpStatus.status.NOT_FOUND);
+
+        const publicId = user.imgUrl.split('/').pop().split('.')[0];
+
+        await cloudinary.uploader.destroy(publicId);
+        user.imgUrl = null;
+        const updatedUser = await user.save();
+        if (!updatedUser) {
+            throw new ApiError('Failed to update user', httpStatus.status.INTERNAL_SERVER_ERROR);
+        }
+        return updatedUser;
+    }
+    catch (error) {
+        throw new ApiError(error.message, httpStatus.status.INTERNAL_SERVER_ERROR);
+    }
+}
+const getDemandMul = async (req, res) => {
+    try {
+        const unassignedOrders = await Order.find({ assigned_to: null }).countDocuments();
+        const availableRiders = await Rider.find({ order_accepted: false }).countDocuments();
+
+        const getDemandMultiple = unassignedOrders / availableRiders;
+
+        return {
+            unassignedOrders,
+            availableRiders,
+            getDemandMultiple
+        };
+    } catch (error) {
+        throw new ApiError(error.message, httpStatus.status.INTERNAL_SERVER_ERROR);
+    }
+};
+
+
+module.exports = {
+    getUser,
+    addUserAddress,
+    updateUserAddress,
+    updateUser,
+    getUserTickets,
+    getAllUsers,
+    newUser,
+    deleteUser,
+    getUserAllOrders,
+    getUserDetail,
+    updateUserByAdmin,
+    delImage,
+    getDemandMul
+};

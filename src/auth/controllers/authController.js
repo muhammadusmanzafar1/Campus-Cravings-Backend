@@ -7,38 +7,36 @@ const sessionService = require('../services/session');
 
 exports.registerUser = asyncHandler(async (req, res) => {
     let user = await authService.registerWithEmail(req.body);
-     return user;
+    return user;
 });
 
-exports.registerViaPhone = asyncHandler( async (req, res)=> {
+exports.registerViaPhone = asyncHandler(async (req, res) => {
     let user = await authService.registerWithPhone(req.body);
     return user;
 })
 
 exports.verifyOTP = asyncHandler(async (req, res) => {
     let user = await authService.verifyOTP(req.body);
-    user.deviceId = req.body.deviceId;
+    // user.deviceId = req.body.deviceId;
     user.deviceType = req.body.deviceType;
     const session = await sessionService.createSession(user, req.body);
-
-    user.lastAccess = moment.utc();
-    user = await user.save();
-
     const responseData = {
-        ...user.toObject(), 
+        ...user.toObject(),
         accessToken: session.accessToken,
         refreshToken: session.refreshToken
     };
     res.cookie('refreshToken', user.refreshToken, {
-         secure: false,
-         httpOnly: true,
+        secure: false,
+        httpOnly: true,
     });
     return responseData;
+
 });
+
 
 exports.login = asyncHandler(async (req, res) => {
     let user = await authService.login(req.body);
-    user.deviceId = req.body.deviceId;
+    // user.deviceId = req.body.deviceId;
     user.deviceType = req.body.deviceType;
 
     const session = await sessionService.createSession(user, req.body);
@@ -47,19 +45,54 @@ exports.login = asyncHandler(async (req, res) => {
     user = await user.save();
 
     const responseData = {
-        ...user.toObject(), 
+        ...user.toObject(),
         accessToken: session.accessToken,
         refreshToken: session.refreshToken
-        
+
     };
-    const option = {
-         secure: process.env.NODE_ENV == 'prod',
-         httpOnly: true,
-    };
-    res.cookie('refreshToken', session.refreshToken, option).cookie(
-         'accessToken',
-         session.accessToken,
-         option
-    );
+    // const option = {
+    //     secure: process.env.NODE_ENV == 'prod',
+    //     httpOnly: true,
+    // };
+    res
+  .cookie('refreshToken', session.refreshToken, {
+    secure: true,
+    sameSite: 'none'
+  })
+  .cookie('accessToken', session.accessToken, {
+    secure: true,
+    sameSite: 'none'
+  });
     return responseData;
 });
+
+
+exports.resendOTP = asyncHandler(async (req, res) => {
+   const data = await authService.resendOtp(req.body);
+    return data;
+});
+
+exports.handleForgotPassword = async (req, res) => {
+    let user = await authService.forgotPassword(req.body);
+    return user;
+};
+
+exports.handleUpdatePassword = async (req, res) => {
+    const data = await authService.updatePassword(req.params.id, req.body);
+    return data;
+};
+
+exports.handleResetPassword = async (userId, reqbody) => {
+    const data = await authService.resetPassword(userId, reqbody);
+    return data;
+};
+
+exports.handleResetPasswordOTP = async (userId, reqbody) => {
+    const data = await authService.resetPasswordOTP(userId, reqbody);
+    return data;
+};
+
+exports.handleLogout = async (req) => {
+    const data = await authService.handleLogout(req);
+    return data;
+};

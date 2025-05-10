@@ -1,5 +1,6 @@
 
 const sgMail = require("@sendgrid/mail");
+const { log } = require("winston");
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 exports.sendMail = (toEmail, message) => {
@@ -15,13 +16,14 @@ exports.sendMail = (toEmail, message) => {
     try {
         const msg = {
             to: toEmail,
-            from: 'muhammadusmanzafar111@gmail.com',
+            from: 'support@campuscravings.co',
             subject: message.subject || "",
             html: message.body,
         }
         sgMail
             .send(msg)
             .then(() => {
+                console.log("Email sent to " + msg);
                 console.log("Email sent");
             })
             .catch((error) => {

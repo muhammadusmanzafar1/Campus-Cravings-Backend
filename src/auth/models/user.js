@@ -9,7 +9,11 @@ const entitySchema = new mongoose.Schema({
     lastName: String,
     fullName: String,
     userName: String,
-    imgUrl: String,
+    universityName: String,
+    imgUrl: {
+        type: String,
+        default: "",
+    },
     authMethod: {
         type: String,
         enum: authMethods,
@@ -17,6 +21,7 @@ const entitySchema = new mongoose.Schema({
     },
     countryCode: String,
     ISOCode: String,
+    phoneNumber: String,
     phone: String,
     email: {
         type: String,
@@ -24,14 +29,41 @@ const entitySchema = new mongoose.Schema({
     },
     activationCode: String,
     password: String,
+    addresses: [{
+        address: { type: String, required: true },
+        coordinates: {
+            type: {
+                type: String,
+                enum: ['Point'],
+                default: 'Point',
+                required: true,
+            },
+            coordinates: {
+                type: [Number],
+                required: true,
+            }
+        }
+    }],
     status: {
         type: String,
-        enum: ['pending', 'active', 'deleted', 'blocked'],
+        enum: ['pending', "Email-verified", 'active', 'deleted', 'blocked'],
         default: 'pending',
     },
-    role: {
-        type: String,
-        enum: ['superAdmin', 'user', 'admin'],
+    isRestaurant: {
+        type: Boolean,
+        default: false
+    },
+    isDelivery: {
+        type: Boolean,
+        default: false
+    },
+    isCustomer: {
+        type: Boolean,
+        default: false
+    },
+    isAdmin: {
+        type: Boolean,
+        default: false
     },
     isEmailVerified: {
         type: Boolean,
@@ -77,25 +109,38 @@ const entitySchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
+    stripeAccountId: String,
+    restaurant: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Restaurant",
+    }
 });
 
-entitySchema.statics.newEntity = async function (body, createdByAdmin = true) {
+entitySchema.statics.newEntity = async function (body, imgUrl,createdByAdmin = true) {
     const model = {
         firstName: body.firstName,
         lastName: body.lastName,
         fullName: body.firstName && body.lastName ? `${body.firstName} ${body.lastName}` : null,
+        imgUrl: imgUrl,
         authMethod: body.authMethod,
         userName: body.firstName ? `${body.firstName}_${utils.generateRandomAlphaNumeric()}` : utils.generateRandomAlphaNumeric(),
         email: body.email,
+        phoneNumber: body.phoneNumber,
+        universityName: body.universityName,
         phone: body.phone,
         ISOCode: body.ISOCode,
         countryCode: body.countryCode,
-        role: body.role,
+        isRestaurant: body.isRestaurant,
+        isDelivery: body.isDelivery,
+        isCustomer: body.isCustomer,
+        isAdmin: body.isAdmin,
         about: body.about,
         googleId: body.googleId,
         facebookId: body.facebookId,
         appleId: body.appleId,
+        restaurantId: body.restaurant,
         stripeCustomerId: body.stripeCustomerId || "",
+        addresses: body.addresses || []
     };
 
     if (body.password) {
@@ -112,6 +157,7 @@ entitySchema.statics.newEntity = async function (body, createdByAdmin = true) {
 
     return model;
 };
+entitySchema.index({ "addresses.coordinates": "2dsphere" });
 
 entitySchema.statics.isEmailTaken = async function (email) {
     return !!(await this.findOne({ email }));

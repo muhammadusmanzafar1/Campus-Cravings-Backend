@@ -14,12 +14,52 @@ const registerViaEmail = {
         googleId: Joi.string().optional(),
         facebookId: Joi.string().optional(),
         appleId: Joi.string().optional(),
-        imgUrl: Joi.string(),
+        universityName: Joi.string().optional(),
+        imgUrl: Joi.string().allow(""),
         status: Joi.string(),
         deviceType: Joi.string().optional().valid('web', 'android', 'ios'),
         role: Joi.string().default("user"),
         countryCode: Joi.string().optional(),
-        phone: Joi.string().optional().custom(phone)
+        phoneNumber: Joi.string().optional(),
+        phone: Joi.string().optional().custom(phone),
+        isRestaurant: Joi.boolean().optional(),
+        isCustomer: Joi.boolean().optional(),
+        isDelivery: Joi.boolean().optional(),
+        isAdmin: Joi.boolean().optional(),
+        storeName: Joi.string().when('isRestaurant', { is: true, then: Joi.required() }),
+        brandName: Joi.string().when('isRestaurant', { is: true, then: Joi.required() }),
+        floor: Joi.string().when('isRestaurant', { is: true, then: Joi.required() }),
+        restaurantImages: Joi.array().items(Joi.string()),
+        addresses: Joi.array()
+            .items(
+                Joi.object({
+                    address: Joi.string().required(),
+                    coordinates: Joi.object({
+                        type: Joi.string().valid('Point').required(),
+                        coordinates: Joi.array()
+                            .items(Joi.number().required())
+                            .length(2)
+                            .required()
+                    }).required()
+                })
+            )
+         .when('isRestaurant', { is: true, then: Joi.required() }),
+        openingHours: Joi.object({
+          monday: Joi.string().optional(),
+          tuesday: Joi.string().optional(),
+          wednesday: Joi.string().optional(),
+          thursday: Joi.string().optional(),
+          friday: Joi.string().optional(),
+          saturday: Joi.string().optional(),
+          sunday: Joi.string().optional(),
+        }),
+        cuisine: Joi.string().when('isRestaurant', { is: true, then: Joi.required() }),
+        deliveryMethods: Joi.array().items(Joi.string()).when('isRestaurant', { is: true, then: Joi.required() }),
+        ratings: Joi.object({
+          averageRating: Joi.number().default(0),
+          totalRatings: Joi.number().default(0),
+        }).when('isRestaurant', { is: true, then: Joi.required() }),
+        paymentMethods: Joi.array().items(Joi.string()).when('isRestaurant', { is: true, then: Joi.required() }),
     }).xor("email","phone")
 };
 
@@ -60,7 +100,7 @@ const resendOtp = {
     body: Joi.object().keys({
         userId: Joi.string().required(),
         authMethod: Joi.string().required().valid('phone', 'email'),
-        deviceId: Joi.string().required(),
+        deviceId: Joi.string().optional(),
         deviceType: Joi.string().required().valid('web', 'android', 'ios')
     })
 };
@@ -70,9 +110,7 @@ const forgotPassword = {
         authMethod: Joi.string().required().valid('phone', 'email'),
         email: Joi.string().email().lowercase(),
         phone: Joi.string().custom(phone),
-        deviceId: Joi.string().required(),
-        deviceType: Joi.string().required().valid('web', 'android', 'ios')
-    }).or('phone', 'email').required()
+    })
 };
 
 const updatePassword = {
@@ -83,6 +121,13 @@ const updatePassword = {
 };
 
 const resetPassword = {
+    body: Joi.object().keys({
+        password: Joi.string().required().custom(password),
+        oldPassword: Joi.string().required()
+    })
+};
+
+const resetPasswordOTP = {
     body: Joi.object().keys({
         password: Joi.string().required().custom(password),
     })
@@ -114,5 +159,6 @@ module.exports = {
     forgotPassword,
     updatePassword,
     resetPassword,
-    socialLogin
+    socialLogin,
+    resetPasswordOTP
 };
