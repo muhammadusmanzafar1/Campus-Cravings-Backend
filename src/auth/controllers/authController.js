@@ -54,17 +54,18 @@ exports.login = asyncHandler(async (req, res) => {
     //     secure: process.env.NODE_ENV == 'prod',
     //     httpOnly: true,
     // };
+    const option = {
+    secure: true,
+    sameSite: 'none',
+    domain: '.campuscravings.co',
+  };
     res
-  .cookie('refreshToken', session.refreshToken, {
-    secure: true,
-    sameSite: 'none',
-    domain: '.campuscravings.co',
-  })
-  .cookie('accessToken', session.accessToken, {
-    secure: true,
-    sameSite: 'none',
-    domain: '.campuscravings.co',
-  });
+  .cookie('refreshToken', session.refreshToken, 
+    option
+)
+  .cookie('accessToken', session.accessToken, 
+    option
+);
     return responseData;
 });
 
