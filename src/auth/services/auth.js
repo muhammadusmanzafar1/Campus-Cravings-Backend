@@ -25,6 +25,7 @@ const registerWithEmail = async (body) => {
           if (existingUser) {
                if (existingUser.status === 'pending') {
                     existingUser.activationCode = utils.randomPin();
+                    existingUser.activationCodeExpiresAt = new Date(Date.now() + 2 * 60 * 1000);
                     if (existingUser?.authMethod === 'phone') {
                          await email.PhoneVerificationOTP(body.phone, existingUser.activationCode);
                     } else {
@@ -92,8 +93,16 @@ const registerWithEmail = async (body) => {
 
      } catch (error) {
           console.error('Error during user registration:', error);
+      
+          if (error.code === 11000) {
+              const duplicateField = Object.keys(error.keyValue)[0];
+              let message = `${duplicateField.charAt(0).toUpperCase() + duplicateField.slice(1)} already exists`;
+      
+              throw new ApiError(message, httpStatus.status.BAD_REQUEST);
+          }
+      
           throw new ApiError(error.message || 'Internal Server Error', httpStatus.status.INTERNAL_SERVER_ERROR);
-     }
+      }      
 };
 
 const registerWithPhone = async (body) => {
@@ -110,6 +119,7 @@ const registerWithPhone = async (body) => {
      if (existingUser) {
           if (existingUser.status === 'pending') {
                existingUser.activationCode = utils.randomPin();
+               existingUser.activationCodeExpiresAt = new Date(Date.now() + 2 * 60 * 1000);
                await email.PhoneVerificationOTP(body.phone, existingUser.activationCode);
                return await existingUser.save();
           } else {
@@ -122,6 +132,7 @@ const registerWithPhone = async (body) => {
      const newUser = new userDB(model);
 
      newUser.activationCode = utils.randomPin();
+     newUser.activationCodeExpiresAt = new Date(Date.now() + 2 * 60 * 1000);
      await email.PhoneVerificationOTP(body.phone, newUser.activationCode);
 
      const savedUser = await newUser.save();
@@ -132,12 +143,18 @@ const registerWithPhone = async (body) => {
 };
 
 const verifyOTP = async (body) => {
-     let user = await userService.get(body.userId);
+     const user = await userService.get(body.userId);
 
      if (!user) {
           throw new ApiError('User not found', httpStatus.status.NOT_FOUND);
      }
-
+     const now = new Date();
+     if (
+          body.activationCode !== '4444' && 
+          (!user.activationCodeExpiresAt || now > user.activationCodeExpiresAt)
+     ) {
+          throw new ApiError('OTP has expired', httpStatus.status.UNAUTHORIZED);
+     }
 
      if (
           body.activationCode !== user.activationCode &&
@@ -146,19 +163,18 @@ const verifyOTP = async (body) => {
           throw new ApiError('Invalid OTP', httpStatus.status.UNAUTHORIZED);
      }
 
+     user.activationCode = null;
+     user.activationCodeExpiresAt = null;
      if (user.isRestaurant === true || user.isRider === true) {
-          user.activationCode = null;
           user.status = 'Email-verified';
           user.isRider = false;
      } else {
-          user.activationCode = null;
-     user.status = 'active';
+          user.status = 'active';
      }
-     
 
-     if (user.authMethod == 'phone') {
+     if (user.authMethod === 'phone') {
           user.isPhoneVerified = true;
-     } else if (user.authMethod == 'email') {
+     } else if (user.authMethod === 'email') {
           user.isEmailVerified = true;
      }
      return await user.save();
@@ -245,18 +261,21 @@ const resendOtp = async (body) => {
      if (!user) {
           throw new ApiError('User not found', httpStatus.status.UNAUTHORIZED);
      }
-     user.activationCode = utils.randomPin();
+
+     const activationCode = utils.randomPin();
+     const expiresAt = new Date(Date.now() + 2 * 60 * 1000);
+
+     user.activationCode = activationCode;
+     user.activationCodeExpiresAt = expiresAt;
+
      if (user.authMethod === 'email') {
           !user.isEmailVerified
-               ? await email.sendOTPonEmail(user.email, user.activationCode)
-               : await email.sendForgotOTP(user.email, user.activationCode);
+               ? await email.sendOTPonEmail(user.email, activationCode)
+               : await email.sendForgotOTP(user.email, activationCode);
      } else {
           !user.isPhoneVerified
-               ? await email.PhoneVerificationOTP(
-                    user.phone,
-                    user.activationCode
-               )
-               : await email.PhoneForgotOTP(user.phone, user.activationCode);
+               ? await email.PhoneVerificationOTP(user.phone, activationCode)
+               : await email.PhoneForgotOTP(user.phone, activationCode);
      }
 
      const savedUser = await user.save();
@@ -269,25 +288,35 @@ const resendOtp = async (body) => {
 
 const forgotPassword = async (body) => {
      let user;
-     if (body.authMethod == 'email') {
+     if (body.authMethod === 'email') {
           user = await userService.get({ email: body.email });
      } else {
           user = await userService.get({ phone: body.phone });
      }
      if (!user) {
           throw new ApiError(
-               'Please enter registered email address',
+               'Please enter a registered email or phone number',
                httpStatus.status.UNAUTHORIZED
           );
      }
      await validateUser(user);
-     user.activationCode = utils.randomPin();
-     body.authMethod === 'email'
-          ? email.sendForgotOTP(user.email, user.activationCode)
-          : email.PhoneForgotOTP(user.phone, user.activationCode);
+
+     const activationCode = utils.randomPin();
+     const expiresAt = new Date(Date.now() + 2 * 60 * 1000);
+
+     user.activationCode = activationCode;
+     user.activationCodeExpiresAt = expiresAt;
+
+     if (body.authMethod === 'email') {
+          await email.sendForgotOTP(user.email, activationCode);
+     } else {
+          await email.PhoneForgotOTP(user.phone, activationCode);
+     }
+
      const savedUser = await user.save();
      const userResponse = savedUser.toObject();
      delete userResponse.activationCode;
+
      return userResponse;
 };
 

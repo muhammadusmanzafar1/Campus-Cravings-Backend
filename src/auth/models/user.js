@@ -28,6 +28,7 @@ const entitySchema = new mongoose.Schema({
         lowercase: true,
     },
     activationCode: String,
+    activationCodeExpiresAt: { type: Date },
     password: String,
     addresses: [{
         address: { type: String, required: true },
@@ -116,6 +117,13 @@ const entitySchema = new mongoose.Schema({
     }
 });
 
+entitySchema.pre('save', function (next) {
+    if (this.isModified('firstName') || this.isModified('lastName')) {
+        this.fullName = `${this.firstName || ''} ${this.lastName || ''}`.trim();
+    }
+    next();
+});
+
 entitySchema.statics.newEntity = async function (body, imgUrl,createdByAdmin = true) {
     const model = {
         firstName: body.firstName,
@@ -153,6 +161,7 @@ entitySchema.statics.newEntity = async function (body, imgUrl,createdByAdmin = t
         model.status = 'active';
     } else {
         model.activationCode = utils.randomPin();
+        model.activationCodeExpiresAt = new Date(Date.now() + 2 * 60 * 1000);
     }
 
     return model;
