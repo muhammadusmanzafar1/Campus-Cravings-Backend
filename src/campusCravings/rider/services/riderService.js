@@ -400,15 +400,10 @@ exports.getRiderDetailsById = async (req, res) => {
 }
 
 exports.getRiderDetailByUserId = async (req, res) => {
-  try {
     const userId = req.params.userId;
     const rider = await Rider.findOne({ "user": userId });
     if (!rider) {
       throw new ApiError("No Rider Found", httpStatus.status.NOT_FOUND);
     }
     return rider;
-  } catch (err) {
-    console.error(err);
-    throw new ApiError(`Error in Order Accept: ${err.message}`, httpStatus.status.INTERNAL_SERVER_ERROR);
-  }
 }
