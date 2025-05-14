@@ -32,14 +32,14 @@ const startStripeOnboarding = async (req, res) => {
         successUrl
     );
 
-    // if (user.isRestaurant && onboardingUrl.) {
-    //     user.status = 'active';
-    //     await user.save();
-    // } else if (rider) {
-    //     user.isDelivery = true;
-    //     rider.status = 'active';
-    //     await rider.save();
-    // }
+    if (user.isRestaurant) {
+        user.status = 'active';
+        await user.save();
+    } else if (rider) {
+        user.isDelivery = true;
+        rider.status = 'active';
+        await rider.save();
+    }
 
     return { url: onboardingUrl };
 };
