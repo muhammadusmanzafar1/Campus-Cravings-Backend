@@ -40,3 +40,7 @@ exports.getRiderDetailsById = asyncHandler(async (req, res) => {
     const data = await riderService.getRiderDetailsById(req, res);
     return data;
 })
+exports.getRiderDetailByUserId = asyncHandler(async (req, res) => {
+    const data = await riderService.getRiderDetailByUserId(req, res);
+    return data;
+})

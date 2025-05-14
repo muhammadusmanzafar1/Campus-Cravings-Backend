@@ -68,7 +68,7 @@ const riderSchema = new Schema({
   status: {
     type: String,
     enum: ['pending', 'active', 'inactive', 'banned'],
-    default: 'active'
+    default: 'pending'
   },
   createdAt: {
     type: Date,

@@ -12,6 +12,7 @@ const compression = require("compression");
 const categoryRoutes = require("./src/campusCravings/restaurant/routes/categoryRoutes")
 const restaurantRoute = require("./src/campusCravings/restaurant/routes/restaurantRoutes")
 const apiRoutes = require('./src/campusCravings/routes/index')
+const stripeRoutes = require('./src/payment/routes/stripeRoutes');
 
 const app = express();
 
@@ -62,6 +63,11 @@ app.use((req, res, next) => {
 
 // Routes 
 app.use("/api", apiRoutes);
+
+app.use('/api/stripe/webhook', express.raw({ type: 'application/json' }));
+
+app.use(express.json());
+app.use('/api/stripe', stripeRoutes);
 
 app.get("/", (req, res) => {
     res.send("Welcome to Campus Cravings!");

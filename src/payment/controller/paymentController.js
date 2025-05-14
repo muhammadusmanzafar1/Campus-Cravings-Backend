@@ -15,10 +15,11 @@ const startStripeOnboarding = async (req, res) => {
     }
 
     const user = await User.findById(userId);
+    if (!user) throw new ApiError('User not found', 404);
 
     const rider = await Rider.findOne({'user':userId});
+    if (!rider) throw new ApiError('Rider not found', 404);
 
-    if (!user) return res.status(404).json({ message: 'User not found' });
 
     if (!user.stripeAccountId) {
         user.stripeAccountId = await createStripeAccount(user.email);
@@ -31,16 +32,66 @@ const startStripeOnboarding = async (req, res) => {
         successUrl
     );
 
-    if (user.isRestaurant) {
-        user.status = 'active';
-        await user.save();
-    } else if (rider) {
-        user.isRider = true;
-        await rider.save();
-    }
+    // if (user.isRestaurant && onboardingUrl.) {
+    //     user.status = 'active';
+    //     await user.save();
+    // } else if (rider) {
+    //     user.isDelivery = true;
+    //     rider.status = 'active';
+    //     await rider.save();
+    // }
 
     return { url: onboardingUrl };
 };
+
+
+exports.stripeWebhook = async (req, res) => {
+    const sig = req.headers['stripe-signature'];
+  
+    let event;
+  
+    try {
+      event = stripe.webhooks.constructEvent(
+        req.body, // Use raw body here
+        sig,
+        process.env.STRIPE_WEBHOOK_SECRET
+      );
+    } catch (err) {
+      console.error('Webhook signature verification failed:', err.message);
+      return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+  
+    // Handle onboarding completion
+    if (event.type === 'account.updated') {
+      const account = event.data.object;
+  
+      if (account.details_submitted) {
+        try {
+          const user = await User.findOne({ stripeAccountId: account.id });
+          if (user) {
+            if (user.isRestaurant) {
+              user.status = 'active';
+              await user.save();
+            } else {
+              const rider = await Rider.findOne({ user: user._id });
+              if (rider) {
+                user.isDelivery = true;
+                await user.save();
+  
+                rider.status = 'active';
+                await rider.save();
+              }
+            }
+          }
+        } catch (err) {
+          console.error('Error updating user after onboarding:', err.message);
+          return res.status(500).send('Internal Server Error');
+        }
+      }
+    }
+  
+    return 'Event received';
+  };
 
 const handleOrderDelivered = async (req, res) => {
     const { orderId } = req.params;
