@@ -130,6 +130,7 @@ exports.getRandomUnassignedOrder = async (req, res) => {
         restaurantCoords: coordinates
       }
     }
+console.log(">>>>>>>>>>>>>>>>>>>>>", OrderDetails.length, riderUserIds.length);
 
     // Send the orders to those riders
     await sendOrderToSpecificRiders(riderUserIds, OrderDetails);
@@ -364,6 +365,9 @@ exports.riderLocation = async (req, res) => {
     return rider.location;
   } catch (err) {
     console.error(err);
+    if (err instanceof ApiError) {
+      throw err;
+    }
     throw new ApiError(`Error in Order Accept: ${err.message}`, httpStatus.status.INTERNAL_SERVER_ERROR);
   }
 }
