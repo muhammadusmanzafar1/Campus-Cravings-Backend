@@ -279,9 +279,15 @@ const deleteUser = async (req, res) => {
 const getUserAllOrders = async (req, res) => {
     try {
         const userType = req.query.for || 'customer';
-        const userId = req?.user?._id;
+        let userId = req?.user?._id;
         const comparingId = userType === 'rider' ? 'assigned_to' : 'user_id';
 
+        if (comparingId === 'assigned_to') {
+            const rider = await Rider.findOne({ user: userId });
+            if (!rider) throw new ApiError("Rider not found", httpStatus.status.NOT_FOUND);
+            userId = rider._id;
+        }
+        
         const orders = await Order.find({ [comparingId]: userId })
             .populate('user_id', 'firstName lastName email imgUrl')
             .populate('restaurant_id', 'storeName brandName phoneNumber restaurantImages')

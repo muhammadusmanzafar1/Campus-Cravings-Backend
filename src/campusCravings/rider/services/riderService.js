@@ -130,7 +130,6 @@ exports.getRandomUnassignedOrder = async (req, res) => {
         restaurantCoords: coordinates
       }
     }
-console.log(">>>>>>>>>>>>>>>>>>>>>", orders.length, riderUserIds.length);
 
     // Send the orders to those riders
     await sendOrderToSpecificRiders(riderUserIds, OrderDetails);
