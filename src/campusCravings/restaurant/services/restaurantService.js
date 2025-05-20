@@ -147,20 +147,28 @@ exports.getNearbyRestaurantsWithCategories = async (req, res, next) => {
             if (!timeRange || !timeRange.includes('-')) return false;
         
             const [openStr, closeStr] = timeRange.split('-').map(s => s.trim());
-            const open = moment.tz(openStr, 'hh:mm A', 'America/New_York').set({
-                year: now.year(),
-                month: now.month(),
-                date: now.date()
-            });
-            const close = moment.tz(closeStr, 'hh:mm A', 'America/New_York').set({
+        
+            // Parse using local time (no timezone conversion)
+            const open = moment(openStr, 'hh:mm A').set({
                 year: now.year(),
                 month: now.month(),
                 date: now.date()
             });
         
-            if (close.isBefore(open)) close.add(1, 'day');
+            const close = moment(closeStr, 'hh:mm A').set({
+                year: now.year(),
+                month: now.month(),
+                date: now.date()
+            });
+        
+            // Handle overnight hours (e.g., 9:00 PM - 2:00 AM)
+            if (close.isBefore(open)) {
+                close.add(1, 'day');
+            }
+        
             return now.isBetween(open, close);
-        });        
+        });
+                
         console.log(openRestaurants);
         
         return openRestaurants;
