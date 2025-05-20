@@ -18,7 +18,7 @@ const startStripeOnboarding = async (req, res) => {
     if (!user) throw new ApiError('User not found', 404);
 
     const rider = await Rider.findOne({'user':userId});
-    if (!rider) throw new ApiError('Rider not found', 404);
+    // if (!rider) throw new ApiError('Rider not found', 404);
 
 
     if (!user.stripeAccountId) {
