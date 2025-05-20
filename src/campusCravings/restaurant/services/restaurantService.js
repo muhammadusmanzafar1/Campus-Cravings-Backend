@@ -140,11 +140,13 @@ exports.getNearbyRestaurantsWithCategories = async (req, res, next) => {
                 }
             },
         }).populate('categories');
+        console.log(restaurants);
+        
         const openRestaurants = restaurants.filter(r => {
             const timeRange = r.openingHours?.[currentDay];
-            if (!timeRange || !timeRange.includes(' - ')) return false;
-
-            const [openStr, closeStr] = timeRange.split(' - ');
+            if (!timeRange || !timeRange.includes('-')) return false;
+        
+            const [openStr, closeStr] = timeRange.split('-').map(s => s.trim());
             const open = moment.tz(openStr, 'hh:mm A', 'America/New_York').set({
                 year: now.year(),
                 month: now.month(),
@@ -155,10 +157,12 @@ exports.getNearbyRestaurantsWithCategories = async (req, res, next) => {
                 month: now.month(),
                 date: now.date()
             });
-
+        
             if (close.isBefore(open)) close.add(1, 'day');
             return now.isBetween(open, close);
-        });
+        });        
+        console.log(openRestaurants);
+        
         return openRestaurants;
     } catch (error) {
         next(error);
