@@ -168,8 +168,6 @@ exports.getNearbyRestaurantsWithCategories = async (req, res, next) => {
         
             return now.isBetween(open, close);
         });
-                
-        console.log(openRestaurants);
         
         return openRestaurants;
     } catch (error) {
