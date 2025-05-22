@@ -3,21 +3,17 @@ const stripe = require('../../../utils/stripe');
 
 async function createStripeAccount(email) {
   const account = await stripe.accounts.create({
-    email: email,
-        controller: {
-          fees: {
-            payer: "application",
-          },
-          losses: {
-            payments: "application",
-          },
-          stripe_dashboard: {
-            type: "express",
-          },
-        },
-      });
-      return account.id;
-    }
+    type: "express",
+    country: "US",
+    email,
+    business_type: "individual",
+    capabilities: {
+      transfers: { requested: true },
+      card_payments: { requested: true },
+    },
+  });
+  return account.id;
+}
 
 async function generateOnboardingLink(accountId, refreshUrl, returnUrl) {
     const link = await stripe.accountLinks.create({
@@ -25,6 +21,7 @@ async function generateOnboardingLink(accountId, refreshUrl, returnUrl) {
       refresh_url: refreshUrl,
       return_url: returnUrl,
       type: 'account_onboarding',
+      collect: 'eventually_due',
     });
   
     return link.url;
