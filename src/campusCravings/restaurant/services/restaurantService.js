@@ -148,14 +148,14 @@ exports.getNearbyRestaurantsWithCategories = async (req, res, next) => {
         
             const [openStr, closeStr] = timeRange.split('-').map(s => s.trim());
         
-            // Parse using local time (no timezone conversion)
-            const open = moment(openStr, 'hh:mm A').set({
+            const now = moment.tz('America/New_York');
+            const open = moment.tz(openStr, 'hh:mm A', 'America/New_York').set({
                 year: now.year(),
                 month: now.month(),
                 date: now.date()
             });
         
-            const close = moment(closeStr, 'hh:mm A').set({
+            let close = moment.tz(closeStr, 'hh:mm A', 'America/New_York').set({
                 year: now.year(),
                 month: now.month(),
                 date: now.date()
