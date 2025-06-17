@@ -132,6 +132,35 @@ const updateUserAddress = async ({ user, body }) => {
         throw new ApiError(error.message, httpStatus.status.INTERNAL_SERVER_ERROR);
     }
 };
+
+// Delete User Address
+const deleteUserAddress = async (req) => {
+    try {
+        const userId = req.user._id;
+        const addressId = req.params.addressId;
+        const user = await User.findById(userId);
+        if (!user) {
+            throw new ApiError('User not found', httpStatus.status.NOT_FOUND);
+        }
+        const address = user.addresses.id(addressId);
+        if (!address) {
+            throw new ApiError('Address not found', httpStatus.status.NOT_FOUND);
+        }
+        
+        user.addresses.pull({ _id: addressId });
+        const updatedUser = await user.save();
+        if (!updatedUser) {
+            throw new ApiError('Failed to delete address', httpStatus.status.INTERNAL_SERVER_ERROR);
+        }
+        return updatedUser;
+    } catch (error) {
+        if (error instanceof ApiError) {
+            throw error;
+        }
+        throw new ApiError(error.message, httpStatus.status.INTERNAL_SERVER_ERROR);
+    }
+};
+
 const getUserTickets = async (req) => {
     const tickets = await Ticket.find({ userId: req.user._id });
     return tickets;
@@ -440,6 +469,7 @@ module.exports = {
     getUser,
     addUserAddress,
     updateUserAddress,
+    deleteUserAddress,
     updateUser,
     getUserTickets,
     getAllUsers,

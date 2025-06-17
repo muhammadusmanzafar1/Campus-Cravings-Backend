@@ -22,6 +22,11 @@ exports.updateUserAddress = asyncHandler(async (req, res) => {
     return user;
 });
 
+exports.deleteUserAddress = asyncHandler(async (req, res) => {
+    const user = await userService.deleteUserAddress(req);
+    return user;
+});
+
 exports.getUserTickets = async (req, res) => {
     const tickets = await userService.getUserTickets(req);
     return tickets;

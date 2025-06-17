@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { addUserAddress, updateUserAddress, getUser, updateUser, getUserTickets, getAllusers,
+const { addUserAddress, updateUserAddress, deleteUserAddress, getUser, updateUser, getUserTickets, getAllusers,
     createNewUser, delUser, getUserAllOrders, getUserDetail, updateUserByAdmin, delImage, getDemandMul
- } = require('../controllers/userController');
+} = require('../controllers/userController');
 const { validateBody } = require("../../../../middlewares/validate");
 const { registerViaEmail } = require('../../../auth/validators/auth')
 const { addAddressSchema, updateAddressSchema, updateUserSchema, updateUserAdmin } = require("../validators/user");
@@ -66,6 +66,19 @@ router.patch("/updateAddress", validateBody(updateAddressSchema), async (req, re
     try {
         const updateAddress = await updateUserAddress(req, res);
         res.status(httpStatus.status.OK).json({ message: "User Address updated successfully", updatedAddress: updateAddress });
+    } catch (error) {
+        if (error instanceof ApiError) {
+            return res.status(error.statusCode).json({ message: error.message });
+        }
+        return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
+    }
+});
+
+// delete User Address
+router.delete("/deleteAddress/:addressId", async (req, res) => {
+    try {
+        const deleteAddress = await deleteUserAddress(req, res);
+        res.status(httpStatus.status.OK).json({ message: "User Address deleted successfully", deletedAddress: deleteAddress });
     } catch (error) {
         if (error instanceof ApiError) {
             return res.status(error.statusCode).json({ message: error.message });
@@ -161,10 +174,10 @@ router.get('/getuser/:id', async (req, res) => {
 })
 
 router.patch("/updateUserByAdmin/:id", async (req, res) => {
-        const { error, value } = updateUserAdmin.body.validate(req.body, { abortEarly: false });
-        if (error) {
-            return res.status(httpStatus.status.BAD_REQUEST).json({ message: "Validation Error", errors: error.details.map(err => err.message), });
-        }
+    const { error, value } = updateUserAdmin.body.validate(req.body, { abortEarly: false });
+    if (error) {
+        return res.status(httpStatus.status.BAD_REQUEST).json({ message: "Validation Error", errors: error.details.map(err => err.message), });
+    }
     try {
         const user = await updateUserByAdmin(req, res);
         res.status(httpStatus.status.OK).json({ message: "User data updated successfully", userInfo: user });
