@@ -126,9 +126,8 @@ exports.getAllRestaurant = async (req, res, next) => {
 exports.getNearbyRestaurantsWithCategories = async (req, res, next) => {
     try {
         const { latitude, longitude } = req.query;
-        const distanceInMeters = 20 * 1609.34;
-        const now = moment().tz('America/New_York');
-        const currentDay = now.format('dddd').toLowerCase();
+        const distanceInMeters = 20 * 1609.34; // 20 miles to meters
+
         const restaurants = await Restaurant.find({
             "addresses.coordinates": {
                 $nearSphere: {
@@ -140,36 +139,38 @@ exports.getNearbyRestaurantsWithCategories = async (req, res, next) => {
                 }
             },
         }).populate('categories');
-        console.log(restaurants);
-        
+
         const openRestaurants = restaurants.filter(r => {
+            const timeZone = r.timeZone || 'UTC'; // default fallback
+            const now = moment.tz(timeZone);
+            const currentDay = now.format('dddd').toLowerCase();
+
             const timeRange = r.openingHours?.[currentDay];
             if (!timeRange || !timeRange.includes('-')) return false;
-        
+
             const [openStr, closeStr] = timeRange.split('-').map(s => s.trim());
-        
-            const now = moment.tz('America/New_York');
-            const open = moment.tz(openStr, 'hh:mm A', 'America/New_York').set({
+
+            const open = moment.tz(openStr, 'hh:mm A', timeZone).set({
                 year: now.year(),
                 month: now.month(),
                 date: now.date()
             });
-        
-            let close = moment.tz(closeStr, 'hh:mm A', 'America/New_York').set({
+
+            let close = moment.tz(closeStr, 'hh:mm A', timeZone).set({
                 year: now.year(),
                 month: now.month(),
                 date: now.date()
             });
-        
+
             // Handle overnight hours (e.g., 9:00 PM - 2:00 AM)
             if (close.isBefore(open)) {
                 close.add(1, 'day');
             }
-        
+
             return now.isBetween(open, close);
         });
-        
-        return openRestaurants;
+
+        return res.json(openRestaurants);
     } catch (error) {
         next(error);
     }
