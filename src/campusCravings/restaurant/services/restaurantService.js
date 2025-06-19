@@ -156,10 +156,9 @@ exports.getNearbyRestaurantsWithCategories = async (req, res, next) => {
 
             const [lng, lat] = coords;
 
-            // 🌍 Get time zone of this restaurant's coordinates
             let timeZone;
             try {
-                timeZone = tzLookup(lat, lng); // tzLookup expects lat, lng (not reversed)
+                timeZone = tzLookup(lat, lng); 
             } catch (err) {
                 console.warn(`Could not determine time zone for ${r.storeName}:`, err.message);
                 return false;
@@ -203,7 +202,7 @@ exports.getNearbyRestaurantsWithCategories = async (req, res, next) => {
 exports.getpoplarFoodItems = async (req, res, next) => {
     const { latitude, longitude } = req.query;
     if (!latitude || !longitude) {
-        throw new ApiError('Latitude and longitude are required', httpStatus.status.BAD_REQUEST)
+        throw new ApiError('Latitude and longitude are required', httpStatus.status.BAD_REQUEST);
     }
     try {
         const nearbyRestaurants = await Restaurant.aggregate([
@@ -218,26 +217,45 @@ exports.getpoplarFoodItems = async (req, res, next) => {
                     spherical: true
                 }
             },
-            { $project: { _id: 1, openingHours: 1 } }
+            {
+                $project: {
+                    _id: 1,
+                    openingHours: 1,
+                    addresses: 1
+                }
+            }
         ]);
-
 
         if (!nearbyRestaurants.length) {
             throw new ApiError('No nearby restaurants found', httpStatus.status.NOT_FOUND)
         }
-        const now = moment().tz('America/New_York');
-        const currentDay = now.format('dddd').toLowerCase();
+
         const openRestaurants = nearbyRestaurants.filter(r => {
+            const coords = r.addresses?.coordinates?.coordinates;
+            if (!coords || coords.length !== 2) return false;
+
+            const [lng, lat] = coords;
+
+            let timeZone;
+            try {
+                timeZone = tzLookup(lat, lng);
+            } catch (err) {
+                console.warn(`Could not determine timezone for restaurant: ${r._id}`);
+                return false;
+            }
+
+            const now = moment.tz(timeZone);
+            const currentDay = now.format('dddd').toLowerCase();
             const timeRange = r.openingHours?.[currentDay];
             if (!timeRange || !timeRange.includes(' - ')) return false;
 
             const [openStr, closeStr] = timeRange.split(' - ');
-            const open = moment.tz(openStr, 'hh:mm A', 'America/New_York').set({
+            const open = moment.tz(openStr, 'hh:mm A', timeZone).set({
                 year: now.year(),
                 month: now.month(),
                 date: now.date()
             });
-            const close = moment.tz(closeStr, 'hh:mm A', 'America/New_York').set({
+            const close = moment.tz(closeStr, 'hh:mm A', timeZone).set({
                 year: now.year(),
                 month: now.month(),
                 date: now.date()
