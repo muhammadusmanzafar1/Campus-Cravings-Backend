@@ -46,6 +46,7 @@
     "socket.io": "^4.8.1",
     "stripe": "^18.0.0",
     "twilio": "^5.5.2",
+    "tz-lookup": "^6.1.25",
     "underscore": "^1.13.7",
     "validator": "^13.15.0",
     "winston": "^3.17.0",

@@ -10,6 +10,7 @@ const { getGrowthPercentage } = require('../../admin/helpers/AnalyticHelper');
 const { getIO } = require('../../../sockets/service/socketService');
 const cloudinary = require('../../../../utils/Cloudinary');
 const moment = require('moment-timezone');
+const tzLookup = require('tz-lookup');
 
 exports.getRestaurantAnalytics = async (req, res, next) => {
 
@@ -125,12 +126,12 @@ exports.getAllRestaurant = async (req, res, next) => {
 
 exports.getNearbyRestaurantsWithCategories = async (req, res, next) => {
     try {
-        const { latitude, longitude, timeZone } = req.query;
+        const { latitude, longitude } = req.query;
 
-        if (!latitude || !longitude || !timeZone) {
+        if (!latitude || !longitude) {
             return res.status(400).json({
                 isSuccess: false,
-                message: "Missing required parameters: latitude, longitude, or timeZone"
+                message: "Missing required parameters: latitude and longitude"
             });
         }
 
@@ -148,9 +149,23 @@ exports.getNearbyRestaurantsWithCategories = async (req, res, next) => {
             },
         }).populate('categories');
 
-        const now = moment.tz(timeZone);
+        const openRestaurants = restaurants.filter(r => {
+            const coords = r.addresses.coordinates?.coordinates;
 
-        const openRestaurants = restaurants.filter((r) => {
+            if (!coords || coords.length !== 2) return false;
+
+            const [lng, lat] = coords;
+
+            // 🌍 Get time zone of this restaurant's coordinates
+            let timeZone;
+            try {
+                timeZone = tzLookup(lat, lng); // tzLookup expects lat, lng (not reversed)
+            } catch (err) {
+                console.warn(`Could not determine time zone for ${r.storeName}:`, err.message);
+                return false;
+            }
+
+            const now = moment.tz(timeZone);
             const currentDay = now.format('dddd').toLowerCase();
             const timeRange = r.openingHours?.[currentDay];
 
@@ -171,16 +186,17 @@ exports.getNearbyRestaurantsWithCategories = async (req, res, next) => {
             });
 
             if (close.isBefore(open)) {
-                close.add(1, 'day');
+                close.add(1, 'day'); // Overnight handling
             }
 
             return now.isBetween(open, close);
-
         });
 
-        return openRestaurants;
+        return  openRestaurants;
+
     } catch (error) {
-        throw error; // Let route handle it
+        console.error("Error while fetching nearby restaurants:", error);
+        next(error);
     }
 };
 
