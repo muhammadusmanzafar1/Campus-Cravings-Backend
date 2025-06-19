@@ -116,7 +116,7 @@ exports.getAllRestaurant = async (req, res, next) => {
             throw new ApiError("No category Found", httpStatus.status.NOT_FOUND);
         }
 
-        return res.status(200).json(categories);
+        return categories;
     } catch (error) {
         console.error('Error occurred while fetching categories:', error);
         next(error);
@@ -271,7 +271,7 @@ exports.getpoplarFoodItems = async (req, res, next) => {
         ]);
 
         if (!orders.length) {
-            return res.status(404).json({ message: 'No popular items found' });
+            return { message: 'No popular items found' };
         }
 
 
