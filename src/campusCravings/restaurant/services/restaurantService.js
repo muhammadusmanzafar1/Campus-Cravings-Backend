@@ -126,7 +126,7 @@ exports.getAllRestaurant = async (req, res, next) => {
 exports.getNearbyRestaurantsWithCategories = async (req, res, next) => {
     try {
         const { latitude, longitude } = req.query;
-        const distanceInMeters = 20 * 1609.34; // 20 miles to meters
+        const distanceInMeters = 20 * 1609.34;
 
         const restaurants = await Restaurant.find({
             "addresses.coordinates": {
@@ -141,7 +141,7 @@ exports.getNearbyRestaurantsWithCategories = async (req, res, next) => {
         }).populate('categories');
 
         const openRestaurants = restaurants.filter(r => {
-            const timeZone = r.timeZone || 'UTC'; // default fallback
+            const timeZone = r.timeZone || 'UTC';
             const now = moment.tz(timeZone);
             const currentDay = now.format('dddd').toLowerCase();
 
@@ -162,19 +162,17 @@ exports.getNearbyRestaurantsWithCategories = async (req, res, next) => {
                 date: now.date()
             });
 
-            // Handle overnight hours (e.g., 9:00 PM - 2:00 AM)
-            if (close.isBefore(open)) {
-                close.add(1, 'day');
-            }
+            if (close.isBefore(open)) close.add(1, 'day');
 
             return now.isBetween(open, close);
         });
 
-        return res.json(openRestaurants);
+        return openRestaurants;
     } catch (error) {
-        next(error);
+        throw error; // Let route handle it
     }
 };
+
 exports.getpoplarFoodItems = async (req, res, next) => {
     const { latitude, longitude } = req.query;
     if (!latitude || !longitude) {
