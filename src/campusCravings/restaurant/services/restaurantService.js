@@ -186,7 +186,7 @@ exports.getNearbyRestaurantsWithCategories = async (req, res, next) => {
             });
 
             if (close.isBefore(open)) {
-                close.add(1, 'day'); // Overnight handling
+                close.add(1, 'day');
             }
 
             return now.isBetween(open, close);
