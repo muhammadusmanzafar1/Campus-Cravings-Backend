@@ -125,7 +125,15 @@ exports.getAllRestaurant = async (req, res, next) => {
 
 exports.getNearbyRestaurantsWithCategories = async (req, res, next) => {
     try {
-        const { latitude, longitude } = req.query;
+        const { latitude, longitude, timeZone } = req.query;
+
+        if (!latitude || !longitude || !timeZone) {
+            return res.status(400).json({
+                isSuccess: false,
+                message: "Missing required parameters: latitude, longitude, or timeZone"
+            });
+        }
+
         const distanceInMeters = 20 * 1609.34;
 
         const restaurants = await Restaurant.find({
@@ -140,12 +148,12 @@ exports.getNearbyRestaurantsWithCategories = async (req, res, next) => {
             },
         }).populate('categories');
 
-        const openRestaurants = restaurants.filter(r => {
-            const timeZone = r.timeZone || 'UTC';
-            const now = moment.tz(timeZone);
-            const currentDay = now.format('dddd').toLowerCase();
+        const now = moment.tz(timeZone);
 
+        const openRestaurants = restaurants.filter((r) => {
+            const currentDay = now.format('dddd').toLowerCase();
             const timeRange = r.openingHours?.[currentDay];
+
             if (!timeRange || !timeRange.includes('-')) return false;
 
             const [openStr, closeStr] = timeRange.split('-').map(s => s.trim());
@@ -162,9 +170,12 @@ exports.getNearbyRestaurantsWithCategories = async (req, res, next) => {
                 date: now.date()
             });
 
-            if (close.isBefore(open)) close.add(1, 'day');
+            if (close.isBefore(open)) {
+                close.add(1, 'day');
+            }
 
             return now.isBetween(open, close);
+
         });
 
         return openRestaurants;
@@ -368,8 +379,8 @@ exports.getResturantAnalytics = async (req) => {
             currentOrders,
             previousOrders
         ] = await Promise.all([
-            Order.countDocuments({  restaurant_id: restaurantId, created_at: { $gte: currentStart } }),
-            Order.countDocuments({  restaurant_id: restaurantId, created_at: { $gte: previousStart, $lt: currentStart } }),
+            Order.countDocuments({ restaurant_id: restaurantId, created_at: { $gte: currentStart } }),
+            Order.countDocuments({ restaurant_id: restaurantId, created_at: { $gte: previousStart, $lt: currentStart } }),
         ]);
         const [currentRevenueAgg, previousRevenueAgg] = await Promise.all([
             Order.aggregate([
