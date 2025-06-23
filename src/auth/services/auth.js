@@ -34,7 +34,7 @@ const registerWithEmail = async (body) => {
 
                if (existingUser.status === 'pending') {
 
-                    throw new ApiError("This user is not verified yet!", httpStatus.status.BAD_REQUEST);
+                    throw new ApiError("This user is not verified yet!", httpStatus.status.UNAUTHORIZED);
                }
                return existingUser;
           }
