@@ -20,8 +20,6 @@ const registerWithEmail = async (body) => {
                existingUser = await userService.get({ phone: body.phone });
           }
 
-          if (existingUser) await validateUser(existingUser);
-
           if (existingUser) {
                if (existingUser.status === 'pending') {
                     existingUser.activationCode = utils.randomPin();
@@ -32,11 +30,15 @@ const registerWithEmail = async (body) => {
                          await email.sendOTPonEmail(body.email, existingUser.activationCode);
                     }
                     return await existingUser.save();
-               } else {
-                    const errorMessage = body.authMethod === 'email' ? 'Email already exists' : 'Phone number already exists';
-                    throw new ApiError(errorMessage, httpStatus.status.BAD_REQUEST);
                }
+
+               // Only validate user if not pending
+               await validateUser(existingUser);
+
+               const errorMessage = body.authMethod === 'email' ? 'Email already exists' : 'Phone number already exists';
+               throw new ApiError(errorMessage, httpStatus.status.BAD_REQUEST);
           }
+
           let imgUrl = '';
           if (body.imgUrl) {
                const uploadImg = await cloudinary.uploader.upload(body.imgUrl);
@@ -136,10 +138,10 @@ const registerWithPhone = async (body) => {
      await email.PhoneVerificationOTP(body.phone, newUser.activationCode);
 
      const savedUser = await newUser.save();
-          const userResponse = savedUser.toObject();
-          delete userResponse.activationCode;
+     const userResponse = savedUser.toObject();
+     delete userResponse.activationCode;
 
-          return userResponse;
+     return userResponse;
 };
 
 const verifyOTP = async (body) => {
@@ -150,7 +152,7 @@ const verifyOTP = async (body) => {
      }
      const now = new Date();
      if (
-          body.activationCode !== '4444' && 
+          body.activationCode !== '4444' &&
           (!user.activationCodeExpiresAt || now > user.activationCodeExpiresAt)
      ) {
           throw new ApiError('OTP has expired', httpStatus.status.UNAUTHORIZED);
