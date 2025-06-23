@@ -21,7 +21,7 @@ const updateRestaurantSchema = Joi.object({
         saturday: Joi.string(),
         sunday: Joi.string(),
     }),
-    brandName: Joi.string(),
+    brandName: Joi.string().optional(),
     floor: Joi.string(),
     phoneNumber: Joi.string(),
     addresses: Joi.object({
