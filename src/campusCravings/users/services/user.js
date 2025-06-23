@@ -326,7 +326,7 @@ const getUserAllOrders = async (req, res) => {
             const cleanItems = (order?.items || []).map(item => {
                 const itemData = item?.item_id;
                 const quantity = item?.quantity || 0;
-                const basePrice = itemData?.price || 0;
+                const basePrice = Number(itemData?.price) || 0;
 
                 const selectedCustomizationIds = item?.customizations?.map(c => c?.toString()) || [];
                 const customizationList = itemData?.customization || [];

@@ -2,21 +2,30 @@ const mongoose = require('mongoose');
 
 const itemSchema = new mongoose.Schema({
   name: String,
-  price: Number,
+  price: {
+    type: Number,
+    default: 0
+  },
   description: String,
   estimated_preparation_time: Number,
-  customization: [
-    {
-      name: String,
-      price: Number
-    }
-  ],
-  sizes: [
-    {
-      name: String,
-      price: Number
-    }
-  ],
+  customization: {
+    type: [
+      {
+        name: { type: String },
+        price: { type: Number }
+      }
+    ],
+    default: []
+  },
+  sizes: {
+    type: [
+      {
+        name: { type: String, },
+        price: { type: Number }
+      }
+    ],
+    default: []
+  },
   calories: {
     type: Number,
     min: 0

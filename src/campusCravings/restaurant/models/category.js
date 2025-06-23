@@ -8,7 +8,7 @@ const categorySchema = new Schema({
   },
   description: {
     type: String,
-    required: true,
+    default: '',
   },
   items: [{ type: Schema.Types.ObjectId, ref: 'Item' }],
   created_at: {

@@ -20,7 +20,6 @@ const restaurantSchema = new Schema({
   },
   brandName: {
     type: String,
-    required: true
   },
   floor: String,
   phoneNumber: {
