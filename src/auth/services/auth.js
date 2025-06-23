@@ -32,10 +32,7 @@ const registerWithEmail = async (body) => {
 
                await existingUser.save();
 
-               if (existingUser.status === 'pending') {
-
-                    throw new ApiError("This user is not verified yet!", httpStatus.status.UNAUTHORIZED);
-               }
+               await validateUser(existingUser);
                return existingUser;
           }
 
