@@ -21,23 +21,24 @@ const registerWithEmail = async (body) => {
           }
 
           if (existingUser) {
-               if (existingUser.status === 'pending') {
-                    existingUser.activationCode = utils.randomPin();
-                    existingUser.activationCodeExpiresAt = new Date(Date.now() + 2 * 60 * 1000);
-                    if (existingUser?.authMethod === 'phone') {
-                         await email.PhoneVerificationOTP(body.phone, existingUser.activationCode);
-                    } else {
-                         await email.sendOTPonEmail(body.email, existingUser.activationCode);
-                    }
-                    return await existingUser.save();
+               existingUser.activationCode = utils.randomPin();
+               existingUser.activationCodeExpiresAt = new Date(Date.now() + 2 * 60 * 1000);
+
+               if (existingUser.authMethod === 'phone') {
+                    await email.PhoneVerificationOTP(body.phone, existingUser.activationCode);
+               } else {
+                    await email.sendOTPonEmail(body.email, existingUser.activationCode);
                }
 
-               // Only validate user if not pending
-               await validateUser(existingUser);
+               await existingUser.save();
 
-               const errorMessage = body.authMethod === 'email' ? 'Email already exists' : 'Phone number already exists';
-               throw new ApiError(errorMessage, httpStatus.status.BAD_REQUEST);
+               if (existingUser.status === 'pending') {
+
+                    throw new ApiError("This user is not verified yet!", httpStatus.status.BAD_REQUEST);
+               }
+               return existingUser;
           }
+
 
           let imgUrl = '';
           if (body.imgUrl) {
@@ -49,10 +50,10 @@ const registerWithEmail = async (body) => {
                const { restaurantImages } = body;
                body.restaurantImages = [];
                if (restaurantImages && restaurantImages.length > 0) {
-               for (const image of restaurantImages) {
-                    const uploadImg = await cloudinary.uploader.upload(image);
-                    const imgUrl = uploadImg.url || imgUrl;
-                    body.restaurantImages.push(imgUrl);
+                    for (const image of restaurantImages) {
+                         const uploadImg = await cloudinary.uploader.upload(image);
+                         const imgUrl = uploadImg.url || imgUrl;
+                         body.restaurantImages.push(imgUrl);
                     }
                }
                const userModel = await userDB.newEntity(body, imgUrl, false);
@@ -95,16 +96,16 @@ const registerWithEmail = async (body) => {
 
      } catch (error) {
           console.error('Error during user registration:', error);
-      
+
           if (error.code === 11000) {
-              const duplicateField = Object.keys(error.keyValue)[0];
-              let message = `${duplicateField.charAt(0).toUpperCase() + duplicateField.slice(1)} already exists`;
-      
-              throw new ApiError(message, httpStatus.status.BAD_REQUEST);
+               const duplicateField = Object.keys(error.keyValue)[0];
+               let message = `${duplicateField.charAt(0).toUpperCase() + duplicateField.slice(1)} already exists`;
+
+               throw new ApiError(message, httpStatus.status.BAD_REQUEST);
           }
-      
+
           throw new ApiError(error.message || 'Internal Server Error', httpStatus.status.INTERNAL_SERVER_ERROR);
-      }      
+     }
 };
 
 const registerWithPhone = async (body) => {
