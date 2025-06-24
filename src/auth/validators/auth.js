@@ -54,7 +54,7 @@ const registerViaEmail = {
           sunday: Joi.string().optional(),
         }),
         cuisine: Joi.string().when('isRestaurant', { is: true, then: Joi.required() }),
-        deliveryMethods: Joi.array().items(Joi.string()).when('isRestaurant', { is: true, then: Joi.required() }),
+        // deliveryMethods: Joi.array().items(Joi.string()).when('isRestaurant', { is: true, then: Joi.required() }),
         ratings: Joi.object({
           averageRating: Joi.number().default(0),
           totalRatings: Joi.number().default(0),
