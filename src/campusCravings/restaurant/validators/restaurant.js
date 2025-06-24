@@ -34,7 +34,7 @@ const updateRestaurantSchema = Joi.object({
         })
     }),
     cuisine: Joi.string(),
-    deliveryMethods: Joi.array().items(Joi.string()),
+    // deliveryMethods: Joi.array().items(Joi.string()),
     paymentMethods: Joi.array().items(Joi.string()),
     status: Joi.string(),
     categories: Joi.array().items(Joi.string())
