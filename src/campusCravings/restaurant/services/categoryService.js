@@ -124,6 +124,20 @@ const deleteCategoryItem = async (id) => {
     }
 };
 
+const deleteCategory = async (id) => {
+    try {
+        const category = await Category.findById(id);
+        if (!category) {
+            throw new ApiError("Category not found", httpStatus.status.NOT_FOUND);
+        }
+        await items.deleteMany({ _id: { $in: category.items } });
+        await Category.findByIdAndDelete(id);
+        return "Category and its items deleted successfully";
+    } catch (error) {
+        throw new ApiError(error.message, httpStatus.status.BAD_REQUEST);
+    }
+};
+
 
 
 module.exports = {

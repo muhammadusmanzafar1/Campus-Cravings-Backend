@@ -29,3 +29,9 @@ exports.deleteItems = asyncHandler(async (req, res) => {
     const deletedItem = await restCat.deleteCategoryItem(itemId);
     return deletedItem;
 });
+
+exports.deleteCategory = asyncHandler(async (req, res) => {
+    const categoryId = req.params.id;
+    const deletedCategory = await restCat.deleteCategory(categoryId);
+    return deletedCategory;
+});
