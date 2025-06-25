@@ -67,4 +67,16 @@ router.delete("/deleteitem/:id", async (req, res) => {
     }
 });
 
+router.delete("/deletecategory/:id", async (req, res) => {
+    try {
+        const deleteCategory = await deleteCategory(req, res);
+        res.status(httpStatus.status.OK).json({ message: "Category deleted successfully", Category: deleteCategory });
+    } catch (error) {
+        if (error instanceof ApiError) {
+            return res.status(error.statusCode).json({ message: error.message });
+        }
+        return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
+    }
+});
+
 module.exports = router;
