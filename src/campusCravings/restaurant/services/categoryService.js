@@ -109,13 +109,16 @@ const updateCategory = async (data) => {
 
 const deleteCategoryItem = async (id) => {
     try {
-        const updatedCategory = await items.findByIdAndDelete(id);
-
-        if (!updatedCategory) {
-            throw new ApiError('item not found', http.status.NOT_FOUND);
+        const item = await items.findById(id);
+        if (!item) {
+            throw new ApiError("Item not found", httpStatus.status.NOT_FOUND);
         }
-
-        return "item deleted";
+        await items.findByIdAndDelete(id);
+        await Category.updateOne(
+            { _id: item.category },
+            { $pull: { items: item._id } }
+        );
+        return "Item deleted and removed from category";
     } catch (error) {
         throw new ApiError(error.message, httpStatus.status.BAD_REQUEST);
     }
