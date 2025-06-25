@@ -426,7 +426,49 @@ exports.searchRestaurantsandCategories = async (req) => {
             },
         });
 
-        const nearbyRestaurantIds = nearbyRestaurants.map(r => r._id);
+        const openRestaurants = nearbyRestaurants.filter(r => {
+            const coords = r.addresses.coordinates?.coordinates;
+
+            if (!coords || coords.length !== 2) return false;
+
+            const [lng, lat] = coords;
+
+            let timeZone;
+            try {
+                timeZone = tzLookup(lat, lng);
+            } catch (err) {
+                console.warn(`Could not determine time zone for ${r.storeName}:`, err.message);
+                return false;
+            }
+
+            const now = moment.tz(timeZone);
+            const currentDay = now.format('dddd').toLowerCase();
+            const timeRange = r.openingHours?.[currentDay];
+
+            if (!timeRange || !timeRange.includes('-')) return false;
+
+            const [openStr, closeStr] = timeRange.split('-').map(s => s.trim());
+
+            const open = moment.tz(openStr, 'hh:mm A', timeZone).set({
+                year: now.year(),
+                month: now.month(),
+                date: now.date()
+            });
+
+            let close = moment.tz(closeStr, 'hh:mm A', timeZone).set({
+                year: now.year(),
+                month: now.month(),
+                date: now.date()
+            });
+
+            if (close.isBefore(open)) {
+                close.add(1, 'day');
+            }
+
+            return now.isBetween(open, close);
+        });
+
+        const nearbyRestaurantIds = openRestaurants.map(r => r._id);
 
         const matchedCategories = await Category.find({
             restaurant: { $in: nearbyRestaurantIds },
