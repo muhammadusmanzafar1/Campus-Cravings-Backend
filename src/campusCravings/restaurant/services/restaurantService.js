@@ -432,7 +432,7 @@ exports.searchRestaurantsandCategories = async (req) => {
         const matchedCategories = await Category.find({
             restaurant: { $in: nearbyRestaurantIds },
             name: { $regex: search, $options: 'i' },
-        });
+        }).populate('items');
 
         const matchedRestaurantIds = matchedCategories.map(cat => cat.restaurant.toString());
 
