@@ -428,7 +428,6 @@ exports.searchRestaurantsandCategories = async (req) => {
 
         const nearbyRestaurantIds = nearbyRestaurants.map(r => r._id);
 
-        // Step 2: Find matching categories in nearby restaurants
         const matchedCategories = await Category.find({
             restaurant: { $in: nearbyRestaurantIds },
             name: { $regex: search, $options: 'i' },
@@ -436,7 +435,6 @@ exports.searchRestaurantsandCategories = async (req) => {
 
         const matchedRestaurantIds = matchedCategories.map(cat => cat.restaurant.toString());
 
-        // Step 3: Filter only those restaurants that have a matching category
         const filteredRestaurants = nearbyRestaurants.filter(r =>
             matchedRestaurantIds.includes(r._id.toString())
         );
