@@ -114,7 +114,7 @@ exports.getAllRestaurant = async (req, res, next) => {
         const categories = await Category.find({ restaurant: restaurantId });
 
         if (!categories || categories.length === 0) {
-            throw new ApiError("No category Found", httpStatus.status.NOT_FOUND);
+            throw new ApiError("No category found", httpStatus.status.NOT_FOUND);
         }
 
         return categories;
@@ -124,7 +124,7 @@ exports.getAllRestaurant = async (req, res, next) => {
     }
 };
 
-exports.getNearbyRestaurantsWithCategories = async (req, res, next) => {
+exports.getNearbyRestaurantsWithCategories = async (req, res) => {
     try {
         const { latitude, longitude } = req.query;
 
@@ -195,7 +195,10 @@ exports.getNearbyRestaurantsWithCategories = async (req, res, next) => {
 
     } catch (error) {
         console.error("Error while fetching nearby restaurants:", error);
-        next(error);
+        if (error instanceof ApiError) {
+            throw error;
+        }
+        throw new ApiError(error.message || "Internal Server Error", error.statusCode || httpStatus.status.INTERNAL_SERVER_ERROR)
     }
 };
 

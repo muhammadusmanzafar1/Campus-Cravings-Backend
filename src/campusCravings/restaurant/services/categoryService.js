@@ -10,7 +10,6 @@ const cloudinary = require('../../../../utils/Cloudinary'); //
 const createCategory = async (req) => {
 
     const restaurantId = req.user.restaurant;
-    console.log(req.user);
     try {
         const restaurant = await Restaurant.findById(restaurantId);
         if (!restaurant) {
@@ -44,6 +43,9 @@ const createItem = async (data) => {
         const category = await Category.findById(id);
         if (!category) {
             throw new ApiError("Category not found", httpStatus.status.NOT_FOUND);
+        }
+        if (itemData.sizes && itemData.sizes.length > 0) {
+            itemData.price = 0;
         }
         const newImageArray = [];
         for (let i = 0; i < image.length; i++) {

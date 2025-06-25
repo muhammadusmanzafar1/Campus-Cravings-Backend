@@ -118,13 +118,13 @@ router.get("/riderLocation/:riderId", async (req, res, next) => {
     }
 });
 // send rider details with order number
-router.get("/getRiderDetails/:orderId", async (req, res, next) => {
+router.get("/getRiderDetails/:orderId", async (req, res) => {
     try {
-        const riderDetatils = await rider.getRiderDetails(req, res, next);
-        if (!rider) {
-            return next(new ApiError("Invalid request", httpStatus.status.BAD_REQUEST));
-        }
-        res.status(httpStatus.status.OK).json({ message: "Rider details retrieved successfully", data: riderDetatils });
+        const riderDetatils = await rider.getRiderDetails(req, res);
+        // if (!rider) {
+        //     return next(new ApiError("Invalid request", httpStatus.status.BAD_REQUEST));
+        // }
+       return res.status(httpStatus.status.OK).json({ message: "Rider details retrieved successfully", data: riderDetatils });
     } catch (error) {
         console.error("Error in /getRiderDetails route:", error);
         if (error instanceof ApiError) {
@@ -136,9 +136,9 @@ router.get("/getRiderDetails/:orderId", async (req, res, next) => {
 router.get("/getRiderDetailsById/:riderId", async (req, res, next) => {
     try {
         const riderDetatils = await rider.getRiderDetailsById(req, res, next);
-        if (!rider) {
-            return next(new ApiError("Invalid request", httpStatus.status.BAD_REQUEST));
-        }
+        // if (!rider) {
+        //     return next(new ApiError("Invalid request", httpStatus.status.BAD_REQUEST));
+        // }
         res.status(httpStatus.status.OK).json({ message: "Rider details retrieved successfully", data: riderDetatils });
     } catch (error) {
         console.error("Error in /getRiderDetails route:", error);
