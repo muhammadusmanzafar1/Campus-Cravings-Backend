@@ -157,6 +157,18 @@ router.get("/search", validateBody(searchSchema), async (req, res) => {
     }
 });
 
+router.get("/searchCategory", validateBody(searchSchema), async (req, res) => {
+    try {
+        const search = await restaurant.searchRestaurantsandCategory(req, res);
+        res.status(httpStatus.status.OK).json({ message: "Nearby Restaurants fetched successfully", searchResult: search });
+    } catch (error) {
+        if (error instanceof ApiError) {
+            return res.status(error.statusCode).json({ message: error.message });
+        }
+        return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
+    }
+});
+
 // Get data analytics with respect to restaurant id
 router.get("/analytics/:days", async (req, res) => {
     try {

@@ -158,7 +158,7 @@ exports.getNearbyRestaurantsWithCategories = async (req, res) => {
 
             let timeZone;
             try {
-                timeZone = tzLookup(lat, lng); 
+                timeZone = tzLookup(lat, lng);
             } catch (err) {
                 console.warn(`Could not determine time zone for ${r.storeName}:`, err.message);
                 return false;
@@ -191,7 +191,7 @@ exports.getNearbyRestaurantsWithCategories = async (req, res) => {
             return now.isBetween(open, close);
         });
 
-        return  openRestaurants;
+        return openRestaurants;
 
     } catch (error) {
         console.error("Error while fetching nearby restaurants:", error);
@@ -370,7 +370,7 @@ exports.searchRestaurantsandFoodItems = async (req) => {
         if (!latitude || !longitude || !search) {
             throw new ApiError("Missing required parameters: latitude, longitude and search are required.", httpStatus.status.BAD_REQUEST);
         }
-        const radiusInMeters = 15 * 1609.34;
+        const radiusInMeters = 20 * 1609.34;
         const nearbyRestaurants = await Restaurant.find({
             'addresses.coordinates': {
                 $nearSphere: {
@@ -385,8 +385,7 @@ exports.searchRestaurantsandFoodItems = async (req) => {
         const nearbyRestaurantIds = nearbyRestaurants.map(r => r._id);
         // Filter restaurants by search term (storeName or brandName)
         const filteredRestaurants = nearbyRestaurants.filter(r =>
-            r.storeName.toLowerCase().includes(search.toLowerCase()) ||
-            r.brandName.toLowerCase().includes(search.toLowerCase())
+            r.storeName?.toLowerCase().includes(search.toString().toLowerCase())
         );
         const matchedItems = await Item.find({
             restaurant: { $in: nearbyRestaurantIds },
@@ -395,6 +394,54 @@ exports.searchRestaurantsandFoodItems = async (req) => {
         return {
             restaurants: filteredRestaurants,
             FoodItems: matchedItems
+        };
+    } catch (error) {
+        console.error(error);
+        throw new ApiError(error.message, httpStatus.status.BAD_REQUEST);
+    }
+};
+
+exports.searchRestaurantsandCategories = async (req) => {
+    try {
+        const { latitude, longitude, search } = req.query;
+
+        if (!latitude || !longitude || !search) {
+            throw new ApiError(
+                "Missing required parameters: latitude, longitude and search are required.",
+                httpStatus.status.BAD_REQUEST
+            );
+        }
+
+        const radiusInMeters = 20 * 1609.34;
+
+        const nearbyRestaurants = await Restaurant.find({
+            'addresses.coordinates': {
+                $nearSphere: {
+                    $geometry: {
+                        type: "Point",
+                        coordinates: [longitude, latitude],
+                    },
+                    $maxDistance: radiusInMeters,
+                },
+            },
+        });
+
+        const nearbyRestaurantIds = nearbyRestaurants.map(r => r._id);
+
+        const matchedCategories = await Category.find({
+            restaurant: { $in: nearbyRestaurantIds },
+            name: { $regex: search, $options: 'i' },
+        }).populate('items');
+
+        const matchedRestaurantIds = matchedCategories.map(cat => cat.restaurant.toString());
+
+        const filteredRestaurants = nearbyRestaurants.filter(r =>
+            matchedRestaurantIds.includes(r._id.toString())
+        );
+
+        return {
+            restaurants: filteredRestaurants,
+            categories: matchedCategories,
         };
     } catch (error) {
         console.error(error);
