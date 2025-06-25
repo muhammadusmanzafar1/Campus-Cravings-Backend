@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const httpStatus = require("http-status");
 const ApiError = require('../../../../utils/ApiError');
-const { createCategory, getItems, updateItems, deleteItems, getCategories, createItem } = require('../controllers/categoryController')
+const { createCategory, getItems, updateItems, deleteItems, getCategories, createItem, deleteCategory } = require('../controllers/categoryController')
 
 router.post("/addcategory", async (req, res) => {
 
@@ -69,8 +69,8 @@ router.delete("/deleteitem/:id", async (req, res) => {
 
 router.delete("/deletecategory/:id", async (req, res) => {
     try {
-        const deleteCategory = await deleteCategory(req, res);
-        res.status(httpStatus.status.OK).json({ message: "Category deleted successfully", Category: deleteCategory });
+        const deletedCategory = await deleteCategory(req, res);
+        res.status(httpStatus.status.OK).json({ message: "Category deleted successfully", Category: deletedCategory });
     } catch (error) {
         if (error instanceof ApiError) {
             return res.status(error.statusCode).json({ message: error.message });

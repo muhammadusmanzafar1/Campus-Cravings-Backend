@@ -145,5 +145,6 @@ module.exports = {
     getCategoryItemsById,
     updateCategory,
     deleteCategoryItem,
-    createItem
+    createItem,
+    deleteCategory
 }
