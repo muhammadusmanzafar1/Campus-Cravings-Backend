@@ -202,7 +202,7 @@ exports.getNearbyRestaurantsWithCategories = async (req, res) => {
     }
 };
 
-exports.getpoplarFoodItems = async (req, res, next) => {
+exports.getpoplarFoodItems = async (req, res) => {
     const { latitude, longitude } = req.query;
     if (!latitude || !longitude) {
         throw new ApiError('Latitude and longitude are required', httpStatus.status.BAD_REQUEST);

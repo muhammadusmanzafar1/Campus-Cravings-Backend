@@ -59,9 +59,9 @@ exports.getTwentyMilesRestaurents = asyncHandler(async (req, res, next) => {
     }
 });
 
-exports.getpoplarFoodItems = asyncHandler(async (req, res, next) => {
+exports.getpoplarFoodItems = asyncHandler(async (req, res) => {
     try {
-        const restaurant = await restaurantService.getpoplarFoodItems(req, res, next);
+        const restaurant = await restaurantService.getpoplarFoodItems(req, res);
         return restaurant;
     } catch (error) {
         throw new ApiError(error.message, httpStatus.status.NOT_FOUND);

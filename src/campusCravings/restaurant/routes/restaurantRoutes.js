@@ -103,7 +103,7 @@ router.get('/getNearbyPopularFood', async (req, res, next) => {
             });
         }
 
-        const result = await restaurant.getpoplarFoodItems(req, res, next);
+        const result = await restaurant.getpoplarFoodItems(req, res);
 
         if (!result || result.length === 0) {
             return res.status(httpStatus.status.NOT_FOUND).json({
