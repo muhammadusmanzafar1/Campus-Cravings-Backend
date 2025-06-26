@@ -22,33 +22,33 @@ exports.stripeWebhook = async (req, res) => {
     }
   
     // Handle onboarding completion
-    if (event.type === 'account.updated') {
-      const account = event.data.object;
+    // if (event.type === 'account.updated') {
+    //   const account = event.data.object;
   
-      if (account.details_submitted) {
-        try {
-          const user = await User.findOne({ stripeAccountId: account.id });
-          if (user) {
-            if (user.isRestaurant) {
-              user.status = 'active';
-              await user.save();
-            } else {
-              const rider = await Rider.findOne({ user: user._id });
-              if (rider) {
-                user.isDelivery = true;
-                await user.save();
+    //   if (account.details_submitted) {
+    //     try {
+    //       const user = await User.findOne({ stripeAccountId: account.id });
+    //       if (user) {
+    //         if (user.isRestaurant) {
+    //           user.status = 'active';
+    //           await user.save();
+    //         } else {
+    //           const rider = await Rider.findOne({ user: user._id });
+    //           if (rider) {
+    //             user.isDelivery = true;
+    //             await user.save();
   
-                rider.status = 'active';
-                await rider.save();
-              }
-            }
-          }
-        } catch (err) {
-          console.error('Error updating user after onboarding:', err.message);
-          return res.status(500).send('Internal Server Error');
-        }
-      }
-    }
+    //             rider.status = 'active';
+    //             await rider.save();
+    //           }
+    //         }
+    //       }
+    //     } catch (err) {
+    //       console.error('Error updating user after onboarding:', err.message);
+    //       return res.status(500).send('Internal Server Error');
+    //     }
+    //   }
+    // }
   
     return 'Event received';
   };
