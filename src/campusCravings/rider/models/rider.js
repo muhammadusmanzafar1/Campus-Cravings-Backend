@@ -31,12 +31,10 @@ const riderSchema = new Schema({
     type: String,
   },
   SSN: {
-    type: String,
-    required: true
+    type: String
   },
   national_id_image_url: {
-    type: String,
-    required: true
+    type: String
   },
   totalHours: {
     type: Number,

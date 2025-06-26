@@ -32,14 +32,12 @@ exports.registerRider = async (req, res) => {
       monirs,
       club_organizations,
       bio,
-      SSN,
-      national_id_image_url
     } = req.body;
 
     const uploadImg = await cloudinary.uploader.upload(national_id_image_url);
     const imgUrl = uploadImg.url;
     // Ensure required fields are present
-    if (!batch_year || !majors || !SSN || !national_id_image_url) {
+    if (!batch_year || !majors) {
       throw new ApiError('Missing required fields', httpStatus.status.BAD_REQUEST);
     }
 
@@ -50,8 +48,6 @@ exports.registerRider = async (req, res) => {
       monirs,
       club_organizations,
       bio,
-      SSN,
-      national_id_image_url: imgUrl,
       location: {
         type: 'Point',
         coordinates: [location.lng, location.lat]

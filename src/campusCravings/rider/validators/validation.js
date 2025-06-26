@@ -7,8 +7,8 @@ const registerRiderSchema = {
         monirs: Joi.array().items(Joi.string()).optional(),
         club_organizations: Joi.array().items(Joi.string()).optional(),
         bio: Joi.string().optional(),
-        SSN: Joi.string().required(),
-        national_id_image_url: Joi.string().required(),
+        SSN: Joi.string().optional(),
+        national_id_image_url: Joi.string().optional(),
         location: Joi.object({
             lat: Joi.number().required(),
             lng: Joi.number().required()
