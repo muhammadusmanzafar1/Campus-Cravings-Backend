@@ -10,9 +10,9 @@ const startStripeOnboarding = async (req, res) => {
     const { userId } = req.params;
     const { failureUrl, successUrl } = req.query;
 
-    // if (!failureUrl || !successUrl) {
-    //     throw new ApiError('Missing required query parameters: failureUrl or successUrl');
-    // }
+    if (!failureUrl || !successUrl) {
+        throw new ApiError('Missing required query parameters: failureUrl or successUrl');
+    }
 
     const user = await User.findById(userId);
     if (!user) throw new ApiError('User not found', 404);
@@ -28,8 +28,8 @@ const startStripeOnboarding = async (req, res) => {
 
     const onboardingUrl = await generateOnboardingLink(
         user.stripeAccountId,
-        "https://sample.com/stripe-onboarding",
-        "https://sample.com/stripe-onboarding-success"
+        failureUrl,
+        successUrl
     );
 
     if (user.isRestaurant) {
