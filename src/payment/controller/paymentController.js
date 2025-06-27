@@ -28,8 +28,8 @@ const startStripeOnboarding = async (req, res) => {
 
     const onboardingUrl = await generateOnboardingLink(
         user.stripeAccountId,
-        failureUrl,
-        successUrl
+        "https://sample.com/stripe-onboarding",
+        "https://sample.com/stripe-onboarding-success"
     );
 
     if (user.isRestaurant) {
