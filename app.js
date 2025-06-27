@@ -16,7 +16,7 @@ const stripeRoutes = require('./src/payment/routes/stripeRoutes');
 
 const app = express();
 
-app.use('/api/stripe/webhook', require('./src/payment/routes/stripeRoutes'));
+app.use('/api/stripe', require('./src/payment/routes/stripeRoutes'));
 
 // Middleware
 

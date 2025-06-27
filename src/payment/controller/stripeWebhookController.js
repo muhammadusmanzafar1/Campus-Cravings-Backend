@@ -50,5 +50,5 @@ exports.stripeWebhook = async (req, res) => {
     //   }
     // }
   
-    return 'Event received';
+    // return 'Event received';
   };
