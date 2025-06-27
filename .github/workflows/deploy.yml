@@ -3,7 +3,7 @@ name: Campus Cravings Backend Deployment
 on:
   push:
     branches:
-      - main  # Change if using a different branch
+      - testing/stripe  # Change if using a different branch
 
 jobs:
   deploy:
