@@ -42,7 +42,7 @@ app.use(upload.any());
 
 // parse json request body
 // app.use(express.json({ limit: '50mb' }));
-app.use('/api/stripe', stripeRoutes);
+// app.use('/api/stripe', stripeRoutes);
 
 // parse urlencoded request body
 app.use(express.urlencoded({ limit: '50mb', extended: true }));

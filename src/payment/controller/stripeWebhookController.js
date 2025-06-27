@@ -15,7 +15,7 @@ exports.stripeWebhook = async (req, res) => {
         process.env.STRIPE_WEBHOOK_SECRET
       );
       console.log('Webhook event received:', event.type);
-      
+      return res.status(200).json({ received: true });
     } catch (err) {
       console.error('Webhook signature verification failed:', err.message);
       return res.status(400).send(`Webhook Error: ${err.message}`);
