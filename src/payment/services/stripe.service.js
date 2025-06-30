@@ -12,7 +12,7 @@ exports.handleTransferCreated = async (transfer, stripeAccountId) => {
   }
 
   if (user.isRestaurant && user.restaurant) {
-    const order = await Order.findOne({ restaurant_id: user.restaurant });
+    const order = await Order.findOne({ restaurant_id: user.restaurant, transfer_to_account: false, status: 'delivered' });
     if (order) {
       order.transfer_to_account = true;
       await order.save();

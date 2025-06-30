@@ -197,56 +197,56 @@ exports.deliverOrder = async (req, res) => {
     await order.save();
     await rider.save();
 
-    // Get User records for stripeAccountIds
-    const restaurantUser = await User.findOne({restaurant: order.restaurant_id});
-    const riderUser = await User.findById(rider.user);
-    console.log('riderUser:', riderUser);
-    console.log('restaurantUser:', restaurantUser);
+    // // Get User records for stripeAccountIds
+    // const restaurantUser = await User.findOne({restaurant: order.restaurant_id});
+    // const riderUser = await User.findById(rider.user);
+    // console.log('riderUser:', riderUser);
+    // console.log('restaurantUser:', restaurantUser);
     
 
-    if (!riderUser || !riderUser.stripeAccountId || !restaurantUser || !restaurantUser.stripeAccountId) {
-      throw new ApiError('Stripe account not linked to rider or restaurant', httpStatus.status.BAD_REQUEST);
-    }
+    // if (!riderUser || !riderUser.stripeAccountId || !restaurantUser || !restaurantUser.stripeAccountId) {
+    //   throw new ApiError('Stripe account not linked to rider or restaurant', httpStatus.status.BAD_REQUEST);
+    // }
 
-    const orderPrice = order.order_price || 0;
-    const platformFee = orderPrice * 0.10 * 100;
-    const restaurantShare = orderPrice * 100;
-    const riderShare = (order.delivery_fee + order.tip) * 100;    
+    // const orderPrice = order.order_price || 0;
+    // const platformFee = orderPrice * 0.10 * 100;
+    // const restaurantShare = orderPrice * 100;
+    // const riderShare = (order.delivery_fee + order.tip) * 100;    
 
-    const balance = await stripe.balance.retrieve();
-    const available = balance.available.find(b => b.currency === 'usd')?.amount || 0;
+    // const balance = await stripe.balance.retrieve();
+    // const available = balance.available.find(b => b.currency === 'usd')?.amount || 0;
     
 
-    const totalPlatformEarnings = await PlatformShare.aggregate([
-      { $group: { _id: null, total: { $sum: "$amount" } } }
-    ]);
-    const adminTotal = totalPlatformEarnings[0]?.total || 0;
+    // const totalPlatformEarnings = await PlatformShare.aggregate([
+    //   { $group: { _id: null, total: { $sum: "$amount" } } }
+    // ]);
+    // const adminTotal = totalPlatformEarnings[0]?.total || 0;
 
-    if (available < adminTotal + riderShare + restaurantShare) {
-      throw new ApiError("Insufficient balance for payouts", httpStatus.status.BAD_REQUEST);
-    }
+    // if (available < adminTotal + riderShare + restaurantShare) {
+    //   throw new ApiError("Insufficient balance for payouts", httpStatus.status.BAD_REQUEST);
+    // }
 
-    await PlatformShare.create({
-      orderId: order._id,
-      amount: platformFee,
-      currency: 'usd'
-    });
+    // await PlatformShare.create({
+    //   orderId: order._id,
+    //   amount: platformFee,
+    //   currency: 'usd'
+    // });
 
-     await stripe.transfers.create({
-      amount: restaurantShare,
-      currency: 'usd',
-      destination: restaurantUser.stripeAccountId,
-      description: `Restaurant payout for order ${order._id}`,
-      transfer_group: `order_${order._id}`
-    });
+    //  await stripe.transfers.create({
+    //   amount: restaurantShare,
+    //   currency: 'usd',
+    //   destination: restaurantUser.stripeAccountId,
+    //   description: `Restaurant payout for order ${order._id}`,
+    //   transfer_group: `order_${order._id}`
+    // });
 
-    await stripe.transfers.create({
-      amount: riderShare,
-      currency: 'usd',
-      destination: riderUser.stripeAccountId,
-      description: `Rider payout for order ${order._id}`,
-      transfer_group: `order_${order._id}`
-    });
+    // await stripe.transfers.create({
+    //   amount: riderShare,
+    //   currency: 'usd',
+    //   destination: riderUser.stripeAccountId,
+    //   description: `Rider payout for order ${order._id}`,
+    //   transfer_group: `order_${order._id}`
+    // });
 
     return {
       order,
