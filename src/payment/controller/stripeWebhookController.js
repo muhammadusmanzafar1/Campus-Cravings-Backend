@@ -1,56 +1,39 @@
-const Stripe = require('stripe');
-const User = require('../../auth/models/user');
-const Rider = require('../../campusCravings/rider/models/rider');
-const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const { handleTransferCreated, handlePayoutPaid } = require('../services/stripe.service');
 
 exports.stripeWebhook = async (req, res) => {
-    const sig = req.headers['stripe-signature'];
-    console.log('🔔 Stripe signature header:', sig);
-  console.log('📦 Raw body received:', req.body);
-  
-    let event;
-  
-    try {
-      event = stripe.webhooks.constructEvent(
-        req.body, // Use raw body here
-        sig,
-        process.env.STRIPE_WEBHOOK_SECRET
-      );
-      console.log('Webhook event received:', event.type);
-      return res.status(200).json({ received: true });
-    } catch (err) {
-      console.error('Webhook signature verification failed:', err.message);
-      return res.status(400).send(`Webhook Error: ${err.message}`);
+  const sig = req.headers['stripe-signature'];
+  const stripeAccountId = req.headers['stripe-account'];
+
+  let event;
+
+  try {
+    event = stripe.webhooks.constructEvent(
+      req.body,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET
+    );
+    console.log('Webhook event received:', event.type);
+  } catch (err) {
+    console.error('Webhook signature verification failed:', err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  try {
+    switch (event.type) {
+      case 'transfer.created':
+        await handleTransferCreated(event.data.object, stripeAccountId);
+        break;
+      case 'payout.paid':
+        await handlePayoutPaid(event.data.object);
+        break;
+      default:
+        console.log(`Unhandled event type: ${event.type}`);
     }
-  
-    // Handle onboarding completion
-    // if (event.type === 'account.updated') {
-    //   const account = event.data.object;
-  
-    //   if (account.details_submitted) {
-    //     try {
-    //       const user = await User.findOne({ stripeAccountId: account.id });
-    //       if (user) {
-    //         if (user.isRestaurant) {
-    //           user.status = 'active';
-    //           await user.save();
-    //         } else {
-    //           const rider = await Rider.findOne({ user: user._id });
-    //           if (rider) {
-    //             user.isDelivery = true;
-    //             await user.save();
-  
-    //             rider.status = 'active';
-    //             await rider.save();
-    //           }
-    //         }
-    //       }
-    //     } catch (err) {
-    //       console.error('Error updating user after onboarding:', err.message);
-    //       return res.status(500).send('Internal Server Error');
-    //     }
-    //   }
-    // }
-  
-    // return 'Event received';
-  };
+
+    return res.status(200).json({ received: true });
+  } catch (err) {
+    console.error('Error processing webhook:', err.message);
+    return res.status(500).send('Internal Server Error');
+  }
+};

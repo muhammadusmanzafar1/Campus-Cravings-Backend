@@ -147,7 +147,7 @@ entitySchema.statics.newEntity = async function (body, imgUrl,createdByAdmin = t
         facebookId: body.facebookId,
         appleId: body.appleId,
         restaurantId: body.restaurant,
-        stripeCustomerId: body.stripeCustomerId || "",
+        stripeAccountId: body.stripeCustomerId || "",
         addresses: body.addresses || []
     };
 
