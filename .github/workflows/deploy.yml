@@ -26,6 +26,6 @@ jobs:
           cd /staging-CampusCravings-backend/CampusCravings-backend
           git pull origin testing/stripe
           npm install
-          pm2 restart 1
+          pm2 restart 2
           exit
           EOF
