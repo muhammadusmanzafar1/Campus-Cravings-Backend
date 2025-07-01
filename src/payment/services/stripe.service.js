@@ -24,7 +24,6 @@ exports.handleTransferCreated = async (orderId, stripeAccountId) => {
         await order.save();
         console.log(`Marked order ${order._id} as transferred to restaurant`);
 
-        // 👉 Trigger manual payout to restaurant
         await triggerManualPayout(stripeAccountId);
       }
     } else if (user.isDelivery) {
@@ -36,7 +35,6 @@ exports.handleTransferCreated = async (orderId, stripeAccountId) => {
           await order.save();
           console.log(`Marked order ${order._id} as transferred to rider`);
 
-          // 👉 Trigger manual payout to rider
           await triggerManualPayout(stripeAccountId);
         }
       }
@@ -48,7 +46,6 @@ exports.handleTransferCreated = async (orderId, stripeAccountId) => {
   }
 };
 
-// ✅ Helper function to trigger manual payout
 async function triggerManualPayout(stripeAccountId) {
   try {
     const balance = await stripe.balance.retrieve({
@@ -66,10 +63,11 @@ async function triggerManualPayout(stripeAccountId) {
       { $group: { _id: null, total: { $sum: "$amount" } } }
     ]);
     const adminTotal = totalPlatformEarnings[0]?.total || 0;
+    let payout;
 
     if (usdBalance < adminTotal) {
 
-      const payout = await stripe.payouts.create({
+      payout = await stripe.payouts.create({
         amount: usdBalance,
         currency: 'usd',
       }, {
@@ -112,12 +110,10 @@ exports.handlePayoutPaid = async (payout) => {
           return;
         }
 
-        // Update order payout status
         order.payouts.restaurant.status = 'paid';
         order.payouts.restaurant.amount = amount;
         await order.save();
 
-        // Log payout
         await new PayoutLog({
           order_id: order._id,
           recipient_type: 'restaurant',
@@ -133,7 +129,6 @@ exports.handlePayoutPaid = async (payout) => {
         console.error(`Error handling restaurant payout for order ${order_id}:`, err.message);
       }
 
-    // If it's a rider
     } else if (user.isDelivery) {
       try {
         const rider = await Rider.findOne({ user: user._id });
@@ -150,12 +145,10 @@ exports.handlePayoutPaid = async (payout) => {
           return;
         }
 
-        // Update order payout status
         order.payouts.rider.status = 'paid';
         order.payouts.rider.amount = amount;
         await order.save();
 
-        // Log payout
         await new PayoutLog({
           order_id: order._id,
           recipient_type: 'rider',
