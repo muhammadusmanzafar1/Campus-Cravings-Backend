@@ -200,8 +200,6 @@ exports.deliverOrder = async (req, res) => {
     // Get User records for stripeAccountIds
     const restaurantUser = await User.findOne({restaurant: order.restaurant_id});
     const riderUser = await User.findById(rider.user);
-    console.log('riderUser:', riderUser);
-    console.log('restaurantUser:', restaurantUser);
     
 
     if (!riderUser || !riderUser.stripeAccountId || !restaurantUser || !restaurantUser.stripeAccountId) {
@@ -237,7 +235,7 @@ exports.deliverOrder = async (req, res) => {
       currency: 'usd',
       destination: restaurantUser.stripeAccountId,
       description: `Restaurant payout for order ${order._id}`,
-      transfer_group: `order_${order._id}`
+      transfer_group: `${order._id}`
     });
 
     await stripe.transfers.create({
@@ -245,7 +243,7 @@ exports.deliverOrder = async (req, res) => {
       currency: 'usd',
       destination: riderUser.stripeAccountId,
       description: `Rider payout for order ${order._id}`,
-      transfer_group: `order_${order._id}`
+      transfer_group: `${order._id}`
     });
 
     return {
@@ -254,7 +252,7 @@ exports.deliverOrder = async (req, res) => {
     };
   } catch (err) {
     console.error(err);
-    throw new ApiError(err.message, httpStatus.status.INTERNAL_SERVER_ERROR);
+    throw new ApiError(err.message, err.statusCodde || httpStatus.status.INTERNAL_SERVER_ERROR);
   }
 };
 

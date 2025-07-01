@@ -59,6 +59,44 @@ const orderSchema = new mongoose.Schema({
         ],
         default: []
     },
+    payouts: {
+        type: {
+            restaurant: {
+                status: {
+                    type: String,
+                    enum: ['unpaid', 'paid', 'failed', 'canceled'],
+                    default: 'unpaid'
+                },
+                amount: {
+                    type: Number,
+                    default: 0
+                }
+            },
+            rider: {
+                status: {
+                    type: String,
+                    enum: ['unpaid', 'paid', 'failed', 'canceled'],
+                    default: 'unpaid'
+                },
+                amount: {
+                    type: Number,
+                    default: 0
+                }
+            }
+        },
+        default: {
+            restaurant: { status: 'unpaid', amount: 0 },
+            rider: { status: 'unpaid', amount: 0 }
+        }
+    },
+    transfer_to_rider: {
+        type: Boolean,
+        default: false
+    },
+    transfer_to_restaurant: {
+        type: Boolean,
+        default: false
+    },
     total_price: {
         type: Number,
         required: true
