@@ -52,6 +52,7 @@ async function triggerManualPayout(stripeAccountId) {
     });
 
     const usdBalance = balance.available.find(b => b.currency === 'usd')?.amount || 0;
+    console.log(`Connected account balance: $${usdBalance / 100}`);
 
     if (usdBalance < 100) {
       console.warn(`Not enough balance in ${stripeAccountId} to trigger payout.`);
@@ -62,24 +63,26 @@ async function triggerManualPayout(stripeAccountId) {
       { $group: { _id: null, total: { $sum: "$amount" } } }
     ]);
     const adminTotal = totalPlatformEarnings[0]?.total || 0;
-    const availableBalance = await stripe.balance.retrieve();
     console.log(">>>>>>>>>>>>>>>>>>>>>>>adminTotal", adminTotal);
-    console.log(">>>>>>>>>>>>>>>>>>>>>>>usdBalance", availableBalance.available[0].amount);
-    
-    let payout;
 
-    if (availableBalance.available[0].amount < adminTotal) {
+    const platformBalance = await stripe.balance.retrieve();
+    const platformUsdBalance = platformBalance.available.find(b => b.currency === 'usd')?.amount || 0;
+    console.log(">>>>>>>>>>>>>>>>>>>>>>>Platform USD Balance", platformUsdBalance);
 
-      payout = await stripe.payouts.create({
-        amount: usdBalance,
-        currency: 'usd',
-      }, {
-        stripeAccount: stripeAccountId
-      });
-    } else {
-      console.warn(`Insufficient balance in ${stripeAccountId} to cover platform fees.`);
+    if (platformUsdBalance < adminTotal) {
+      console.warn(`Insufficient platform balance to cover admin fees (${adminTotal} cents).`);
+      return;
     }
+
+    const payout = await stripe.payouts.create({
+      amount: usdBalance,
+      currency: 'usd',
+    }, {
+      stripeAccount: stripeAccountId
+    });
+
     // console.log(`Payout of $${usdBalance / 100} created for ${stripeAccountId}: ${payout.id}`);
+
   } catch (err) {
     console.error(`Failed to create payout for ${stripeAccountId}:`, err.message);
   }
