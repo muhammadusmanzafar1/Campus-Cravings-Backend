@@ -16,7 +16,7 @@ exports.handleTransferCreated = async (orderId, stripeAccountId) => {
   if (user.isRestaurant && user.restaurant) {
     const order = await Order.findOne({_id: order_id, restaurant_id: user.restaurant});
     if (order) {
-      order.transfer_to_account = true;
+      order.transfer_to_restaurant = true;
       await order.save();
     }
   } else if (user.isDelivery) {
@@ -24,7 +24,7 @@ exports.handleTransferCreated = async (orderId, stripeAccountId) => {
     if (rider) {
       const order = await Order.findOne({ _id: order_id, assigned_to: rider._id });
       if (order) {
-        order.transfer_to_account = true;
+        order.transfer_to_rider = true;
         await order.save();
       }
     }
