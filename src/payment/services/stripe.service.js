@@ -63,12 +63,13 @@ async function triggerManualPayout(stripeAccountId) {
       { $group: { _id: null, total: { $sum: "$amount" } } }
     ]);
     const adminTotal = totalPlatformEarnings[0]?.total || 0;
+    const availableBalance = await stripe.balance.retrieve();
     console.log(">>>>>>>>>>>>>>>>>>>>>>>adminTotal", adminTotal);
     console.log(">>>>>>>>>>>>>>>>>>>>>>>usdBalance", usdBalance);
     
     let payout;
 
-    if (usdBalance < adminTotal) {
+    if (availableBalance <= adminTotal) {
 
       payout = await stripe.payouts.create({
         amount: usdBalance,
