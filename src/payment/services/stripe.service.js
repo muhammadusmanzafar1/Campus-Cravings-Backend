@@ -23,7 +23,7 @@ exports.handleTransferCreated = async (orderId, stripeAccountId) => {
         await order.save();
         console.log(`Marked order ${order._id} as transferred to restaurant`);
 
-        await triggerManualPayout(stripeAccountId);
+        await triggerManualPayout(stripeAccountId, order_id);
       }
     } else if (user.isDelivery) {
       const rider = await Rider.findOne({ user: user._id });
@@ -34,7 +34,7 @@ exports.handleTransferCreated = async (orderId, stripeAccountId) => {
           await order.save();
           console.log(`Marked order ${order._id} as transferred to rider`);
 
-          await triggerManualPayout(stripeAccountId);
+          await triggerManualPayout(stripeAccountId, order_id);
         }
       }
     } else {
@@ -45,7 +45,7 @@ exports.handleTransferCreated = async (orderId, stripeAccountId) => {
   }
 };
 
-async function triggerManualPayout(stripeAccountId) {
+async function triggerManualPayout(stripeAccountId, order_Id) {
   try {
     const balance = await stripe.balance.retrieve({
       stripeAccount: stripeAccountId
@@ -74,6 +74,9 @@ async function triggerManualPayout(stripeAccountId) {
     const payout = await stripe.payouts.create({
       amount: usdBalance,
       currency: 'usd',
+      metadata: {
+        orderId: order_Id,
+      }
     }, {
       stripeAccount: stripeAccountId
     });
@@ -85,7 +88,7 @@ async function triggerManualPayout(stripeAccountId) {
 
 exports.handlePayoutFailed = async (payout) => {
   try {
-    const orderId = payout.transfer_group;
+    const orderId = payout.metadata.orderId;
     const order_id = orderId?.startsWith('order_') ? orderId.split('order_')[1] : orderId;
 
     if (!order_id) {
@@ -160,7 +163,7 @@ exports.handlePayoutFailed = async (payout) => {
 
 exports.handlePayoutCanceled = async (payout) => {
   try {
-    const orderId = payout.transfer_group;
+    const orderId = payout.metadata.orderId;
     const order_id = orderId?.startsWith('order_') ? orderId.split('order_')[1] : orderId;
 
     if (!order_id) {
@@ -235,7 +238,7 @@ exports.handlePayoutCanceled = async (payout) => {
 
 exports.handlePayoutPaid = async (payout) => {
   try {
-    const orderId = payout.transfer_group;
+    const orderId = payout.metadata.orderId;
     const order_id = orderId?.startsWith('order_') ? orderId.split('order_')[1] : orderId;
 
     if (!order_id) {

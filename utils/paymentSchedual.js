@@ -63,7 +63,10 @@ async function processPayouts() {
             currency: 'usd',
             destination: restaurantUser.stripeAccountId,
             description: `Restaurant payout for order ${order._id}`,
-            transfer_group: `${order._id}`
+            transfer_group: `${order._id}`,
+            metadata: {
+              orderId: order._id.toString(),
+            }
           });
 
           await stripe.transfers.create({
@@ -71,7 +74,10 @@ async function processPayouts() {
             currency: 'usd',
             destination: riderUser.stripeAccountId,
             description: `Rider payout for order ${order._id}`,
-            transfer_group: `${order._id}`
+            transfer_group: `${order._id}`,
+            metadata: {
+              orderId: order._id.toString(),
+            }
           });
           
           await order.save();

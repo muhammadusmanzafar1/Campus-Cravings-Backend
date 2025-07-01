@@ -21,7 +21,7 @@ exports.stripeWebhook = async (req, res) => {
   try {
     switch (event.type) {
       case 'transfer.created':
-        await handleTransferCreated(event.data.object.transfer_group, event.data.object.destination);
+        await handleTransferCreated(event.data.object.metadata.orderId, event.data.object.destination);
         break;
       case 'payout.failed':
         await handlePayoutFailed(event.data.object);
