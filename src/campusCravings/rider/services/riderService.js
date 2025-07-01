@@ -15,6 +15,7 @@ const { getIO } = require('../../../sockets/service/socketService');
 const { sendOrderToSpecificRiders } = require('../../../sockets/controllers/rider');
 const order = require('../../admin/models/order');
 const { default: mongoose } = require('mongoose');
+const { error } = require('winston');
 
 
 exports.registerRider = async (req, res) => {
@@ -254,7 +255,7 @@ exports.deliverOrder = async (req, res) => {
     };
   } catch (err) {
     console.error(err);
-    throw new ApiError(err.message, httpStatus.status.INTERNAL_SERVER_ERROR);
+    throw new ApiError(err.message, err.statusCodde || httpStatus.status.INTERNAL_SERVER_ERROR);
   }
 };
 
