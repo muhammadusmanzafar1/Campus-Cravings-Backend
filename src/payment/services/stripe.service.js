@@ -68,7 +68,7 @@ async function triggerManualPayout(stripeAccountId) {
     
     let payout;
 
-    if (availableBalance.available[0].amount <= adminTotal) {
+    if (availableBalance.available[0].amount < adminTotal) {
 
       payout = await stripe.payouts.create({
         amount: usdBalance,
