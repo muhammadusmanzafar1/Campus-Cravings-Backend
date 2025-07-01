@@ -3,7 +3,7 @@ name: Campus Cravings Backend Deployment
 on:
   push:
     branches:
-      - testing/stripe  # Change if using a different branch
+      - main  # Change if using a different branch
 
 jobs:
   deploy:
@@ -23,9 +23,9 @@ jobs:
       - name: 📡 Deployment
         run: |
           ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
-          cd /staging-CampusCravings-backend/CampusCravings-backend
-          git pull origin testing/stripe
+          cd /CampusCravings-backend
+          git pull origin main
           npm install
-          pm2 restart 2
+          pm2 restart 0
           exit
           EOF
