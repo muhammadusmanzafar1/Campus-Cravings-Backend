@@ -151,7 +151,7 @@ exports.deliverOrder = async (req, res) => {
       throw new ApiError('Order not found', httpStatus.status.NOT_FOUND);
     }
 
-    const rider = await Rider.findOne({ user: req.user.id });
+    const rider = await Rider.findOne({ user: order.assigned_to }); // change this when deploying with req.user.id
     if (!rider) {
       throw new ApiError('Rider not found', httpStatus.status.NOT_FOUND);
     }
