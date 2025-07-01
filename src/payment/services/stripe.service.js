@@ -3,7 +3,7 @@ const Rider = require('../../campusCravings/rider/models/rider');
 const PayoutLog = require('../../campusCravings/admin/models/payoutLog');
 const Order = require('../../campusCravings/admin/models/order');
 
-exports.handleTransferCreated = async (transfer, stripeAccountId) => {
+exports.handleTransferCreated = async (orderId, stripeAccountId) => {
   const user = await User.findOne({ stripeAccountId });
 
   if (!user) {
@@ -12,7 +12,7 @@ exports.handleTransferCreated = async (transfer, stripeAccountId) => {
   }
 
   if (user.isRestaurant && user.restaurant) {
-    const order = await Order.findOne({ restaurant_id: user.restaurant, transfer_to_account: false, status: 'delivered' });
+    const order = await Order.findOne({_id: orderId, restaurant_id: user.restaurant});
     if (order) {
       order.transfer_to_account = true;
       await order.save();
@@ -20,7 +20,7 @@ exports.handleTransferCreated = async (transfer, stripeAccountId) => {
   } else if (user.isDelivery) {
     const rider = await Rider.findOne({ user: user._id });
     if (rider) {
-      const order = await Order.findOne({ assigned_to: rider._id });
+      const order = await Order.findOne({ _id: orderId, assigned_to: rider._id });
       if (order) {
         order.transfer_to_account = true;
         await order.save();
@@ -32,6 +32,7 @@ exports.handleTransferCreated = async (transfer, stripeAccountId) => {
 };
 
 exports.handlePayoutPaid = async (payout) => {
+  const orderId = payout.transfer_group;
   const user = await User.findOne({ stripeAccountId: payout.destination });
 
   if (!user) {
@@ -42,7 +43,7 @@ exports.handlePayoutPaid = async (payout) => {
   const amount = payout.amount / 100;
 
   if (user.isRestaurant && user.restaurant) {
-    const order = await Order.findOne({ restaurant_id: user.restaurant });
+    const order = await Order.findOne({ _id: orderId, restaurant_id: user.restaurant });
     if (order) {
       order.payouts.restaurant.status = 'paid';
       order.payouts.restaurant.amount = amount;
@@ -61,7 +62,7 @@ exports.handlePayoutPaid = async (payout) => {
   } else if (user.isDelivery) {
     const rider = await Rider.findOne({ user: user._id });
     if (rider) {
-      const order = await Order.findOne({ assigned_to: rider._id });
+      const order = await Order.findOne({ _id: orderId, assigned_to: rider._id });
       if (order) {
         order.payouts.rider.status = 'paid';
         order.payouts.rider.amount = amount;

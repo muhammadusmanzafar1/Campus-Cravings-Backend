@@ -201,8 +201,6 @@ exports.deliverOrder = async (req, res) => {
     // Get User records for stripeAccountIds
     const restaurantUser = await User.findOne({restaurant: order.restaurant_id});
     const riderUser = await User.findById(rider.user);
-    console.log('riderUser:', riderUser);
-    console.log('restaurantUser:', restaurantUser);
     
 
     if (!riderUser || !riderUser.stripeAccountId || !restaurantUser || !restaurantUser.stripeAccountId) {
