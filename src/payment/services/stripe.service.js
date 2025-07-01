@@ -64,7 +64,7 @@ async function triggerManualPayout(stripeAccountId) {
     const adminTotal = totalPlatformEarnings[0]?.total || 0;
     const availableBalance = await stripe.balance.retrieve();
     console.log(">>>>>>>>>>>>>>>>>>>>>>>adminTotal", adminTotal);
-    console.log(">>>>>>>>>>>>>>>>>>>>>>>usdBalance", availableBalance);
+    console.log(">>>>>>>>>>>>>>>>>>>>>>>usdBalance", availableBalance.available[0].amount);
     
     let payout;
 
