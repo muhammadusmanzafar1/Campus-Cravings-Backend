@@ -22,10 +22,13 @@ exports.stripeWebhook = async (req, res) => {
   try {
     switch (event.type) {
       case 'transfer.created':
-        await handleTransferCreated(event.data.object, stripeAccountId);
+        // await handleTransferCreated(event.data.object, stripeAccountId);
+        console.log(`Transfer created for account ${stripeAccountId}:`, event.data.object);
+        
         break;
       case 'payout.paid':
-        await handlePayoutPaid(event.data.object);
+        // await handlePayoutPaid(event.data.object);
+        console.log(`Payout paid for account ${stripeAccountId}:`, event.data.object);
         break;
       default:
         console.log(`Unhandled event type: ${event.type}`);
