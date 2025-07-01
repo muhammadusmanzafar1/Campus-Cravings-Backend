@@ -13,7 +13,6 @@ exports.stripeWebhook = async (req, res) => {
       sig,
       process.env.STRIPE_WEBHOOK_SECRET
     );
-    console.log('Webhook event received:', JSON.stringify(event, null, 2));
   } catch (err) {
     console.error('Webhook signature verification failed:', err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
@@ -23,7 +22,6 @@ exports.stripeWebhook = async (req, res) => {
     switch (event.type) {
       case 'transfer.created':
         await handleTransferCreated(event.data.object.transfer_group, event.data.object.destination);
-        
         break;
       case 'payout.failed':
         await handlePayoutFailed(event.data.object);
