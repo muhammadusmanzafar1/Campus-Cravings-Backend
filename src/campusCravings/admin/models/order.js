@@ -64,7 +64,7 @@ const orderSchema = new mongoose.Schema({
             restaurant: {
                 status: {
                     type: String,
-                    enum: ['unpaid', 'paid'],
+                    enum: ['unpaid', 'paid', 'failed', 'canceled'],
                     default: 'unpaid'
                 },
                 amount: {
@@ -75,7 +75,7 @@ const orderSchema = new mongoose.Schema({
             rider: {
                 status: {
                     type: String,
-                    enum: ['unpaid', 'paid'],
+                    enum: ['unpaid', 'paid', 'failed', 'canceled'],
                     default: 'unpaid'
                 },
                 amount: {

@@ -1,5 +1,5 @@
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-const { handleTransferCreated, handlePayoutPaid } = require('../services/stripe.service');
+const { handleTransferCreated, handlePayoutPaid, handlePayoutFailed, handlePayoutCanceled } = require('../services/stripe.service');
 
 exports.stripeWebhook = async (req, res) => {
   const sig = req.headers['stripe-signature'];
@@ -22,8 +22,14 @@ exports.stripeWebhook = async (req, res) => {
   try {
     switch (event.type) {
       case 'transfer.created':
-        await handleTransferCreated(event.data.object.transfer_group, event.data.object.destination, );
+        await handleTransferCreated(event.data.object.transfer_group, event.data.object.destination);
         
+        break;
+      case 'payout.failed':
+        await handlePayoutFailed(event.data.object);
+        break;
+      case 'payout.canceled':
+        await handlePayoutCanceled(event.data.object);
         break;
       case 'payout.paid':
         await handlePayoutPaid(event.data.object);

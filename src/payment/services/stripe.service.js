@@ -52,9 +52,8 @@ async function triggerManualPayout(stripeAccountId) {
     });
 
     const usdBalance = balance.available.find(b => b.currency === 'usd')?.amount || 0;
-    console.log(`Connected account balance: $${usdBalance / 100}`);
 
-    if (usdBalance < 100) {
+    if (usdBalance < 5) {
       console.warn(`Not enough balance in ${stripeAccountId} to trigger payout.`);
       return;
     }
@@ -63,11 +62,9 @@ async function triggerManualPayout(stripeAccountId) {
       { $group: { _id: null, total: { $sum: "$amount" } } }
     ]);
     const adminTotal = totalPlatformEarnings[0]?.total || 0;
-    console.log(">>>>>>>>>>>>>>>>>>>>>>>adminTotal", adminTotal);
 
     const platformBalance = await stripe.balance.retrieve();
     const platformUsdBalance = platformBalance.available.find(b => b.currency === 'usd')?.amount || 0;
-    console.log(">>>>>>>>>>>>>>>>>>>>>>>Platform USD Balance", platformUsdBalance);
 
     if (platformUsdBalance < adminTotal) {
       console.warn(`Insufficient platform balance to cover admin fees (${adminTotal} cents).`);
@@ -80,15 +77,161 @@ async function triggerManualPayout(stripeAccountId) {
     }, {
       stripeAccount: stripeAccountId
     });
-    console.log(">>>>>>>>>>>>>>>>>>>>>>>Payout created:", payout);
-    
-
-    // console.log(`Payout of $${usdBalance / 100} created for ${stripeAccountId}: ${payout.id}`);
 
   } catch (err) {
     console.error(`Failed to create payout for ${stripeAccountId}:`, err.message);
   }
 }
+
+exports.handlePayoutFailed = async (payout) => {
+  try {
+    const orderId = payout.transfer_group;
+    const order_id = orderId?.startsWith('order_') ? orderId.split('order_')[1] : orderId;
+
+    if (!order_id) {
+      console.warn('Missing or invalid transfer_group in failed payout');
+      return;
+    }
+
+    const user = await User.findOne({ stripeAccountId: payout.destination });
+
+    if (!user) {
+      console.warn(`No user found with Stripe account ${payout.destination}`);
+      return;
+    }
+
+    const amount = payout.amount / 100;
+
+    if (user.isRestaurant && user.restaurant) {
+      const order = await Order.findOne({ _id: order_id, restaurant_id: user.restaurant });
+      if (!order) {
+        console.warn(`Order not found for restaurant user: ${order_id}`);
+        return;
+      }
+
+      order.payouts.restaurant.status = 'failed';
+      await order.save();
+
+      await new PayoutLog({
+        order_id: order._id,
+        recipient_type: 'restaurant',
+        recipient_id: user.restaurant,
+        amount,
+        status: 'failed',
+        stripe_transfer_id: payout.id,
+        metadata: payout,
+      }).save();
+
+      console.log(`Restaurant payout failed log created for order ${order._id}`);
+    } else if (user.isDelivery) {
+      const rider = await Rider.findOne({ user: user._id });
+      if (!rider) {
+        console.warn(`Rider not found for user ${user._id}`);
+        return;
+      }
+
+      const order = await Order.findOne({ _id: order_id, assigned_to: rider._id });
+      if (!order) {
+        console.warn(`Order not found for rider user: ${order_id}`);
+        return;
+      }
+
+      order.payouts.rider.status = 'failed';
+      await order.save();
+
+      await new PayoutLog({
+        order_id: order._id,
+        recipient_type: 'rider',
+        recipient_id: rider._id,
+        amount,
+        status: 'failed',
+        stripe_transfer_id: payout.id,
+        metadata: payout,
+      }).save();
+
+      console.log(`Rider payout failed log created for order ${order._id}`);
+    } else {
+      console.warn(`User with Stripe account ${payout.destination} has unknown role.`);
+    }
+  } catch (err) {
+    console.error(`Error in handlePayoutFailed:`, err.message);
+  }
+};
+
+exports.handlePayoutCanceled = async (payout) => {
+  try {
+    const orderId = payout.transfer_group;
+    const order_id = orderId?.startsWith('order_') ? orderId.split('order_')[1] : orderId;
+
+    if (!order_id) {
+      console.warn('Missing or invalid transfer_group in canceled payout');
+      return;
+    }
+
+    const user = await User.findOne({ stripeAccountId: payout.destination });
+
+    if (!user) {
+      console.warn(`No user found with Stripe account ${payout.destination}`);
+      return;
+    }
+
+    const amount = payout.amount / 100;
+
+    if (user.isRestaurant && user.restaurant) {
+      const order = await Order.findOne({ _id: order_id, restaurant_id: user.restaurant });
+      if (!order) {
+        console.warn(`Order not found for restaurant user: ${order_id}`);
+        return;
+      }
+
+      order.payouts.restaurant.status = 'canceled';
+      await order.save();
+
+      await new PayoutLog({
+        order_id: order._id,
+        recipient_type: 'restaurant',
+        recipient_id: user.restaurant,
+        amount,
+        status: 'canceled',
+        stripe_transfer_id: payout.id,
+        metadata: payout,
+      }).save();
+
+      console.log(`Restaurant payout canceled log created for order ${order._id}`);
+    } else if (user.isDelivery) {
+      const rider = await Rider.findOne({ user: user._id });
+      if (!rider) {
+        console.warn(`Rider not found for user ${user._id}`);
+        return;
+      }
+
+      const order = await Order.findOne({ _id: order_id, assigned_to: rider._id });
+      if (!order) {
+        console.warn(`Order not found for rider user: ${order_id}`);
+        return;
+      }
+
+      order.payouts.rider.status = 'canceled';
+      await order.save();
+
+      await new PayoutLog({
+        order_id: order._id,
+        recipient_type: 'rider',
+        recipient_id: rider._id,
+        amount,
+        status: 'canceled',
+        stripe_transfer_id: payout.id,
+        metadata: payout,
+      }).save();
+
+      console.log(`Rider payout canceled log created for order ${order._id}`);
+    } else {
+      console.warn(`User with Stripe account ${payout.destination} has unknown role.`);
+    }
+  } catch (err) {
+    console.error(`Error in handlePayoutCanceled:`, err.message);
+  }
+};
 
 exports.handlePayoutPaid = async (payout) => {
   try {
