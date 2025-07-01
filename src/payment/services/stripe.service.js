@@ -80,6 +80,8 @@ async function triggerManualPayout(stripeAccountId) {
     }, {
       stripeAccount: stripeAccountId
     });
+    console.log(">>>>>>>>>>>>>>>>>>>>>>>Payout created:", payout);
+    
 
     // console.log(`Payout of $${usdBalance / 100} created for ${stripeAccountId}: ${payout.id}`);
 
