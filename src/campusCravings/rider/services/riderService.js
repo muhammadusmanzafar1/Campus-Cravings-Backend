@@ -15,7 +15,6 @@ const { getIO } = require('../../../sockets/service/socketService');
 const { sendOrderToSpecificRiders } = require('../../../sockets/controllers/rider');
 const order = require('../../admin/models/order');
 const { default: mongoose } = require('mongoose');
-const { error } = require('winston');
 
 
 exports.registerRider = async (req, res) => {
