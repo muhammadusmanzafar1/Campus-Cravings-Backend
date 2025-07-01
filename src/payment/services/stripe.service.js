@@ -4,7 +4,6 @@ const Rider = require('../../campusCravings/rider/models/rider');
 const PayoutLog = require('../../campusCravings/admin/models/payoutLog');
 const Order = require('../../campusCravings/admin/models/order');
 const PlatformShare = require('../../campusCravings/admin/models/platformShare');
-const { log } = require('winston');
 
 exports.handleTransferCreated = async (orderId, stripeAccountId) => {
   try {
@@ -65,7 +64,7 @@ async function triggerManualPayout(stripeAccountId) {
     const adminTotal = totalPlatformEarnings[0]?.total || 0;
     const availableBalance = await stripe.balance.retrieve();
     console.log(">>>>>>>>>>>>>>>>>>>>>>>adminTotal", adminTotal);
-    console.log(">>>>>>>>>>>>>>>>>>>>>>>usdBalance", usdBalance);
+    console.log(">>>>>>>>>>>>>>>>>>>>>>>usdBalance", availableBalance);
     
     let payout;
 
@@ -80,7 +79,7 @@ async function triggerManualPayout(stripeAccountId) {
     } else {
       console.warn(`Insufficient balance in ${stripeAccountId} to cover platform fees.`);
     }
-    console.log(`Payout of $${usdBalance / 100} created for ${stripeAccountId}: ${payout.id}`);
+    // console.log(`Payout of $${usdBalance / 100} created for ${stripeAccountId}: ${payout.id}`);
   } catch (err) {
     console.error(`Failed to create payout for ${stripeAccountId}:`, err.message);
   }
