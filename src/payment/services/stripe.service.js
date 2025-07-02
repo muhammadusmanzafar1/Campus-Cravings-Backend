@@ -53,7 +53,7 @@ async function triggerManualPayout(stripeAccountId, order_Id) {
 
     const usdBalance = balance.available.find(b => b.currency === 'usd')?.amount || 0;
 
-    if (usdBalance < 5) {
+    if (usdBalance < 1) {
       console.warn(`Not enough balance in ${stripeAccountId} to trigger payout.`);
       return;
     }

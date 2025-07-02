@@ -49,14 +49,12 @@ async function processPayouts() {
           continue;
         }
 
-        // Save platform fee
         await PlatformShare.create({
           orderId: order._id,
           amount: platformFee,
           currency: 'usd'
         });
 
-        // Stripe Transfers — Now inside isolated try/catch
         try {
           await stripe.transfers.create({
             amount: restaurantShare,
