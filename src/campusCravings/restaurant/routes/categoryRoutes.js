@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const httpStatus = require("http-status");
 const ApiError = require('../../../../utils/ApiError');
-const { createCategory, getItems, updateItems, deleteItems, getCategories, createItem, deleteCategory } = require('../controllers/categoryController')
+const { createCategory, getItems, updateItems, deleteItems, getCategories, createItem, deleteCategory, getCategoriesName } = require('../controllers/categoryController')
 
 router.post("/addcategory", async (req, res) => {
 
@@ -35,6 +35,18 @@ router.get("/getitem/:id", async (req, res) => {
     try {
         const getItem = await getItems(req, res);
         res.status(httpStatus.status.OK).json({ message: "Items retrieved successfully", items: getItem });
+    } catch (error) {
+        if (error instanceof ApiError) {
+            return res.status(error.statusCode).json({ message: error.message });
+        }
+        return res.status(httpStatus.status.INTERNAL_SERVER_ERROR).json({ message: error.message || "Server Error" });
+    }
+});
+
+router.get("/getcategoryname", async (req, res) => {
+    try {
+        const getCategory = await getCategoriesName(req, res);
+        res.status(httpStatus.status.OK).json({ message: "Categories retrieved successfully", categories: getCategory });
     } catch (error) {
         if (error instanceof ApiError) {
             return res.status(error.statusCode).json({ message: error.message });

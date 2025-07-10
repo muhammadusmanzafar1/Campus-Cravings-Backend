@@ -4,7 +4,9 @@ const ApiError = require("../../../../utils/ApiError");
 const Category = require('../models/category');
 const Restaurant = require('../models/restaurant');
 const items = require('../models/items')
-const cloudinary = require('../../../../utils/Cloudinary'); //
+const cloudinary = require('../../../../utils/Cloudinary');
+const moment = require('moment-timezone');
+const tzLookup = require('tz-lookup');
 
 // Create a new category with items
 const createCategory = async (req) => {
@@ -79,6 +81,107 @@ const getCategoryItemsById = async (itemId) => {
     }
 };
 
+const getCategoriesName = async (req, res) => {
+    try {
+        const { latitude, longitude } = req.query;
+
+        // Validate required parameters
+        if (!latitude || !longitude) {
+            throw new ApiError("Missing required parameters: latitude and longitude are required.", httpStatus.status.BAD_REQUEST);
+        }
+
+        const lat = parseFloat(latitude);
+        const lng = parseFloat(longitude);
+        const distanceInMeters = 20 * 1609.34;
+
+        // Fetch nearby restaurants
+        const nearbyRestaurants = await Restaurant.find({
+            "addresses.coordinates": {
+                $nearSphere: {
+                    $geometry: {
+                        type: "Point",
+                        coordinates: [lng, lat],
+                    },
+                    $maxDistance: distanceInMeters,
+                },
+            },
+        });
+
+        // Filter open restaurants
+        const openRestaurants = nearbyRestaurants.filter((restaurant) => {
+            const coords = restaurant.addresses?.coordinates?.coordinates;
+            if (!coords || coords.length !== 2) return false;
+
+            const [restLng, restLat] = coords;
+
+            let timeZone;
+            try {
+                timeZone = tzLookup(restLat, restLng);
+            } catch (err) {
+                console.warn(`Timezone lookup failed for ${restaurant.storeName}: ${err.message}`);
+                return false;
+            }
+
+            const now = moment.tz(timeZone);
+            const day = now.format('dddd').toLowerCase();
+            const timeRange = restaurant.openingHours?.[day];
+
+            if (!timeRange || !timeRange.includes('-')) return false;
+
+            const [openStr, closeStr] = timeRange.split('-').map((s) => s.trim());
+            const openTime = moment.tz(openStr, 'hh:mm A', timeZone).set({
+                year: now.year(),
+                month: now.month(),
+                date: now.date()
+            });
+            let closeTime = moment.tz(closeStr, 'hh:mm A', timeZone).set({
+                year: now.year(),
+                month: now.month(),
+                date: now.date()
+            });
+
+            if (closeTime.isBefore(openTime)) {
+                closeTime.add(1, 'day');
+            }
+
+            return now.isBetween(openTime, closeTime);
+        });
+
+        const openRestaurantIds = openRestaurants.map((r) => r._id);
+        const categories = await Category.aggregate([
+            {
+                $match: {
+                    restaurant: { $in: openRestaurantIds },
+                    items: { $exists: true, $not: { $size: 0 } },
+                },
+            },
+            {
+                $sort: { created_at: -1 }
+            },
+            {
+                $group: {
+                    _id: "$name", 
+                    doc: { $first: "$$ROOT" } 
+                },
+            },
+            {
+                $replaceRoot: { newRoot: "$doc" } 
+            }
+        ]);
+
+
+        return categories;
+
+    } catch (error) {
+        console.error("Error while fetching nearby categories:", error);
+        const status = error instanceof ApiError ? error.statusCode : httpStatus.status.INTERNAL_SERVER_ERROR;
+        const message = error.message || "Internal Server Error";
+
+        throw new ApiError(message, status);
+    }
+};
+
+
 const updateCategory = async (data) => {
     try {
         const { _id, ...newItem } = data;
@@ -146,5 +249,6 @@ module.exports = {
     updateCategory,
     deleteCategoryItem,
     createItem,
-    deleteCategory
+    deleteCategory,
+    getCategoriesName
 }
