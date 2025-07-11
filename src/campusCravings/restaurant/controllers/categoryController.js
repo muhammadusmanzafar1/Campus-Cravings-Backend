@@ -22,6 +22,11 @@ exports.getCategoriesName = asyncHandler(async (req, res) => {
     return categories;
 });
 
+exports.updateStatusItem = asyncHandler(async (req, res) => {
+    const updatedItem = await restCat.updateStatusItem(req);
+    return updatedItem;
+});
+
 exports.updateItems = asyncHandler(async (req, res) => {
     const updateData = req.body;
 

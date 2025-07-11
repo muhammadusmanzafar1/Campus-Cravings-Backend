@@ -30,6 +30,10 @@ const itemSchema = new mongoose.Schema({
     type: Number,
     min: 0
   },
+  out_of_stock: {
+    type: Boolean,
+    default: false
+  },
   image: [String],
   restaurant: {
     type: mongoose.Schema.Types.ObjectId,
