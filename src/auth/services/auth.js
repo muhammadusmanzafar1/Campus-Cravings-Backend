@@ -19,6 +19,7 @@ const registerWithEmail = async (body) => {
           } else if (body.phone) {
                existingUser = await userService.get({ phone: body.phone });
           }
+          if (existingUser) throw new ApiError("This user is already Registered", httpStatus.status.FORBIDDEN);
 
           if (existingUser) {
                existingUser.activationCode = utils.randomPin();
