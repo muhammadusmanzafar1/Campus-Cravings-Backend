@@ -84,10 +84,7 @@ exports.getAllCategoryByRestaurantId = async (req, res, next) => {
         }
 
         const categories = await Category.find({ restaurant: restaurantId })
-            .populate({
-                path: 'items',
-                match: { out_of_stock: false }
-            });
+            .populate('items');
 
         if (!categories || categories.length === 0) {
             return {
@@ -281,11 +278,6 @@ exports.getpoplarFoodItems = async (req, res) => {
                     totalOrdered: { $sum: "$items.quantity" }
                 }
             },
-            {
-                $match: {
-                    totalOrdered: { $gte: 5 }
-                }
-            },
             { $sort: { totalOrdered: -1 } },
             { $limit: 10 },
             {
@@ -397,8 +389,7 @@ exports.searchRestaurantsandFoodItems = async (req) => {
         );
         const matchedItems = await Item.find({
             restaurant: { $in: nearbyRestaurantIds },
-            name: { $regex: search, $options: 'i' },
-            out_of_stock: { $ne: false }
+            name: { $regex: search, $options: 'i' }
         }).populate('category');
         return {
             restaurants: filteredRestaurants,
@@ -482,10 +473,7 @@ exports.searchRestaurantsandCategories = async (req) => {
         const matchedCategories = await Category.find({
             restaurant: { $in: nearbyRestaurantIds },
             name: { $regex: search, $options: 'i' },
-        }).populate({
-            path: 'items',
-            match: { out_of_stock: false }
-        });
+        }).populate('items');
 
         const matchedRestaurantIds = matchedCategories.map(cat => cat.restaurant.toString());
 

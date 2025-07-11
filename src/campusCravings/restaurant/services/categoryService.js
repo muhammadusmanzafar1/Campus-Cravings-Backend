@@ -71,7 +71,7 @@ const createItem = async (data) => {
 
 const getCategoryItemsById = async (itemId) => {
     try {
-        const item = await items.findOne({ _id: itemId, out_of_stock: false }).populate('category', 'name');
+        const item = await items.findById(itemId).populate('category', 'name');
 
         if (!item) throw new Error('Item not found');
         return item;
@@ -181,22 +181,6 @@ const getCategoriesName = async (req, res) => {
     }
 };
 
-const updateStatusItem = async (req) => {
-    const { id } = req.params;
-    const { status } = req.query;
-    try {
-        const item = await items.findById(id);
-        if (!item) {
-            throw new ApiError("Item not found", httpStatus.status.NOT_FOUND);
-        }
-        item.out_of_stock = status;
-        await item.save();20
-        return item;
-    } catch (error) {
-        throw new ApiError(error.message, httpStatus.status.BAD_REQUEST);
-    }
-    
-}
 
 const updateCategory = async (data) => {
     try {
@@ -266,6 +250,5 @@ module.exports = {
     deleteCategoryItem,
     createItem,
     deleteCategory,
-    getCategoriesName,
-    updateStatusItem
+    getCategoriesName
 }
