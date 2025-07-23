@@ -84,7 +84,10 @@ exports.getAllCategoryByRestaurantId = async (req, res, next) => {
         }
 
         const categories = await Category.find({ restaurant: restaurantId })
-            .populate('items');
+            .populate({
+                path: "items",
+                match: { out_of_stock: false },
+            });
 
         if (!categories || categories.length === 0) {
             return {
@@ -230,7 +233,7 @@ exports.getpoplarFoodItems = async (req, res) => {
         ]);
 
         if (!nearbyRestaurants.length) {
-            throw new ApiError('No nearby restaurants found', httpStatus.status.NOT_FOUND)
+            throw new ApiError('No nearby restaurants found', httpStatus.status.NOT_FOUND);
         }
 
         const openRestaurants = nearbyRestaurants.filter(r => {
@@ -275,17 +278,44 @@ exports.getpoplarFoodItems = async (req, res) => {
             {
                 $group: {
                     _id: "$items.item_id",
-                    totalOrdered: { $sum: "$items.quantity" }
+                    orderIds: { $addToSet: "$_id" }
                 }
             },
-            { $sort: { totalOrdered: -1 } },
+            {
+                $project: {
+                    item_id: "$_id",
+                    orderCount: { $size: "$orderIds" }
+                }
+            },
+            {
+                $match: {
+                    orderCount: { $gte: 5 }
+                }
+            },
+            { $sort: { orderCount: -1 } },
             { $limit: 10 },
             {
                 $lookup: {
                     from: "items",
-                    localField: "_id",
-                    foreignField: "_id",
+                    let: { itemId: "$_id" },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $and: [
+                                        { $eq: ["$_id", "$$itemId"] },
+                                        { $eq: ["$out_of_stock", false] }
+                                    ]
+                                }
+                            }
+                        }
+                    ],
                     as: "itemDetails"
+                }
+            },
+            {
+                $match: {
+                    "itemDetails.0": { $exists: true }
                 }
             },
             {
@@ -299,7 +329,7 @@ exports.getpoplarFoodItems = async (req, res) => {
             {
                 $project: {
                     item_id: "$_id",
-                    totalOrdered: 1,
+                    orderCount: 1,
                     itemDetails: { $arrayElemAt: ["$itemDetails", 0] },
                     restaurant: {
                         $let: {
@@ -322,18 +352,18 @@ exports.getpoplarFoodItems = async (req, res) => {
             return { message: 'No popular items found' };
         }
 
-
-        const popularItems = orders
-            .filter(order => order.itemDetails)
-            .map(order => ({
-                ...order
-            }));
+const popularItems = orders.map(order => ({ ...order }));
+        // const popularItems = orders
+        //     .filter(order => order.itemDetails)
+        //     .map(order => ({
+        //         ...order
+        //     }));
 
 
         return popularItems
     } catch (error) {
         console.error(error);
-        throw new ApiError('An error occurred while fetching popular items', httpStatus.status.INTERNAL_SERVER_ERROR)
+        throw new ApiError('An error occurred while fetching popular items', httpStatus.status.INTERNAL_SERVER_ERROR);
     }
 };
 exports.nearbyRestaurant = async (req) => {

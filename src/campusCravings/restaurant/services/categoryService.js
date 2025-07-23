@@ -71,7 +71,7 @@ const createItem = async (data) => {
 
 const getCategoryItemsById = async (itemId) => {
     try {
-        const item = await items.findById(itemId).populate('category', 'name');
+        const item = await items.findOne({_id: itemId, out_of_stock: false}).populate('category', 'name');
 
         if (!item) throw new Error('Item not found');
         return item;
@@ -146,29 +146,45 @@ const getCategoriesName = async (req, res) => {
 
             return now.isBetween(openTime, closeTime);
         });
-
         const openRestaurantIds = openRestaurants.map((r) => r._id);
+        
+        const inStockItems = await items.aggregate([
+            {
+                $match: {
+                    out_of_stock: false,
+                    restaurant: { $in: openRestaurantIds },
+                }
+            },
+            {
+                $group: {
+                    _id: "$category",
+                }
+            }
+        ]);
+        
+        const validCategoryIds = inStockItems.map((item) => item._id);
+
         const categories = await Category.aggregate([
             {
                 $match: {
+                    _id: { $in: validCategoryIds },
                     restaurant: { $in: openRestaurantIds },
                     items: { $exists: true, $not: { $size: 0 } },
-                },
+                }
             },
             {
                 $sort: { created_at: -1 }
             },
             {
                 $group: {
-                    _id: "$name", 
-                    doc: { $first: "$$ROOT" } 
-                },
+                    _id: "$name",
+                    doc: { $first: "$$ROOT" }
+                }
             },
             {
-                $replaceRoot: { newRoot: "$doc" } 
+                $replaceRoot: { newRoot: "$doc" }
             }
         ]);
-
 
         return categories;
 
@@ -181,6 +197,22 @@ const getCategoriesName = async (req, res) => {
     }
 };
 
+const updateStatusItem = async (req) => {
+    const { id } = req.params;
+    const { status } = req.query;
+    try {
+        const item = await items.findById(id);
+        if (!item) {
+            throw new ApiError("Item not found", httpStatus.status.NOT_FOUND);
+        }
+        item.out_of_stock = status;
+        await item.save();
+        return item;
+    } catch (error) {
+        throw new ApiError(error.message, httpStatus.status.BAD_REQUEST);
+    }
+
+}
 
 const updateCategory = async (data) => {
     try {
@@ -250,5 +282,6 @@ module.exports = {
     deleteCategoryItem,
     createItem,
     deleteCategory,
-    getCategoriesName
+    getCategoriesName,
+    updateStatusItem
 }
