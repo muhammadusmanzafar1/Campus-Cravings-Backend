@@ -10,10 +10,10 @@ const entitySchema = new mongoose.Schema({
         type: String,
         required: true, // Make it required if necessary
     },
-    fcmToken: {
-        type: String,
-        required: true, // Make it required if necessary
-    },
+    // fcmToken: {
+    //     type: String,
+    //     required: true, // Make it required if necessary
+    // },
     tokenType: {
         type: String,
         enum: ['google', 'facebook', 'linkedin', 'twitter'],
